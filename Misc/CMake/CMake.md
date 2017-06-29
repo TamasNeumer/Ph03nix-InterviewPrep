@@ -8,7 +8,7 @@ Simple configuration files placed in each source directory (called CMakeLists.tx
 - Ubuntu
   - ```sudo apt-get install cmake```
 
-## Commands
+## Common Commands in CMake
 - Specify the minimum version for CMake
   - ```make_minimum_required(VERSION 2.8)```
 - Project's name (in this case hello)
@@ -20,12 +20,16 @@ Simple configuration files placed in each source directory (called CMakeLists.tx
   - ```LIBRARY_OUTPUT_PATH``` set this variable to specify a common place where CMake should put all libraries (instead of ```CMAKE_CURRENT_BINARY_DIR```)
 - ```add_executable(hello ${PROJECT_SOURCE_DIR}/test.cpp)```
 - ```add_library(testStudent SHARED ${SOURCES})``` The library is built as a shared library using the SHARED flag (other options are: STATIC or MODULE) , and the testStudent name is used as the name of the shared library.
-- ```install(TARGETS testStudent DESTINATION /usr/lib)``` define an installation location for the library (in this case it is /usr/lib). Deployment is invoked using a call to )```sudo make install)``` in this case.
+- ```install(TARGETS testStudent DESTINATION /usr/lib)``` define an installation location for the library (in this case it is /usr/lib). Deployment is invoked using a call to ```sudo make install``` in this case.
 - ```set(property value)``` sets the property to the given value. e.g.: ```#set(SOURCES src/mainapp.cpp src/Student.cpp)```
 - ```include_directories(dirName)``` - bring the header files into the build environment
 - ```file(...)```used for file manipulation. A practicular example is the following: ```file(GLOB SOURCES "src/*.cpp")``` GLOB will generate a list of all files that match the globbing expressions and store it into the variable. Thus with this command you find all the .cpp files in the source directory and append it to SOURCES.
 - ```link_directories(directory1 directory2 ...)``` Specify directories in which the linker will look for libraries.
--
+	- Note that this command is rarely necessary. Library locations returned by find_package() and find_library() are absolute paths. Pass these absolute library file paths directly to the target_link_libraries() command. CMake will ensure the linker finds them
+- `target_link_libraries` Link a target to given libraries.
+	- The named `<target>` must have been created in the current directory by a command such as `add_executable()` or `add_library()`.
+	
+	
 ## Examples
 
 ### 1 Example with a single file
@@ -121,7 +125,7 @@ add_executable(libtest libtest.cpp)
 target_link_libraries(libtest ${PROJECT_LINK_LIBS} )
 ```  
 
-### 6 Cpp11 configuration with CMake_
+### 6 Cpp11 configuration with CMake
 ```
 cmake_minimum_required(VERSION 2.8.9)
 project(testProject)
