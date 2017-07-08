@@ -1,4 +1,4 @@
-# GTest Basic Infos
+# Google Test Basic Guide
 
 ## Basics
 - Assertions and Expectations
@@ -43,6 +43,7 @@
   - **A NULL pointer and an empty string are considered different.**
 
 ## Writing Simple Tests
+- **Note that testnames MUST NOT contain underscores ("_")**
 ```cpp
 TEST(test_case_name, test_name) {
  ... test body ...
