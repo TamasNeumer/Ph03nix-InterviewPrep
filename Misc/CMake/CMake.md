@@ -1,7 +1,7 @@
 # CMake
 
 ## What is CMake?
-**CMake is an extensible, open-source system that manages the build process in an operating system and in a compiler-independent manner.**  
+**CMake is an extensible, open-source system that manages the build process in an operating system and in a compiler-independent manner.**
 Simple configuration files placed in each source directory (called CMakeLists.txt files) are used to generate standard build files (e.g., makefiles on Unix and projects/workspaces in Windows MSVC) which are used in the usual way.
 
 ## Install
@@ -28,8 +28,8 @@ Simple configuration files placed in each source directory (called CMakeLists.tx
 	- Note that this command is rarely necessary. Library locations returned by find_package() and find_library() are absolute paths. Pass these absolute library file paths directly to the target_link_libraries() command. CMake will ensure the linker finds them
 - `target_link_libraries` Link a target to given libraries.
 	- The named `<target>` must have been created in the current directory by a command such as `add_executable()` or `add_library()`.
-	
-	
+
+
 ## Examples
 
 ### 1 Example with a single file
@@ -108,7 +108,7 @@ Almost the same, except now we use ```add_library(testStudent STATIC ${SOURCES})
 
 ### 5 Example for using a static / shared library
 ```
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimif there's targets in B/CMum_required(VERSION 2.8.9)
 project (TestLibrary)
 
 #For the shared library:
@@ -123,7 +123,7 @@ include_directories(libinclude)
 
 add_executable(libtest libtest.cpp)
 target_link_libraries(libtest ${PROJECT_LINK_LIBS} )
-```  
+```
 
 ### 6 Cpp11 configuration with CMake
 ```
@@ -149,6 +149,6 @@ TODO:
 - https://cognitivewaves.wordpress.com/cmake-and-visual-studio/
 - https://cmake.org/cmake-tutorial/
 
-Sources:  
+Sources:
 - https://tuannguyen68.gitbooks.io/learning-cmake-a-beginner-s-guide/content/chap1/chap1.html
 - http://derekmolloy.ie/hello-world-introductions-to-cmake/
