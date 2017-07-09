@@ -634,3 +634,46 @@ For example:
   * `./foo_test --gtest_filter=*Null*:*Constructor*` Runs any test whose full name contains either `"Null"` or `"Constructor"`.
   * `./foo_test --gtest_filter=-*DeathTest.*` Runs all non-death tests.
   * `./foo_test --gtest_filter=FooTest.*-FooTest.Bar` Runs everything in test case `FooTest` except `FooTest.Bar`.
+
+### Disabling tests temporarily
+
+If you have a broken test that you cannot fix right away, you can add the
+`DISABLED_` prefix to its name. This will exclude it from execution. This is
+better than commenting out the code or using `#if 0`, as disabled tests are
+still compiled (and thus won't rot).
+
+If you need to disable all tests in a test case, you can either add `DISABLED_`
+to the front of the name of each test, or alternatively add it to the front of
+the test case name.
+
+For example, the following tests won't be run by Google Test, even though they
+will still be compiled:
+
+```cpp
+// Tests that Foo does Abc.
+TEST(FooTest, DISABLED_DoesAbc) { ... }
+
+class DISABLED_BarTest : public ::testing::Test { ... };
+
+// Tests that Bar does Xyz.
+TEST_F(DISABLED_BarTest, DoesXyz) { ... }
+```
+
+_Note:_ This feature should only be used for temporary pain-relief. You still
+have to fix the disabled tests at a later date. As a reminder, Google Test will
+print a banner warning you if a test program contains any disabled tests.
+
+## Generating XML Output
+
+To generate the XML report, set the `GTEST_OUTPUT` environment variable or the
+`--gtest_output` flag to the string `"xml:_path_to_output_file_"`, which will
+create the file at the given location. You can also just use the string
+`"xml"`, in which case the output can be found in the `test_detail.xml` file in
+the current directory.
+
+If you specify a directory (for example, `"xml:output/directory/"` on Linux or
+`"xml:output\directory\"` on Windows), Google Test will create the XML file in
+that directory, named after the test executable (e.g. `foo_test.xml` for test
+program `foo_test` or `foo_test.exe`). If the file already exists (perhaps left
+over from a previous run), Google Test will pick a different name (e.g.
+`foo_test_1.xml`) to avoid overwriting it.

@@ -18,3 +18,14 @@ Add the following lines to your CMakeLists:
 - Tools --> Nuget Package Manager --> Package Manager Console
 - ```Install-Package googletest.v140.windesktop.static.rt-dyn -Version 1.7.0.1```
 - (The official Nuget Package downloaded by the Nuget Package Manager didn't work out...)
+
+## CI and Testing using GoogleTest + Circle CI
+circle.yml:
+```
+dependencies:
+  pre:
+    - mkdir build; cd build; cmake ..; make;
+test:
+  override:
+    - cd build; ./sampleProject_test;
+```
