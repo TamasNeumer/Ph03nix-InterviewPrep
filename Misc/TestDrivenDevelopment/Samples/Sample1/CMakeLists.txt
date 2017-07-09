@@ -11,10 +11,9 @@ endif()
 #-------------------
 # Module source
 #-------------------
-set(PROJECT_LIB_NAME ${PROJECT_NAME_STR}_impl)
-include_directories(${PROJECT_SOURCE_DIR)
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/*.cpp)
-add_executable(${PROJECT_LIB_NAME} ${SRC_FILES})
+include_directories(${PROJECT_SOURCE_DIR}/Sample1Class)
+file(GLOB SOURCES Sample1Class/sample1.cc main.cc)
+add_executable(sample1Production ${SOURCES})
 
 #-------------------
 # Test
@@ -30,7 +29,7 @@ add_executable(${PROJECT_LIB_NAME} ${SRC_FILES})
 #
 
 #file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp
-                         ${PROJECT_SOURCE_DIR}/src/*.cpp)
+#                         ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 #add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
 #add_dependencies(${PROJECT_TEST_NAME} googletest)
