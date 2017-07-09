@@ -491,20 +491,16 @@ class FooTest : public ::testing::Test {
 };
 ```
 
-Next, associate a list of types with the test case, which will be
-repeated for each type in the list:
+Next, associate a list of types with the test case, which will be repeated for each type in the list:
 
 ```cpp
 typedef ::testing::Types<char, int, unsigned int> MyTypes;
 TYPED_TEST_CASE(FooTest, MyTypes);
 ```
 
-The `typedef` is necessary for the `TYPED_TEST_CASE` macro to parse
-correctly.  Otherwise the compiler will think that each comma in the
-type list introduces a new macro argument.
+The `typedef` is necessary for the `TYPED_TEST_CASE` macro to parse correctly.  Otherwise the compiler will think that each comma in the type list introduces a new macro argument.
 
-Then, use `TYPED_TEST()` instead of `TEST_F()` to define a typed test
-for this test case.  You can repeat this as many times as you want:
+Then, use `TYPED_TEST()` instead of `TEST_F()` to define a typed test for this test case.  You can repeat this as many times as you want:
 
 ```cpp
 TYPED_TEST(FooTest, DoesBlah) {
@@ -527,17 +523,114 @@ TYPED_TEST(FooTest, DoesBlah) {
 TYPED_TEST(FooTest, HasPropertyA) { ... }
 ```
 
-# Testing Private Code #
+## Testing Private Code
 
-If you change your software's internal implementation, your tests should not
-break as long as the change is not observable by users. Therefore, per the
-_black-box testing principle_, most of the time you should test your code
-through its public interfaces.
+If you change your software's internal implementation, your tests should not break as long as the change is not observable by users. Therefore, per the _black-box testing principle_, most of the time you should test your code through its public interfaces.
 
-If you still find yourself needing to test internal implementation code,
-consider if there's a better design that wouldn't require you to do so. If you
-absolutely have to test non-public interface code though, you can. There are
-two cases to consider:
+If you still find yourself needing to test internal implementation code, consider if there's a better design that wouldn't require you to do so. If you absolutely have to test non-public interface code though, you can. There are two cases to consider:
 
   * Static functions (_not_ the same as static member functions!) or unnamed namespaces, and
   * Private or protected class members
+
+### Static code
+However, a better approach is to move the private code into the foo::internal namespace, where foo is the namespace your project normally uses, and put the private declarations in a *-internal.h file. Your production .cc files and your tests are allowed to include this internal header, but your clients are not. This way, you can fully test your internal implementation without leaking it to your clients.
+
+### Private Class Members
+Another way to test private members is to refactor them into an implementation class, which is then declared in a `*-internal.h` file. Your clients aren't allowed to include this header but your tests can. Such is called the Pimpl (Private Implementation) idiom.
+
+Or, you can declare an individual test as a friend of your class by adding this line in the class body:
+
+
+```cpp
+FRIEND_TEST(TestCaseName, TestName);
+```
+
+For example,
+```cpp
+// foo.h
+#include "gtest/gtest_prod.h"
+
+// Defines FRIEND_TEST.
+class Foo {
+  ...
+ private:
+  FRIEND_TEST(FooTest, BarReturnsZeroOnNull);
+  int Bar(void* x);
+};
+
+// foo_test.cc
+...
+TEST(FooTest, BarReturnsZeroOnNull) {
+  Foo foo;
+  EXPECT_EQ(0, foo.Bar(NULL));
+  // Uses Foo's private member Bar().
+}
+```
+
+
+Pay special attention when your class is defined in a namespace, as you should
+define your test fixtures and tests in the same namespace if you want them to
+be friends of your class. For example, if the code to be tested looks like:
+
+```cpp
+namespace my_namespace {
+
+class Foo {
+  friend class FooTest;
+  FRIEND_TEST(FooTest, Bar);
+  FRIEND_TEST(FooTest, Baz);
+  ...
+  definition of the class Foo
+  ...
+};
+
+}  // namespace my_namespace
+```
+
+Your test code should be something like:
+
+```cpp
+namespace my_namespace {
+class FooTest : public ::testing::Test {
+ protected:
+  ...
+};
+
+TEST_F(FooTest, Bar) { ... }
+TEST_F(FooTest, Baz) { ... }
+
+}  // namespace my_namespace
+```
+
+## Running Tests - Advanced Version
+### Listing Tests
+
+Sometimes it is necessary to list the available tests in a program before running them so that a filter may be applied if needed. Including the flag `--gtest_list_tests` overrides all other flags and lists tests in the following format:
+```cpp
+TestCase1.
+  TestName1
+  TestName2
+TestCase2.
+  TestName
+```
+
+### Selecting Tests To Running
+
+The format of a filter is a '`:`'-separated list of wildcard patterns (called
+the positive patterns) optionally followed by a '`-`' and another
+'`:`'-separated pattern list (called the negative patterns). A test matches the
+filter if and only if it matches any of the positive patterns but does not
+match any of the negative patterns.
+
+A pattern may contain `'*'` (matches any string) or `'?'` (matches any single
+character). For convenience, the filter `'*-NegativePatterns'` can be also
+written as `'-NegativePatterns'`.
+
+For example:
+
+  * `./foo_test` Has no flag, and thus runs all its tests.
+  * `./foo_test --gtest_filter=*` Also runs everything, due to the single match-everything `*` value.
+  * `./foo_test --gtest_filter=FooTest.*` Runs everything in test case `FooTest`.
+  * `./foo_test --gtest_filter=*Null*:*Constructor*` Runs any test whose full name contains either `"Null"` or `"Constructor"`.
+  * `./foo_test --gtest_filter=-*DeathTest.*` Runs all non-death tests.
+  * `./foo_test --gtest_filter=FooTest.*-FooTest.Bar` Runs everything in test case `FooTest` except `FooTest.Bar`.
