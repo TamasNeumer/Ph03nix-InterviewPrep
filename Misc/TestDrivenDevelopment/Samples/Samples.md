@@ -12,3 +12,6 @@ Demonstrates `EXPECT_STREQ` that is used for comparing strings.
 - Tests:
   - Use of `Fixtures`. `virtual void SetUp() / TearDown()`
   - The testing of `Map` is interesting: The TEST_F only calls a MapTester (part of the Fixture class), that contains the actual assertations. (I'm however not sure if it was necessary...)
+
+## Sample 4
+Very simple counter example with a single test. Step back after Sample 3. :-(
