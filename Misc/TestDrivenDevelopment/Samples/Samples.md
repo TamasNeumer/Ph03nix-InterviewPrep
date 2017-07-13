@@ -15,3 +15,8 @@ Demonstrates `EXPECT_STREQ` that is used for comparing strings.
 
 ## Sample 4
 Very simple counter example with a single test. Step back after Sample 3. :-(
+
+## Sample 5
+- Introduces inheritance with regard to the fixture classes. Cool!
+- We use time limit for tests (5sec)
+- We start using the TestCase(...) << "Error message" operation, where we provide additional information.
