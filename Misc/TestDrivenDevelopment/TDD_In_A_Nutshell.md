@@ -46,7 +46,7 @@ demonstrate the summarized behavior for a single example.
 ## Behavior Driven Development (BDD)
 
 ### What is BDD?
-Behavior-driven development combines the general techniques and principles of TDD with ideas from domain-driven design and object-oriented analysis and design to provide software development and management teams with shared tools and a shared process to collaborate on software development. [[Wikipedia]](https://en.wikipedia.org/wiki/Behavior-driven_development)
+BDD focus is on capturing the required behavior in User Stories, and from these acceptance tests (ATs) are written. BDD isn’t about fancy ways to validate your results; it’s about **sharing expected behaviors** across **all** members of the team. (Not only tech-devs!)
 
 ### Behavior specifications
 Behavior-driven development specifies that tests of any unit of software should be specified in terms of the desired behavior of the unit.  
@@ -59,8 +59,63 @@ BDD specifies that business analysts and developers should collaborate in this a
       - what: effect the stakeholder wants the story to have
       - why: business value the stakeholder will derive from this effect
 
-- Acceptance criteria or scenarios
-    - a description of each specific case of the narrative. Such a scenario has the following structure:
-      - It starts by specifying the initial condition that is assumed to be true at the beginning of the scenario. This may consist of a single clause, or several.
-      - It then states which event triggers the start of the scenario.
-      - Finally, it states the expected outcome, in one or more clauses.
+  - Acceptance criteria or scenarios
+    - A description of each specific case of the narrative. Such a scenario has the following structure:
+      - **Given** It starts by specifying the initial condition that is assumed to be true at the beginning of the scenario. This may consist of a single clause, or several.
+      - **When** It then states which event triggers the start of the scenario.
+      - **Then** Finally, it states the expected outcome, in one or more clauses.
+```text
+Story: Returns go to stock
+
+As a store owner
+In order to keep track of stock
+I want to add items back to stock when they're returned.
+
+Scenario 1: Refunded items should be returned to stock
+Given that a customer previously bought a black sweater from me
+And I have three black sweaters in stock.
+When he returns the black sweater for a refund
+Then I should have four black sweaters in stock.
+
+Scenario 2: Replaced items should be returned to stock
+Given that a customer previously bought a blue garment from me
+And I have two blue garments in stock
+And three black garments in stock.
+When he returns the blue garment for a replacement in black
+Then I should have three blue garments in stock
+And three black garments in stock.
+
+```
+One of the key things BDD addresses is implementation detail in unit tests. A common problem with poor unit tests is they rely too much on how the tested function is implemented. This means if you update the function, even without changing the inputs and outputs, you must also update the test. This is a problem because it makes doing changes tedious.
+```js
+suite('Counter', function() {
+  test('tick increases count to 1', function() {
+    var counter = new Counter();
+
+    counter.tick();
+
+    assert.equal(counter.count, 1);
+  });
+});
+```
+ The test is completely dependent on the fact that the counter starts at 0. So in other words, this test is relying on two things:
+ - Counter starts at 0
+ - Ticking increments by 1  
+
+ The fact the counter starts at 0 is an implementation detail that’s irrelevant to the behavior of the tick() function. Therefore it should not have any bearing on the test. The only reason we wrote the test like this is because we were thinking of the implementation, not of the behavior.
+
+ BDD suggests to test behaviors, so instead of thinking of how the code is implemented, we spend a moment thinking of what the scenario is. Typically you phrase BDD tests in the form of “it should do something”. So when ticking a counter, it should increment count by one.
+
+ ```js
+ describe('Counter', function() {
+  it('should increase count by 1 after calling tick', function() {
+    var counter = new Counter();
+    var expectedCount = counter.count + 1;
+
+    counter.tick();
+
+    assert.equal(counter.count, expectedCount);
+  });
+}); 
+ ```
+[Article on BDD](https://codeutopia.net/blog/2015/03/01/unit-testing-tdd-and-bdd/)
