@@ -90,3 +90,53 @@ public class EmployeeFactoryImpl implements EmployeeFactory {
 - Common monadic forms: There are two very common reasons to pass a single argument into a function. You may be asking a question about that argument, as in boolean fileExists(“MyFile”). Or you may be operating on that argument, transforming it into something else and returning it.
 - Avoid boolean flag arguments. Flag arguments are ugly. Passing a boolean into a function is a truly terrible practice. It immediately complicates the signature of the method, loudly proclaiming that this function does more than one thing. It does one thing if the flag is true and another if the flag is false!
 - If you need more than 3 arguments try to put them into a struct and pass it as an argument. (e.g.: Instead of passing name, postalCode, streetName, houseNumber, pass an Address struct.)
+- Command Query Separation: Functions should either do something or answer something, but not both. --> change state of the object (void) or return some information (bool isEnabled()) but not both.
+- Avoid using error codes:
+```cpp
+if (deletePage(page) == E_OK) {
+  if (registry.deleteReference(page.name) == E_OK) {
+    if (configKeys.deleteKey(page.name.makeKey()) == E_OK){
+      logger.log("page deleted");
+    } else {
+      logger.log("configKey not deleted");
+    }
+  } else {
+    logger.log("deleteReference from registry failed");
+  }
+} else {
+  logger.log("delete failed");
+  return E_ERROR;
+}
+
+Insead:
+
+try {
+  deletePage(page);
+  registry.deleteReference(page.name);
+  configKeys.deleteKey(page.name.makeKey());
+}
+catch (Exception e) {
+  logger.log(e.getMessage());
+}
+```
+- One input, one output for functions (Dijkstra). Martin says that violating this is not a problem when making small functions. (People tend to lose the overview when working with long functions.)
+
+## Comments
+- The proper use of comments is to compensate for our failure to express ourself in code. Note that I used the word failure. I meant it. --> Less shitty comments, more quality code.
+```cpp
+// Check to see if the employee is eligible for full benefits
+if ((employee.flags & HOURLY_FLAG) &&
+(employee.age > 65))
+
+if (employee.isEligibleForFullBenefits())
+```
+- TODO Comments: It is sometimes reasonable to leave “To do” notes in the form of //TODO comments. It is not an excuse to leave bad code in the system. If you have extra time fix them!
+- Comments are usually less maintained than code, thus they often lie. --> Write less comment and write better code!
+- Don't comment on functions that are obvious. ("Constructor for XYZ", "Returns the day of the month")
+- Delete the commented out code.
+
+## Formatting
+- Declare the variables as close  as possible to their actual use.
+- Maximum number of chars in a line should be limited to 80 but max 120.
+- "Space" should be added to operations that have lower "rank" (+,-), but no space to operations that have higher rank ( * , / )
+- Use an auto-formatter. (clang / google style for C++)
