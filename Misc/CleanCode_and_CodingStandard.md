@@ -134,12 +134,9 @@ if (employee.isEligibleForFullBenefits())
 - Comments are usually less maintained than code, thus they often lie. --> Write less comment and write better code!
 - Don't comment on functions that are obvious. ("Constructor for XYZ", "Returns the day of the month")
 - Delete the commented out code.
-<<<<<<< HEAD
 
 ## Formatting
 - Declare the variables as close  as possible to their actual use.
 - Maximum number of chars in a line should be limited to 80 but max 120.
 - "Space" should be added to operations that have lower "rank" (+,-), but no space to operations that have higher rank ( * , / )
 - Use an auto-formatter. (clang / google style for C++)
-=======
->>>>>>> 372049e492f0960e093c3ddb6f4603b53de6ba3d
