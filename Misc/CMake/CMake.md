@@ -108,7 +108,7 @@ Almost the same, except now we use ```add_library(testStudent STATIC ${SOURCES})
 
 ### 5 Example for using a static / shared library
 ```
-cmake_minimif there's targets in B/CMum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 2.8.9)
 project (TestLibrary)
 
 #For the shared library:

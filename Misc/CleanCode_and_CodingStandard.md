@@ -140,3 +140,27 @@ if (employee.isEligibleForFullBenefits())
 - Maximum number of chars in a line should be limited to 80 but max 120.
 - "Space" should be added to operations that have lower "rank" (+,-), but no space to operations that have higher rank ( * , / )
 - Use an auto-formatter. (clang / google style for C++)
+
+## Objects and Datastructures
+- Keep your variables private, so that clients won't depend on it.
+- The goal of abstraction is **not** that you have getters and setters to your private data, but that you **abstract the essence** of your class.
+- Objects hide their members behind abstractions and provide functions that operate on this private data. Data structures provide public members and have no function.
+- Procedural code (code using data structures) makes it easy to add new functions without changing the existing data structures. OO code, on the other hand, makes it easy to add new classes without changing existing functions.
+- Procedural code makes it hard to add new data structures because all the functions must change. OO code makes it hard to add new functions because all the classes must change.
+- Law of Demeter ("One dot rule"): The method should not invoke methods on objects that are returned by any of the allowed functions. In other words, talk to friends, not to strangers.
+
+## Error handling
+- Instead of Error-Codes use exceptions, says Martin. However many C++ standards avoid using exceptions...
+- Don't return nullptr back, as the client has to check it every time!
+
+## Boundaries
+- Wrap the third party library.
+- Instead of learn by doing learn by testing --> write tests for the 3rd party library, and this also enbales you to see  if the 3rd party library breaks your code on a library update.
+- "It’s better to depend on something you control than on something you don’t control, lest it end up controlling you."
+
+## Classes
+- Avoid public members
+- Avoid class-names as "Processor", "Manager", "Super" etc., as these usually have already more than one responsibility.
+- Be able to summarize your class with the words: "If", "Adnd", "But", "or"
+- **Single responsibility principle**
+- Writing small calsses enables extension istead of modification.
