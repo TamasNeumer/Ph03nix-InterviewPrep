@@ -105,3 +105,16 @@ std::vector<int> v(std::begin(values), std::end(values)); // copy array to new v
   - The data stored is not required to be contiguous, so a `vector<bool>` can't be passed to a C API which expects a bool array.
   - `at()`, operator `[]`, and dereferencing of iterators do not return a reference to `bool`. Rather they return a proxy object that (imperfectly) simulates a reference to a `bool` by overloading its assignment operators.
 - In the traditional version (e.g. `std::vector<char> v{true,false};`) would have allocated two bytes of memory. [00000001] [00000000]. Meanwhile the optimized C++ version does this in 1 byte. [00000010]
+
+## C++ Array (std::array)
+- Initialization:
+  - Almost same as vectors, but type takes 2 args:
+    - `std::array<int, 3> a{ 0, 1, 2 };`
+    - `std::array<int, 3> a2(a);` // copy
+    - `std::array<int, 3> a = std::array<int, 3>{ 0, 1, 2 }; `// move
+- Accessing elements
+  - `[]` and `at(index)` --> same as vector
+  - `front() back()` --> same
+  - `data()` --> same
+- Important differences:
+  - Array's size is Fixed. --> Must be a compile time constant, or you can dynamically allocate it, but in this case you must **delete** it via `delete [] arrayName`. Once allocated cannot grow / shrink.
