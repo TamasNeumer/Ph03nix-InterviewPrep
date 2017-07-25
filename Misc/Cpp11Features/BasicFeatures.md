@@ -21,7 +21,6 @@ std::cout << typeid(decltype(i+1.0)).name() << std::endl;
 ```
 - Useful when working with templates --> define return type by `decltype`.
   - `decltype(x*y) DoSomething(X x, Y y){/*...*/}`
-<<<<<<< HEAD
 
 ## Variadic templates
 - The basic idea of a class template is that the template parameter gets substituted by a type at **compile** time
@@ -65,7 +64,7 @@ struct DataStructure<T, Rest ...>
 ```
 - To work through an example, suppose we have DataStructure<int, float> data and we need data.get<1>(). This invokes GetHelper<1, DataStructure<int, float>>::get(data) (the 2nd specialisation), which in turn invokes GetHelper<0, DataStructure<float>>::get(data.rest), which finally returns (by the 1st specialisation as now idx is 0) data.rest.first.
 - The whole stuff:
-````cpp
+```cpp
 #include <iostream>
 
 template<size_t idx, typename T>
@@ -123,5 +122,3 @@ int main()
     return 0;
 }
 ```
-=======
->>>>>>> 1227b374877ada43e33fe2b9812c5e2e5bfb61cf
