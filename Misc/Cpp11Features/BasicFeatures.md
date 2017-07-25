@@ -122,3 +122,8 @@ int main()
     return 0;
 }
 ```
+## Keywords
+- `default` --> Request the compiler to create copy/move constructors / assignments
+- `deleting` --> Requests teh compiler **not** to create the copy/move constructors / assignments
+- `override` --> Notation: The function overrides its base class function. Override keyword has to override (exactly) the base class definition.
+- `final` --> Method can't be overriden by child classes.
