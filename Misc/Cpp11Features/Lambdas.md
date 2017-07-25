@@ -51,4 +51,15 @@ std::vector<int> vec{ 1, 2, 3, 4, 5 };
 int threshold = 10;
 auto it = std::find_if(vec.begin(), vec.end(), [threshold](int value) { return value < threshold; });
 
+// Generic functor used for comparison
+struct islessthan
+{
+    islessthan(int threshold) : _threshold(threshold) {}
+    bool operator()(int value) const
+    {
+        return value < _threshold;
+    }
+private:
+    int _threshold;
+};
 ```
