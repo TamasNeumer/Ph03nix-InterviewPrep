@@ -21,6 +21,7 @@ std::cout << typeid(decltype(i+1.0)).name() << std::endl;
 ```
 - Useful when working with templates --> define return type by `decltype`.
   - `decltype(x*y) DoSomething(X x, Y y){/*...*/}`
+<<<<<<< HEAD
 
 ## Variadic templates
 - The basic idea of a class template is that the template parameter gets substituted by a type at **compile** time
@@ -122,3 +123,5 @@ int main()
     return 0;
 }
 ```
+=======
+>>>>>>> 1227b374877ada43e33fe2b9812c5e2e5bfb61cf
