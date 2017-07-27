@@ -22,7 +22,16 @@ Add the following lines to your CMakeLists:
 - ```Install-Package googletest.v140.windesktop.static.rt-dyn -Version 1.7.0.1```
 - (The official Nuget Package downloaded by the Nuget Package Manager didn't work out...)
 - Now you can add the includes to your file.
+- On visual studio you need to reference your "main" project to this TestProject. (References->Add Reference).
+- Then you can include your main project's files by "../MainProjName/Class.h"
 
+## Setting up main()
+```cpp
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+```
 ## CI and Testing using GoogleTest + Circle CI
 circle.yml:
 ```yml
