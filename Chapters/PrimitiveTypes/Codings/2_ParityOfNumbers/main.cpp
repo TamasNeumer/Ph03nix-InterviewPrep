@@ -34,7 +34,7 @@ short ParityOfNumberII(unsigned long number) {
 * (1101) is the same as of [(11) XOR (01)] --> This yields a 2 bit number (10).
 * The same process for (10) --> 1 XOR 0 --> Parity is 1! O(logN) complexity.
 */
-short PartyOfNumberClever(unsigned long number) {
+short PartyOfNumberClever(unsigned long long number) {
   number = (number >> 32) ^ number;
   number = (number >> 16) ^ number;
   number = (number >> 8) ^ number;
