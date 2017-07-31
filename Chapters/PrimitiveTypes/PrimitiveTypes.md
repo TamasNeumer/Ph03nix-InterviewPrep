@@ -64,3 +64,4 @@ Address  | Layout | Value
 # Coding challanges
 1. Count the number of "1s" in the binary representation of a number.
 2. Compute the party of a number. (Parity if the number of "1"s is odd, 0 otherwise.) --> Do better than the brute-force O(n)!
+3. Having a 64 bit integer, swap the bits "j" and "i".
