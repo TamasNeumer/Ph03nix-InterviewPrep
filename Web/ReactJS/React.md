@@ -1,5 +1,21 @@
 # React
 
+## What is ReactJS?
+
+ReactJS is an open-source, component based front end library responsible only for the view layer of the application. It is open sourced and maintained by Facebook.  
+React "reacts" to state changes in your components quickly and automatically to rerender the components in the HTML DOM by utilizing the virtual DOM. The virtual DOM is an in-memory representation of an actual DOM. By doing most of the processing inside the virtual DOM rather than directly in the browser's DOM, React can act quickly and only add, update, and remove components which have changed since the last render cycle occurred.  
+A React application is made up of multiple components, each responsible for outputting a small, reusable piece of HTML.
+
+React allows us to write components using a domain-specific language called JSX.
+
+## Installing React
+- `npm install --save react react-dom`
+```js
+var React = require('react');
+var ReactDOM = require('react-dom');
+ReactDOM.render(<App />, ...);
+```
+
 ## JSX Intro
 - A syntax extension to JavaScript.
 - JSX produces React "elements" that we will render into to the DOM.
@@ -15,6 +31,7 @@ const user = {
   lastName: 'Perez'
 };
 
+// React element
 const element = (
   <h1>
     Hello, {formatName(user)}!
@@ -68,16 +85,17 @@ ReactDOM.render(
   - Renders a React element into the DOM in the supplied container and returns a reference to the component (or returns null for stateless components).
   - If the React element was previously rendered into container, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.
 
-## Components and Props
+## Functional Components and Props
 - Components let you split the UI into independent, reusable pieces, and think about each piece in isolation.
-- Conceptually, components are like JavaScript functions. They accept arbitrary inputs (called "props") and return React elements describing what should appear on the screen.
+- Conceptually, functional components are like JavaScript functions. They accept arbitrary inputs (called "props") and return React elements describing what should appear on the screen.
 
 ```js
-function Welcome(props) {
+function WelcomeFunctionalComponent(props) {
   return <h1>Hello, {props.name}</h1>;
 }
 
-const element = <Welcome name="Sara" />;
+const element = <WelcomeComponent name="Sara" />;
+
 ReactDOM.render(
   element,
   document.getElementById('root')
@@ -117,19 +135,34 @@ ReactDOM.render(
 - Extract as many small components as you can to maximize the re-usability!
 - In case some props are not defined you can create "default props" by adding this function to the top of your component:
 ```js
-//...
-getDefaultProps: function() {
+getDefaultProps() {
   return {
-    name: 'React',
-    message: 'Default message'
+    name: 'Home',
+    position: 1
   };
 },
-//...
 ```
+Note that **Functional Components** are **stateless**. Stateless functional components are useful for dumb / presentational components. Presentational components focus on the UI rather than behavior, so it’s important to avoid using state in presentational components. Instead, state should be managed by higher-level “container” components, or via Flux/Redux/etc.
 
-## State and Lifecycle
-In the example below we access the class' state and add a date object to it.
-Note how we pass props to the base constructor. Class components should always call the base constructor with props.
+You only need a class component when you   
+1. need component state or
+2. need the lifecycle methods such as componentDidMount etc.
+
+## State and Lifecycle --> Class Component
+### Converting a function component to class component:  
+
+1. Create an ES6 class with the same name that extends React.Component.
+2. Add a single empty method to it called render().
+3. Move the body of the function into the render() method.
+4. Replace props with **this.props** in the render() body.
+5. Delete the remaining empty function declaration.
+
+### Adding local state to a class:
+1. Replace this.props with this.state in the render() method.
+2. Add a class constructor that assigns the initial this.state. (Create vars, as shown here or assign initial state to props.)
+
+In the example below we access the class' state and add a date object to it. Note how we pass props to the base constructor. Class components should **always call the base constructor with props**.
+
 ```js
 class Clock extends React.Component {
   constructor(props) {
@@ -147,26 +180,31 @@ class Clock extends React.Component {
   }
 }
 
+module.exports = Clock;
+
 ReactDOM.render(
   <Clock />,
   document.getElementById('root')
 );
 ```
+- In order to use a component in another file you have to call module.exports.
+
+### Adding lifecycle to a class
 **Mounting and Unmounting**
 - We want to set up a timer whenever the Clock is rendered to the DOM for the first time. This is called "mounting" in React.
-  -  `componentDidMount() {}`
-  -  `componentWillUnmount() {}`
+  -  `componentDidMount() {}` --> Runs after the component output has been rendered to the DOM.
 - We also want to clear that timer whenever the DOM produced by the Clock is removed. This is called "unmounting" in React.
+  -  `componentWillUnmount() {}` -->
 
-Adding class fields:
-- While this.props is set up by React itself and this.state has a special meaning, you are free to add additional fields to the class manually if you need to store something that is not used for the visual output. If you don't use something in render(), it shouldn't be in the state.
-
+**Adding class fields**
+- While this.props is set up by React itself and this.state has a special meaning, you are free to add additional fields to the class manually if you need to store something that is not used for the visual output. **If you don't use something in render(), it shouldn't be in the state**.
+- Don't use the React.createClass, as it is going to be obsolete soon!
 ```js
 class Clock extends React.Component {
   constructor(props) {
     super(props);
     this.state = {date: new Date()};
-  }
+  } // Look maa, no comma required in JSX based class defs.
 
   componentDidMount() {
     // setInterval(function(){ alert("Hello"); }, 3000);
@@ -196,6 +234,8 @@ class Clock extends React.Component {
   }
 }
 
+module.exports = Clock;
+
 ReactDOM.render(
   <Clock />,
   document.getElementById('root')
@@ -212,9 +252,13 @@ ReactDOM.render(
 5) If the Clock component is ever removed from the DOM, React calls the componentWillUnmount() lifecycle hook so the timer is stopped.
 
 **Important rules on state:**
-- Do Not Modify State Directly (`this.state.comment = 'Hello';`) --> Use setState
+- Do Not Modify State Directly (`this.state.comment = 'Hello';`) --> Use `setState()`
 - State Updates May Be Asynchronous:
+  - Because this.props and this.state may be updated asynchronously, you should not rely on their values for calculating the next state.
   - React may batch multiple setState() calls into a single update for performance.
+-  Neither parent nor child components can know if a certain component is stateful or stateless, and they shouldn't care whether it is defined as a function or a class.
+- This is why state is often called local or encapsulated. It is not accessible to any component other than the one that owns and sets it.
+
 ```js
 // Wrong
 this.setState({
@@ -227,6 +271,105 @@ this.setState((prevState, props) => ({
 }));
 ```
 
-State and stateless:  
-- Neither parent nor child components can know if a certain component is stateful or stateless, and they shouldn't care whether it is defined as a function or a class.
-- This is why state is often called local or encapsulated. It is not accessible to any component other than the one that owns and sets it.
+**The data flows down**  
+- If you imagine a component tree as a waterfall of props, each component's state is like an additional water source that joins it at an arbitrary point but also flows down.
+```js
+<FormattedDate date={this.state.date} />
+```
+
+### Nesting components
+#### Nesting using props
+- This is the style where A composes B and B provides an option for A to pass something to compose for a specific purpose. More structured composition.
+```js
+var CommentBox = reactCreateClass({
+  render: function() {
+    return (
+      <div className="commentBox">
+        <h1>Comments</h1>
+        <CommentList title={ListTitle}/> //prop
+        <CommentForm />
+      </div>
+    );
+  }
+});
+```
+
+#### Nesting using children
+- This is the style where A composes B and A tells B to compose C. More power to parent components.
+- Good if
+  - B should accept to compose something different than C in the future or somewhere else
+  - A should control the lifecycle of C
+```js
+var CommentBox = reactCreateClass({
+  render: function() {
+    return (
+      <div className="commentBox">
+        <h1>Comments</h1>
+        <CommentList>
+            <ListTitle/> // child
+        </CommentList>
+        <CommentForm />
+      </div>
+    );
+  }
+});
+```
+#### Nesting without children
+```js
+- This is the style where A composes B and B composes C.
+var CommentList = reactCreateClass({
+  render: function() {
+    return (
+      <div className="commentList">
+        <ListTitle/>
+        Hello, world! I am a CommentList.
+      </div>
+    );
+  }
+});
+```
+
+## The THIS keyword
+- With ES6 classes this is null by default, **properties of the class do not automatically bind to the React class (component) instance.** (= ES6 React.Component doesn't auto bind methods to itself.))
+```js
+var React = require('react');
+var ReactDOM = require('react-dom');
+
+
+class MyComponent extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    handleClick() {
+        console.log(this); // null!!!
+    }
+    render() {
+        return (
+            <div onClick={this.handleClick}>Test</div>
+        );
+    }
+}
+
+ReactDOM.render(
+  <MyComponent/>,
+    document.getElementById('app'));
+```
+There are a few ways we could bind the right this context.
+#### Inline binding:
+```js
+<div onClick={this.handleClick.bind(this)}></div>
+```
+#### Class constructor binding
+(Avoiding inline repetitions) Considered by many as a better approach that avoids touching JSX at all.
+```js
+constructor(props) {
+  super(props);
+  this.handleClick = this.handleClick.bind(this);
+}
+```
+#### ES6 Anyonymous function calls (no binding required)
+```js
+handleClick = () => {
+    console.log(this); // the React Component instance
+  }
+```
