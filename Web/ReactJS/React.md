@@ -133,15 +133,7 @@ ReactDOM.render(
 );
 ```
 - Extract as many small components as you can to maximize the re-usability!
-- In case some props are not defined you can create "default props" by adding this function to the top of your component:
-```js
-getDefaultProps() {
-  return {
-    name: 'Home',
-    position: 1
-  };
-},
-```
+
 Note that **Functional Components** are **stateless**. Stateless functional components are useful for dumb / presentational components. Presentational components focus on the UI rather than behavior, so it’s important to avoid using state in presentational components. Instead, state should be managed by higher-level “container” components, or via Flux/Redux/etc.
 
 You only need a class component when you   
@@ -189,12 +181,117 @@ ReactDOM.render(
 ```
 - In order to use a component in another file you have to call module.exports.
 
+**getDefaultProps() and getInitialState() -> Don't use them!**  
+If the component is defined using ES6 class syntax, the functions getDefaultProps() and getInitialState() cannot be used.  
+Instead, we declare our defaultProps as a static property on the class, and declare the state shape and initial state in the constructor of our class. These are both set on the instance of the class at construction time, before any other React lifecycle function is called.
+
+Replacing `getDefaultProps()`
+```js
+// ES6
+class MyClass extends React.Component {...}
+MyClass.defaultProps = {
+    randomObject: {},
+    ...
+}
+
+// ES7
+class MyClass extends React.Component {  
+    static defaultProps = {
+        randomObject: {},
+        ...
+    };
+}
+```
+
+Replacing `getInitialState()`
+```js
+constructor(props){
+  super(props);
+
+  this.state = {
+    count: this.props.initialCount
+  };
+}
+```
+
+**Forcing proptypes**  
+```js
+//ES6
+MyClass.propTypes = {
+    randomObject: React.PropTypes.object,
+    callback: React.PropTypes.func.isRequired,
+    ...
+};
+
+//ES7
+class MyClass extends React.Component {  
+     static propTypes = {
+        randomObject: React.PropTypes.object,
+        callback: React.PropTypes.func.isRequired,
+        ...
+    };
+}
+```
+
 ### Adding lifecycle to a class
-**Mounting and Unmounting**
-- We want to set up a timer whenever the Clock is rendered to the DOM for the first time. This is called "mounting" in React.
-  -  `componentDidMount() {}` --> Runs after the component output has been rendered to the DOM.
-- We also want to clear that timer whenever the DOM produced by the Clock is removed. This is called "unmounting" in React.
-  -  `componentWillUnmount() {}` -->
+**Mounting**  
+These methods are called when an instance of a component is being created and inserted into the DOM:
+- `constructor()`
+  - Call `super(props)`, initialize state, bind methods
+- `componentWillMount()`
+    - Invoked immediately before mounting occurs.
+    - This is the only lifecycle hook called on server rendering. Generally, **we recommend using the constructor() instead**.
+- `render()`
+  - When called, it should examine this.props and this.state and return a single React element. This element can be either a representation of a native DOM component, such as <div />, or another composite component that you've defined yourself.
+  - render() will not be invoked if shouldComponentUpdate() returns false.
+-  `componentDidMount() {}`
+    - Runs after the component output has been rendered to the DOM.
+    - Initialization that requires DOM nodes should go here.
+    - Preparing timers, Fetching data, Adding event listeners, Manipulating DOM elements.
+    - Setting state will cause re-rendering!  
+
+**Updating**
+- `componentWillReceiveProps(nextProps)`
+  - This is the first function called on properties changes. Invoked before a mounted component receives new props
+  - When component's properties change, React will call this function with the new properties. You can access to the old props with this.props and to the new props with nextProps.
+- `shouldComponentUpdate(nextProps, nextState)`
+  - This is the second function called on properties changes and the first on state changes.
+  - By default, if another component / your component change a property / a state of your component, React will render a new version of your component. In this case, this function always return true. You can override this function and choose more precisely if your component must update or not. --> (Mostly used for optimization.)
+  - Use shouldComponentUpdate() to let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
+- `componentDidUpdate()`
+  - Invoked immediately after updating occurs. This method is not called for the initial render.
+  - Use this as an opportunity to operate on the DOM when the component has been updated.
+- `forceUpdate()`
+  - By default, when your component's state or props change, your component will re-render. If your render() method depends on some other data, you can tell React that the component needs re-rendering by calling forceUpdate().
+  - Normally you should **try to avoid all uses of forceUpdate()** and only read from this.props and this.state in render().
+**Unmounting**
+-  `componentWillUnmount() {}`
+    - This method is called before a component is unmounted from the DOM.
+    - Removing event listeners, Clearing timers, Stopping sockets, Cleaning up redux states.
+
+```js
+componentDidMount() {
+   document.addEventListener("click", this.closeMenu);
+ }
+
+componentWillUnmount() {
+    document.removeEventListener("click", this.closeMenu);
+  }
+
+componentWillReceiveProps(nextProps){
+  if (nextProps.initialCount && nextProps.initialCount > this.state.count){
+    this.setState({
+      count : nextProps.initialCount
+    });
+  }
+}
+
+componentShouldUpdate(nextProps, nextState){
+  return this.props.name !== nextProps.name ||
+    this.state.count !== nextState.count;
+}
+
+```
 
 **Adding class fields**
 - While this.props is set up by React itself and this.state has a special meaning, you are free to add additional fields to the class manually if you need to store something that is not used for the visual output. **If you don't use something in render(), it shouldn't be in the state**.
