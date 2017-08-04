@@ -295,3 +295,153 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 ```
+Essentially, the app context is created before the request comes in and is destroyed (torn down) whenever the request finishes. A teardown can happen because of two reasons: either everything went well (the error parameter will be None) or an exception happened, in which case the error is passed to the teardown function.
+
+## Step 5: Creating the database
+`sqlite3 /tmp/flaskr.db < schema.sql`
+
+To do this, you can create a function and hook it into a flask command that initializes the database. For now just take a look at the code segment below. A good place to add this function, and command, is just below the connect_db function in flaskr.py:
+```py
+def init_db():
+    db = get_db()
+    with app.open_resource('schema.sql', mode='r') as f:
+        db.cursor().executescript(f.read())
+    db.commit()
+
+@app.cli.command('initdb')
+def initdb_command():
+    """Initializes the database."""
+    init_db()
+    print('Initialized the database.')
+```
+- The app.cli.command() decorator registers a new command with the flask script.
+- Go to the "first" flaskr folder and execute the following commands:
+  - `export FLASK_APP=flaskr/flaskr.py`
+  - `flask initdb`
+
+## Step 6: The View Functions
+```py
+@app.route('/')
+def show_entries():
+    db = get_db()
+    cur = db.execute('select title, text from entries order by id desc')
+    entries = cur.fetchall()
+    return render_template('show_entries.html', entries=entries)
+
+@app.route('/add', methods=['POST'])
+def add_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    db = get_db()
+    db.execute('insert into entries (title, text) values (?, ?)',
+                 [request.form['title'], request.form['text']])
+    db.commit()
+    flash('New entry was successfully posted')
+    return redirect(url_for('show_entries'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['username'] != app.config['USERNAME']:
+            error = 'Invalid username'
+        elif request.form['password'] != app.config['PASSWORD']:
+            error = 'Invalid password'
+        else:
+            session['logged_in'] = True
+            flash('You were logged in')
+            return redirect(url_for('show_entries'))
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('You were logged out')
+    return redirect(url_for('show_entries'))
+```
+## Step 7: The Templates
+Put the followings in the /templates folder
+#### layout.html
+```html
+<!doctype html>
+<title>Flaskr</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<div class=page>
+  <h1>Flaskr</h1>
+  <div class=metanav>
+  {% if not session.logged_in %}
+    <a href="{{ url_for('login') }}">log in</a>
+  {% else %}
+    <a href="{{ url_for('logout') }}">log out</a>
+  {% endif %}
+  </div>
+  {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+  {% endfor %}
+  {% block body %}{% endblock %}
+</div>
+```
+#### show_entries.html
+```html
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+    <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
+      <dl>
+        <dt>Title:
+        <dd><input type=text size=30 name=title>
+        <dt>Text:
+        <dd><textarea name=text rows=5 cols=40></textarea>
+        <dd><input type=submit value=Share>
+      </dl>
+    </form>
+  {% endif %}
+  <ul class=entries>
+  {% for entry in entries %}
+    <li><h2>{{ entry.title }}</h2>{{ entry.text|safe }}
+  {% else %}
+    <li><em>Unbelievable.  No entries here so far</em>
+  {% endfor %}
+  </ul>
+{% endblock %}
+```
+#### login.html
+```html
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Login</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  <form action="{{ url_for('login') }}" method=post>
+    <dl>
+      <dt>Username:
+      <dd><input type=text name=username>
+      <dt>Password:
+      <dd><input type=password name=password>
+      <dd><input type=submit value=Login>
+    </dl>
+  </form>
+{% endblock %}
+```
+
+## Step 8: Adding Styling
+Add the following to the /static/style.css
+```css
+body            { font-family: sans-serif; background: #eee; }
+a, h1, h2       { color: #377ba8; }
+h1, h2          { font-family: 'Georgia', serif; margin: 0; }
+h1              { border-bottom: 2px solid #eee; }
+h2              { font-size: 1.2em; }
+
+.page           { margin: 2em auto; width: 35em; border: 5px solid #ccc;
+                  padding: 0.8em; background: white; }
+.entries        { list-style: none; margin: 0; padding: 0; }
+.entries li     { margin: 0.8em 1.2em; }
+.entries li h2  { margin-left: -1em; }
+.add-entry      { font-size: 0.9em; border-bottom: 1px solid #ccc; }
+.add-entry dl   { font-weight: bold; }
+.metanav        { text-align: right; font-size: 0.8em; padding: 0.3em;
+                  margin-bottom: 1em; background: #fafafa; }
+.flash          { background: #cee5F5; padding: 0.5em;
+                  border: 1px solid #aacbe2; }
+.error          { background: #f0d6d6; padding: 0.5em; }
+```
