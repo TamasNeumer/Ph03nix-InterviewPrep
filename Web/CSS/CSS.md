@@ -98,6 +98,15 @@
 - a HEX value - like "#ff0000"
   - RGB values can also be specified using hexadecimal color values in the form: #RRGGBB, where RR (red), GG (green) and BB (blue) are hexadecimal values between 00 and FF (same as decimal 0-255).
 
+## Background:
+- `background-color: green;` --> specify basic bg color
+- `background-image: url("paper.gif");` --> specify bg image
+- `background-repeat: repeat-x;` --> Add repeat only in a specific direction
+- `background-position: right top;` --> specify position
+- `background-attachment: fixed;` --> stays there while scrolling
+
+## Border
+
 ## Questions:
 - CSS Syntax
   - What does CSS stand for?
