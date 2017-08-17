@@ -64,11 +64,12 @@
     ```html
     <head>
     <link rel="stylesheet" type="text/css" href="mystyle.css">
+    @import url('/css/styles.css'); /*other style*/
     </head>
     ```
   - **Internal style sheet**
     - An internal style sheet may be used if one single page has a unique style. (= no reuse)
-    - Internal styles are defined within the <style> element, inside the <head> section of an HTML page:
+    - Internal styles are defined within the `<style>` element, inside the `<head>` section of an HTML page:
     ```html
     <head>
     <style>

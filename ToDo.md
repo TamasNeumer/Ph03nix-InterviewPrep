@@ -7,9 +7,9 @@ Pflichtaufgaben:
 
 Wanna Do:
 0. Sport
-  - Street workout
-  - Swimming
-1. Web developmen:
+    - Street workout
+    - Swimming
+1. Web development:
     - CSS, HTML, JavaScript, Python
     - Frameworks:
       - CSS:
