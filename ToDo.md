@@ -28,3 +28,11 @@ Wanna Do:
 3. NLP Vertiefen
     - Primer into NLP lesen
     - Standford course
+
+
+Read and Learn:
+- https://wekan.github.io/ / https://github.com/wekan/wekan
+- https://wireddots.com/
+
+Useful:
+- http://ionicons.com/
