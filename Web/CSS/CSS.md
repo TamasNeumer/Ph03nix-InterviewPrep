@@ -71,6 +71,15 @@
       }
       ```
     - Examples: `:disabled`, `:hover`, `:link` (link that has not been visited yet) and there are a ton more...
+    - The `:in-range` CSS pseudo-class matches when an element has its value attribute inside the specified range limitations for this element. It allows the page to give a feedback that the value currently defined using the element is inside the range limits.
+      ```css
+      input:in-range {
+          border: 1px solid blue;
+      }
+
+      <input type="number" min="10" max="20" value="15">
+      <p>The border for this value will be blue</p>
+      ```
   - **Pseudo elements**
     - `::pseudo-element`
     - Pseudo-elements are added to selectors but instead of describing a special state, they allow you to style certain parts of a document.
@@ -164,16 +173,63 @@
   - RGB color values can be specified using this formula: rgb(red, green, blue).
 - a HEX value - like "#ff0000"
   - RGB values can also be specified using hexadecimal color values in the form: #RRGGBB, where RR (red), GG (green) and BB (blue) are hexadecimal values between 00 and FF (same as decimal 0-255).
+  - If both "RR"/"GG"/"BB" values are the same you can shorten the hex code into `#RGB`
+- RGBA() notation
+  - `color: rgba(255, 0, 0, 1);` --> Adds opacity (a number from 0 - 1, where 0.0 is fully transparent and 1.0 is fully opaque)
+- HLS() notation
+  - `color: hsl(<hue>, <saturation>%, <lightness>%);`
+- HLSA() same as with RGBA()
+
+## Background
+- `background-color: red;` --> adding simple background-color
+- `background-image: url(partiallytransparentimage.png);` --> adding bg image
+- Background gradients:
+  - `linear-gradient() repeating-linear-gradient() radial-gradient() repeating-radial-gradient()`
+  - `background: linear-gradient( <direction>?, <color-stop-1>, <color-stop-2>, ...);`
+    - `<direction>` --> Could be an argument like to top, to bottom, to right or to left; or an angle as 0deg, 90deg... . The angle starts from to top and rotates clockwise. Can be specified in deg, grad, rad, or turn. If omitted, the gradient flows from top to bottom
+    - `<color-stop-list>` --> List of colors, optionally followed each one by a percentage or length to display it at. For example, yellow 10%, rgba(0,0,0,.5) 40px, #fff 100%...
+  - `background-repeat: repeat-x;` --> Repeating image
+  - `background-position: right top;` --> position
+  - `background-attachment: fixed;` --> No scrolling with page (stays fixed)
+  - `background: #ffffff url("img_tree.png") no-repeat right top;` --> **The background property can be used to set one or more background related properties:**
+
+## Border
+- `border-style:` --> Provides numerous attributes (solid, dotted etc.)
+- `border-width`--> (in px)
+- `border-color`
+- Individual side styles:
+  - `border-top-style, border-right-style`, etc.
+- `border: (width, style, color)` --> border shorthand
+  - `p { border: 10px solid green;}`
+- `border-radius`
+  - Every corner of an element can have up to two values, for the vertical and horizontal radius of that corner (for a maximum of 8 values).
+- The `border-collapse` property applies only to tables (and elements displayed as display: table or inline-table) and sets whether the table borders are collapsed into a single border or detached as in standard HTML.
+
+## Margins
+- The CSS margin properties are used to generate space around elements.
+- The margin properties set the size of the white space **outside** the border.
+- ` margin: 100px 150px 100px 80px;` --> Margin shorthand property (top, right, bottom, left)
+- You can set the margin property to `auto` to horizontally center the element within its container.
+- `inherit` --> lets the margin be inherited from the parent element.
+- **Margin collapse**
+  - When two margins are touching each other vertically, they are collapsed. When two margins touch horizontally, they do not collapse.
+  - In this example the h1 element has a bottom margin of 50px and the h2 element has a top margin of 20px. Then, the vertical margin between h1 and h2 should have been 70px (50px + 20px). However, due to margin collapse, the actual margin ends up being 50px. --> always takes the greater value of the two.
+
+## Paddings
+- The CSS padding properties are used to generate space **around** content. The padding clears an area around the content (**inside the border**) of an element.
+-Syntax similar to margin.
+
+
 
 ## Questions:
 - CSS Syntax
   - What does CSS stand for?
   - Describe the most basic formatting syntax in CSS.
-  - Describe the 3 kind of selectors and give an example.
+  - Element, ID, class, Pseudo class, combination of these, attribute selectors. Explain the selectors.
   - How do you comment out in CSS?
 - Adding CSS to HTML
   - What are the 3 ways of adding CSS to HTML? Give an exact example with code!
   - What does the "cascading" mean when having multiple stylesheets defined at multiple layers?
   - Which one is the dominant stylesheet if there are multiple styles defined for the same item?
 - Colors
-  - What are the three ways to specify color in CSS?
+  - What are the ways to specify color in CSS?
