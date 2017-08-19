@@ -47,14 +47,67 @@
     color: red;
     }
     ```
+  - **Combining selectors**
     - You can add multiple classes to an item by listing the classes delimited by space: `<p class="center large">This paragraph refers to two classes.</p>`
     - You can group selectors as:
+      ```css
+      /*This is valid for h1, h2 and p*/
+      h1, h2, p {
+        text-align: center;
+        color: red;
+      }
+
+      /*All elements with class blue AND red.*/
+      .blue.red {
+        color: blue;
+      }
+      ```
+  - **Pseudo class**
+    - `:pseudo-class`
+    - Pseudo-classes are keywords which allow selection based on information that lies outside of the document tree or that cannot be expressed by other selectors or combinators. (Such as state etc.) Examples include whether or not a link has been followed (`:visited`), the mouse is over an element (`:hover`), a checkbox is checked (`:checked`), etc.
+      ```css
+      selector:pseudo-class {
+      property: value;
+      }
+      ```
+    - Examples: `:disabled`, `:hover`, `:link` (link that has not been visited yet) and there are a ton more...
+  - **Pseudo elements**
+    - `::pseudo-element`
+    - Pseudo-elements are added to selectors but instead of describing a special state, they allow you to style certain parts of a document.
     ```css
-    h1, h2, p {
-      text-align: center;
+    div::after {
+      content: 'after';
       color: red;
+      border: 1px solid red;
+    }
+
+    div {
+      color: black;
+      border: 1px solid black;
+      padding: 1px;
+    }
+
+    div::before {
+      content: 'before';
+      color: green;
+      border: 1px solid green;
     }
     ```
+  - **Attribute selector**
+    - `[attr]	--> <div attr>` --> Matches element with attr
+    - `[attr='val'] --> <div attr="val">` --> Where attribute attr has value val
+    - `[attr~='val']	<div attr="val val2 val3">` --> Where val appears in the whitespace-separated list of attr
+    - `[attr^='val']	<div attr="val1 val2">` --> Where attr's value begins with val
+    - `[attr$='val']	<div attr="sth aval">` --> Where the attr's value ends with val
+    - `[attr*='val']	<div attr="somevalhere">` --> Where attr contains val anywhere
+    - `[attr|='val']	<div attr="val-sth etc">` --> Where attr's value is exactly val, or starts with val and immediately followed by - (U+002D)
+    - `[attr='val' i]	<div attr="val">` --> Where attr has value val, ignoring val's letter casing.
+    - `:lang(en)` --> Element that matches :lang declaration, for example `<span lang="en">`
+  - **Combinators**
+    - `div > p` --> (direct) Child selector
+    - `div span` --> Descendant selector (all span, desc. of div)
+    - `a ~ <span>` --> General sibling selector (`<span>`s that are siblings after an `<a>`)
+    - `a + span`	Adjacent Sibling selector (all `<span>`s that are immediately after an `<a>`)
 - Comments, using block comments: `/* Comment */`
 
 ## Inserting CSS
@@ -64,9 +117,11 @@
     ```html
     <head>
     <link rel="stylesheet" type="text/css" href="mystyle.css">
-    @import url('/css/styles.css'); /*other style*/
+    @import url('/css/styles.css'); <!-- using @ import -->
+    @import 'https://fonts.googleapis.com/css?family=Lato'; <!-- using external url for fonts -->
     </head>
     ```
+    - When someone first visits your website, their browser downloads the HTML of the current page plus the linked CSS file. Then when they navigate to another page, their browser only needs to download the HTML of that page; the CSS file is cached, so it does not need to be downloaded again. Since browsers cache the external stylesheet, your pages load faster.
   - **Internal style sheet**
     - An internal style sheet may be used if one single page has a unique style. (= no reuse)
     - Internal styles are defined within the `<style>` element, inside the `<head>` section of an HTML page:
@@ -91,6 +146,17 @@
     1. Inline style (inside an HTML element)
     2. External and internal style sheets (in the head section)
     3. Browser default
+- You can also change the stylsheet using pure JavaScript or jQuery:
+    ```js
+    var el = document.getElementById("element");
+    el.style.opacity = 0.5;
+    el.style.fontFamily = 'sans-serif';
+
+    $('#element').css('margin', '5px');
+
+    var el2 = document.querySelector("#example");
+    /*...*/
+    ```
 
 ## Colors
 - a valid color name - like "red"
