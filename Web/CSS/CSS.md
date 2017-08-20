@@ -187,7 +187,7 @@
 ## Background
 - `background-color: red;` --> adding simple background-color
 - `background-image: url(partiallytransparentimage.png);` --> adding bg image
-- Background gradients:
+- Background gradients (CSS3):
   - `linear-gradient() repeating-linear-gradient() radial-gradient() repeating-radial-gradient()`
   - `background: linear-gradient( <direction>?, <color-stop-1>, <color-stop-2>, ...);`
     - `<direction>` --> Could be an argument like to top, to bottom, to right or to left; or an angle as 0deg, 90deg... . The angle starts from to top and rotates clockwise. Can be specified in deg, grad, rad, or turn. If omitted, the gradient flows from top to bottom
@@ -277,6 +277,12 @@
 - `line-height` property is used to specify the space between lines
 - `word-spacing` property is used to specify the space between the words in a text.
 - `text-shadow `property adds shadow to text.
+- `text-overflow` property specifies how overflowed content that is not displayed should be signaled to the user.
+  - `overflow: hidden; text-overflow: clip;`
+- `word-wrap` property allows long words to be able to be broken and wrap onto the next line.
+    - `word-wrap: break-word;`
+- `word-break` property specifies line breaking rules
+  - `word-break: keep-all; word-break: break-all;`
 
 ## Font
 - In CSS, there are two types of font family names:
@@ -432,3 +438,176 @@
         filter: alpha(opacity=100); /* For IE8 and earlier */
     }
     ```
+# CSS 3
+CSS3 is the latest standard for CSS. CSS3 is completely backwards-compatible with earlier versions of CSS.
+## Rounded Corners
+- `border-radius` property, you can give any element "rounded corners".
+  - `border-radius: 25px;`
+  - `border-radius: 15px 50px 30px 5px;`
+  - `border-bottom-left-radius: 25px;`
+## Border Image
+- `border-image` property allows you to specify an image to be used instead of the normal border around an element.
+- The property has three parts:
+  - The image to use as the border
+  - Where to slice the image
+  - Define whether the middle sections should be repeated or stretched.
+- The border-image property takes the image and slices it into nine sections, like a tic-tac-toe board. It then places the corners at the corners, and the middle sections are repeated or stretched as you specify.
+  ```css
+  #borderimg {
+      border: 10px solid transparent;
+      padding: 15px;
+      -webkit-border-image: url(border.png) 30 stretch; /* Safari 3.1-5 */
+      -o-border-image: url(border.png) 30 stretch; /* Opera 11-12.1 */
+      border-image: url(border.png) 30 stretch;
+      /* OR:  border-image: url(border.png) 20% round; */
+  }
+  ```
+
+## Background
+- CSS3 allows you to add multiple background images for an element, through the `background-image` property. The different background images are separated by commas, and the images are stacked on top of each other, where the first image is closest to the viewer.
+  ```css
+  #example1 {
+      background-image: url(img_flwr.gif), url(paper.gif);
+      background-position: right bottom, left top;
+      background-repeat: no-repeat, repeat;
+  }
+  ```
+- `background-size` property allows you to specify the size of background images.
+  - The `contain` keyword scales the background image to be as large as possible (but both its width and its height must fit inside the content area). As such, depending on the proportions of the background image and the background positioning area, there may be some areas of the background which are not covered by the background image.
+  - The `cover` keyword scales the background image so that the content area is completely covered by the background image (both its width and height are equal to or exceed the content area). As such, some parts of the background image may not be visible in the background positioning area.
+  - The background-size property also accepts multiple values for background size (using a comma-separated list), when working with multiple backgrounds.
+- `background-origin` property specifies where the background image is positioned. 3 possible values:
+  - `border-box` - the background image starts from the upper left corner of the border
+  - `padding-box` - (default) the background image starts from the upper left corner of the padding edge
+  - `content-box` - the background image starts from the upper left corner of the content
+
+## Color
+- In addition, CSS3 also introduces:
+  - RGBA colors
+  - HSL colors
+  - HSLA colors
+  - opacity
+
+## Shadow
+- `box-shadow` property applies shadow to elements.
+  - horizontal, vertical (px)
+  - blur (px)
+  - color
+  - Adding 2 shadows, second with 0px 0px: `text-shadow: 2px 2px 5px green, 0 0 10px red;`
+    ```css
+    #boxshadow {
+        position: relative;
+        box-shadow: 1px 2px 4px rgba(0, 0, 0, .5);
+        padding: 10px;
+        background: white;
+    }
+
+    #boxshadow img {
+        width: 100%;
+        border: 1px solid #8a4419;
+        border-style: inset;
+    }
+
+    #boxshadow::after {
+        content: '';
+        position: absolute;
+        z-index: -1; /* hide shadow behind image */
+        box-shadow: 0 15px 20px rgba(0, 0, 0, 0.3);
+        width: 70%;
+        left: 15%; /* one half of the remaining 30% */
+        height: 100px;
+        bottom: 0;
+    }
+    ```
+## Transform
+CSS3 transforms allow you to translate, rotate, scale, and skew elements. A transformation is an effect that lets an element change shape, size and position. CSS3 supports 2D and 3D transformations.
+- **2D Transformation**
+  - translate()
+    - `transform: translate(50px, 100px);`
+  - rotate()
+    - `transform: rotate(20deg);`
+  - scale()
+    - `transform: scale(2, 3);`
+  - skewX()
+    - `transform: skewX(20deg);`
+  - skewY()
+    - transform: skew(20deg, 30deg); // Skwing X and Y
+  - matrix()
+    - The matrix() method combines all the 2D transform methods into one.
+    - The parameters are as follow: `matrix(scaleX(),skewY(),skewX(),scaleY(),translateX(),translateY())`
+- **3D Transformation**
+  - rotateZ, rotateY, rotateX
+
+## Transition
+- To create a transition effect, you must specify two things:
+  - the CSS property you want to add an effect to
+  - the duration of the effect
+    - `transition: width 2s;`
+    ```css
+    div {
+        width: 100px;
+        height: 100px;
+        background: red;
+        -webkit-transition: width 2s; /* For Safari 3.1 to 6.0 */
+        transition: width 2s;
+    }
+
+    div:hover {
+        width: 300px;
+    }
+    ```
+  - `transition-timing-function` property specifies the speed curve of the transition effect.
+    - `ease` - specifies a transition effect with a slow start, then fast, then end slowly (this is default)
+    - `linear` - specifies a transition effect with the same speed from start to end
+    - `ease-in` - specifies a transition effect with a slow start
+    - `ease-out` - specifies a transition effect with a slow end
+    - `ease-in-out` - specifies a transition effect with a slow start and end
+    - `cubic-bezier(n,n,n,n)` - lets you define your own values in a cubic-bezier function
+  - `transition-delay` property specifies a delay (in seconds) for the transition effect.
+
+## Animation
+- An animation lets an element gradually change from one style to another. You can change as many CSS properties you want, as many times you want. To use CSS3 animation, you must first specify some keyframes for the animation. Keyframes hold what styles the element will have at certain times.
+- When you specify CSS styles inside the `@keyframes` rule, the animation will gradually change from the current style to the new style at certain times. To get an animation to work, you must bind the animation to an element. The following example binds the "example" animation to the <div> element. The animation will last for 4 seconds, and it will gradually change the background-color of the <div> element from "red" to "yellow":
+  ```css
+  /* The animation code */
+  @keyframes example {
+      from {background-color: red;}
+      to {background-color: yellow;}
+  }
+
+  /*other example*/
+  @keyframes example {
+    0%   {background-color: red;}
+    25%  {background-color: yellow;}
+    50%  {background-color: blue;}
+    100% {background-color: green;}
+  }
+
+  /* The element to apply the animation to */
+  div {
+      width: 100px;
+      height: 100px;
+      background-color: red;
+      animation-name: example;
+      animation-duration: 4s;
+  }
+  ```
+  - `animation-duration` property is not specified, the animation will have no effect, because the default value is 0.
+  - `animation-delay` property specifies a delay for the start of an animation.
+  - `animation-iteration-count` property specifies the number of times an animation should run
+  - `animation-direction` property is used to let an animation run in reverse direction or alternate cycles.
+  - `animation-timing-function` property specifies the speed curve of the animation.
+  - Animation shorthand property:
+  ```css
+  div {
+    animation-name: example;
+    animation-duration: 5s;
+    animation-timing-function: linear;
+    animation-delay: 2s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+  div {
+    animation: example 5s linear 2s infinite alternate;
+  }
+  ```
