@@ -611,3 +611,51 @@ CSS3 transforms allow you to translate, rotate, scale, and skew elements. A tran
     animation: example 5s linear 2s infinite alternate;
   }
   ```
+# Courses
+## Motion design with CSS
+- **Transition**
+  - Don't use `transition-property: all;` as it very hard on resources.
+  - Usually animations last for 250-300ms
+  - Awesome link for transition functions: http://easings.net/
+  - Summary:
+    - Single fire = if you want something to happen once
+    - Granularity = if you would only animate one or two properties
+    - Bulletproof = if transitions aren't supported the change happens anyway
+- **Animations**
+  - Awesome animation links: https://speckyboy.com/css-animation/
+  - Awesome link to see if you "can use": http://caniuse.com
+  - `steps(x)` is a timing function, that splits a block of keyframes into x equal steps, then hops between them.
+    - i.e. I have a series of pics (just as the catwalk.png) where we go from 0 to -2400px in 200px steps --> steps(12)
+  - Cat walk animation:
+    ```css
+    .tuna {
+      background: url(http://stash.rachelnabors.com/animation-workshop/sprite_catwalk.png) 0 0 no-repeat;
+      animation: tunaWalk 1s steps(12) infinite;
+      height: 200px;
+      width: 400px;
+      margin: 100px auto 0;
+    }
+
+    @keyframes tunaWalk {
+      0% { background-position: 0 0; }
+      100% {background-position: 0 -2400px;}
+    }
+    ```
+  - `animation-fill-mode` --> The animation-fill-mode property specifies a style for the element when the animation is not playing (when it is finished, or when it has a delay).
+    - Possible values:
+      - `none`	Default value. The animation will not apply any styles to the target element before or after it is executing
+      - `forwards`	After the animation ends (determined by animation-iteration-count), the animation will apply the property values for the time the animation ended
+      - `backwards`	The animation will apply the property values defined in the keyframe that will start the first iteration of the animation, during the period defined by animation-delay. These are either the values of the from keyframe (when animation-direction is "normal" or "alternate") or those of the to keyframe (when animation-direction is "reverse" or "alternate-reverse")
+      - `both`	The animation will follow the rules for both forwards and backwards. That is, it will extend the animation properties in both directions
+      - `initial`	Sets this property to its default value.
+      - `inherit`	Inherits this property from its parent element.
+  - `animation-play-state` --> The animation-play-state property specifies whether the animation is running or paused.
+    - `animation-play-state: paused|running|initial|inherit;`
+  - `animation-direction` --> The animation-direction property defines whether an animation should play in reverse direction or in alternate cycles.
+    - `animation-direction: normal|reverse|alternate|alternate-reverse|initial|inherit;`
+  - Summary:
+    - (Safari and Android could still use -webkit- at this time. (Webkit prefix))
+    - Allows looping. (Repeating)
+    - Self starting, doesn't require trigger.
+    - Altering: Play back and forth.
+    - Grouping: Each animation can change a number of properties
