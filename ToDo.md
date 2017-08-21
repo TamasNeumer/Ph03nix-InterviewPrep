@@ -25,6 +25,8 @@ Wanna Do:
     - Interview Prep Book
     - Codefights
     - C++ Specs (Stackoverflow Docs)
+4. Shell/cmd commands and stuff. (Do a few shell courses...)
+    - https://www.tutorialspoint.com/unix/unix-basic-operators.htm
 3. NLP Vertiefen
     - Primer into NLP lesen
     - Standford course

@@ -39,7 +39,7 @@
 
 ## Import
 - Sass builds on top of the current CSS @import but instead of requiring an HTTP request, Sass will take the file that you want to import and combine it with the file you're importing into so you can serve a single CSS file to the web browser.
-  - `@import reset` --> Notice we're using @import 'reset'; in the base.scss file. When you import a file you don't need to include the file extension .scss. Sass is smart and will figure it out for you. 
+  - `@import reset` --> Notice we're using @import 'reset'; in the base.scss file. When you import a file you don't need to include the file extension .scss. Sass is smart and will figure it out for you.
 
 ## Mixins
 - A mixin lets you make groups of CSS declarations that you want to reuse throughout your site. You can even pass in values to make your mixin more flexible. A good use of a mixin is for vendor prefixes. Here's an example for border-radius.
@@ -68,4 +68,4 @@
 }
 ```
 ## Operators
-- Doing math in your CSS is very helpful. Sass has a handful of standard math operators like +, -, *, /, and %.
+- Doing math in your CSS is very helpful. Sass has a handful of standard math operators like `+, -, *, /`, and `%`.
