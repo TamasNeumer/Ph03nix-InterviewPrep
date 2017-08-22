@@ -43,3 +43,6 @@ CSS Read and learn:
 - https://codepen.io/MoorLex/pen/yNgjWr?q=mountain&limit=all&order=popularity&depth=everything&show_forks=false
 - https://codepen.io/Christopherallen/pen/Clajw?q=mountain&limit=all&type=type-pens
 - https://codepen.io/Mamboleoo/pen/WrgmYJ?q=mountain&limit=all&type=type-pens
+
+Weather Icons:
+- https://codepen.io/nsayenko/pen/JKzxdm?depth=everything&limit=all&order=popularity&page=3&q=snowflake&show_forks=false

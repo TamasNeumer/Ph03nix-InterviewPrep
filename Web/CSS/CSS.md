@@ -543,6 +543,7 @@ CSS3 transforms allow you to translate, rotate, scale, and skew elements. A tran
   - the CSS property you want to add an effect to
   - the duration of the effect
     - `transition: width 2s;`
+
     ```css
     div {
         width: 100px;
