@@ -659,3 +659,8 @@ CSS3 transforms allow you to translate, rotate, scale, and skew elements. A tran
     - Self starting, doesn't require trigger.
     - Altering: Play back and forth.
     - Grouping: Each animation can change a number of properties
+- **Stateful animation**
+  - TODO Evening
+
+## Useful Links:
+- CSS Shapes: https://css-tricks.com/examples/ShapesOfCSS/
