@@ -665,3 +665,4 @@ CSS3 transforms allow you to translate, rotate, scale, and skew elements. A tran
 
 ## Useful Links:
 - CSS Shapes: https://css-tricks.com/examples/ShapesOfCSS/
+- Free CSS Anim: https://greensock.com/
