@@ -296,6 +296,7 @@
   - The solution that works in all browsers, is to set a default font-size in percent for the <body> element
 - `font-weight` property specifies the weight of a font:
   - normal, bold
+  - Or you can specify it with a value e.g.: `font-weight: 400;`
 - `text-shadow` adds shadow to text.
   ```css
   p {
@@ -612,6 +613,8 @@ CSS3 transforms allow you to translate, rotate, scale, and skew elements. A tran
     animation: example 5s linear 2s infinite alternate;
   }
   ```
+  - `animation-fill-mode` specifies a style for the element when the animation is not playing (when it is finished, or when it has a delay).
+    - `animation-fill-mode: none|forwards|backwards|both|initial|inherit;`
 # Courses
 ## Motion design with CSS
 - **Transition**
