@@ -71,6 +71,10 @@ If you want to prevent the deletion of an instance through a base class pointer,
 - The `final` keyword forbids the class to be inherited.
 - `class A final {};`
 
+## The override keyword
+- In Cpp11 when overriding the function you can use the `override` keyword.
+  - `void foo() const override;`
+
 ## Virtual inheritance as a measure to solve the diamond patterns
 In the traditional diamond pattern (A->B,C and B,C -> D) B and C both inherit from A, and D inherits from B and C, so there are 2 instances of A in D! This results in ambiguity when you're accessing member of A through D, as the compiler has no way of knowing from which class do you want to access that member (the one which B inherits, or the one that is inherited by C?).
 
