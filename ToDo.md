@@ -30,6 +30,7 @@ Wanna Do:
 3. NLP Vertiefen
     - Primer into NLP lesen
     - Standford course
+    - http://nlpforhackers.io/
 
 
 Read and Learn:

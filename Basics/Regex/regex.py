@@ -1,4 +1,8 @@
 import re
 
 p = re.compile('[a-z]+')
-matched_obj = p.match("ha ha")
+m = p.match('ha ha')
+
+print(m.group())
+print(m.start())
+print(m.end())
