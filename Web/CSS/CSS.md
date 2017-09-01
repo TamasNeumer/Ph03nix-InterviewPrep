@@ -47,80 +47,14 @@
     color: red;
     }
     ```
-  - **Combining selectors**
     - You can add multiple classes to an item by listing the classes delimited by space: `<p class="center large">This paragraph refers to two classes.</p>`
     - You can group selectors as:
-      ```css
-      /*This is valid for h1, h2 and p*/
-      h1, h2, p {
-        text-align: center;
-        color: red;
-      }
-
-      /*All elements with class blue AND red.*/
-      .blue.red {
-        color: blue;
-      }
-      ```
-  - **Pseudo class**
-    - `:pseudo-class`
-    - Pseudo-classes are keywords which allow selection based on information that lies outside of the document tree or that cannot be expressed by other selectors or combinators. (Such as state etc.) Examples include whether or not a link has been followed (`:visited`), the mouse is over an element (`:hover`), a checkbox is checked (`:checked`), etc.
-      ```css
-      selector:pseudo-class {
-      property: value;
-      }
-      ```
-    - Examples: `:disabled`, `:hover`, `:link` (link that has not been visited yet) and there are a ton more...
-    - The `:in-range` CSS pseudo-class matches when an element has its value attribute inside the specified range limitations for this element. It allows the page to give a feedback that the value currently defined using the element is inside the range limits.
-      ```css
-      input:in-range {
-          border: 1px solid blue;
-      }
-
-      <input type="number" min="10" max="20" value="15">
-      <p>The border for this value will be blue</p>
-      ```
-  - **Pseudo elements**
-    - `::pseudo-element`
-    - Pseudo-elements are added to selectors but instead of describing a special state, they allow you to style certain parts of a document.
     ```css
-    div::after {
-      content: 'after';
+    h1, h2, p {
+      text-align: center;
       color: red;
-      border: 1px solid red;
-    }
-
-    div {
-      color: black;
-      border: 1px solid black;
-      padding: 1px;
-    }
-
-    div::before {
-      content: 'before';
-      color: green;
-      border: 1px solid green;
-    }
-
-    p::after{
-      content: url(smiley.gif);
     }
     ```
-  - **Attribute selector**
-    - `[attr]	--> <div attr>` --> Matches element with attr
-    - `[attr='val'] --> <div attr="val">` --> Where attribute attr has value val
-    - `[attr~='val']	<div attr="val val2 val3">` --> Where val appears in the whitespace-separated list of attr
-    - `[attr^='val']	<div attr="val1 val2">` --> Where attr's value begins with val
-    - `[attr$='val']	<div attr="sth aval">` --> Where the attr's value ends with val
-    - `[attr*='val']	<div attr="somevalhere">` --> Where attr contains val anywhere
-    - `[attr|='val']	<div attr="val-sth etc">` --> Where attr's value is exactly val, or starts with val and immediately followed by - (U+002D)
-    - `[attr='val' i]	<div attr="val">` --> Where attr has value val, ignoring val's letter casing.
-    - `:lang(en)` --> Element that matches :lang declaration, for example `<span lang="en">`
-  - **Combinators**
-    - `div > p` --> (direct) Child selector
-    - `div span` --> Descendant selector (all span, desc. of div)
-    - `a ~ <span>` --> General sibling selector (`<span>`s that are siblings after an `<a>`)
-    - `a + span`	Adjacent Sibling selector (all `<span>`s that are immediately after an `<a>`)
 - Comments, using block comments: `/* Comment */`
 
 ## Inserting CSS
@@ -130,14 +64,11 @@
     ```html
     <head>
     <link rel="stylesheet" type="text/css" href="mystyle.css">
-    @import url('/css/styles.css'); <!-- using @ import -->
-    @import 'https://fonts.googleapis.com/css?family=Lato'; <!-- using external url for fonts -->
     </head>
     ```
-    - When someone first visits your website, their browser downloads the HTML of the current page plus the linked CSS file. Then when they navigate to another page, their browser only needs to download the HTML of that page; the CSS file is cached, so it does not need to be downloaded again. Since browsers cache the external stylesheet, your pages load faster.
   - **Internal style sheet**
     - An internal style sheet may be used if one single page has a unique style. (= no reuse)
-    - Internal styles are defined within the `<style>` element, inside the `<head>` section of an HTML page:
+    - Internal styles are defined within the <style> element, inside the <head> section of an HTML page:
     ```html
     <head>
     <style>
@@ -159,17 +90,6 @@
     1. Inline style (inside an HTML element)
     2. External and internal style sheets (in the head section)
     3. Browser default
-- You can also change the stylsheet using pure JavaScript or jQuery:
-    ```js
-    var el = document.getElementById("element");
-    el.style.opacity = 0.5;
-    el.style.fontFamily = 'sans-serif';
-
-    $('#element').css('margin', '5px');
-
-    var el2 = document.querySelector("#example");
-    /*...*/
-    ```
 
 ## Colors
 - a valid color name - like "red"
@@ -177,25 +97,13 @@
   - RGB color values can be specified using this formula: rgb(red, green, blue).
 - a HEX value - like "#ff0000"
   - RGB values can also be specified using hexadecimal color values in the form: #RRGGBB, where RR (red), GG (green) and BB (blue) are hexadecimal values between 00 and FF (same as decimal 0-255).
-  - If both "RR"/"GG"/"BB" values are the same you can shorten the hex code into `#RGB`
-- RGBA() notation
-  - `color: rgba(255, 0, 0, 1);` --> Adds opacity (a number from 0 - 1, where 0.0 is fully transparent and 1.0 is fully opaque)
-- HLS() notation
-  - `color: hsl(<hue>, <saturation>%, <lightness>%);`
-- HLSA() same as with RGBA()
 
-## Background
-- `background-color: red;` --> adding simple background-color
-- `background-image: url(partiallytransparentimage.png);` --> adding bg image
-- Background gradients (CSS3):
-  - `linear-gradient() repeating-linear-gradient() radial-gradient() repeating-radial-gradient()`
-  - `background: linear-gradient( <direction>?, <color-stop-1>, <color-stop-2>, ...);`
-    - `<direction>` --> Could be an argument like to top, to bottom, to right or to left; or an angle as 0deg, 90deg... . The angle starts from to top and rotates clockwise. Can be specified in deg, grad, rad, or turn. If omitted, the gradient flows from top to bottom
-    - `<color-stop-list>` --> List of colors, optionally followed each one by a percentage or length to display it at. For example, yellow 10%, rgba(0,0,0,.5) 40px, #fff 100%...
-  - `background-repeat: repeat-x;` --> Repeating image
-  - `background-position: right top;` --> position
-  - `background-attachment: fixed;` --> No scrolling with page (stays fixed)
-  - `background: #ffffff url("img_tree.png") no-repeat right top;` --> **The background property can be used to set one or more background related properties:**
+## Background:
+- `background-color: green;` --> specify basic bg color
+- `background-image: url("paper.gif");` --> specify bg image
+- `background-repeat: repeat-x;` --> Add repeat only in a specific direction
+- `background-position: right top;` --> specify position
+- `background-attachment: fixed;` --> stays there while scrolling
 
 ## Border
 - `border-style:` --> Provides numerous attributes (solid, dotted etc.)
