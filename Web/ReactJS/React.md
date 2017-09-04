@@ -22,21 +22,21 @@ ReactDOM.render(<App />, ...);
 - `const element = <h1>Hello, world!</h1>;` is a sample JSX expression.
 - You can embed JS code into into your JSX, by putting it into curly braces {}
 ```js
-function formatName(user) {
-  return user.firstName + ' ' + user.lastName;
-}
+  function formatName(user) {
+    return user.firstName + ' ' + user.lastName;
+  }
 
-const user = {
-  firstName: 'Harper',
-  lastName: 'Perez'
-};
+  const user = {
+    firstName: 'Harper',
+    lastName: 'Perez'
+  };
 
-// React element
-const element = (
-  <h1>
-    Hello, {formatName(user)}!
-  </h1>
-);
+  // React element
+  const element = (
+    <h1>
+      Hello, {formatName(user)}!
+    </h1>
+  );
 ```
 - After compilation, JSX expressions become regular JavaScript objects. --> you can use JSX inside of `if` statements and `for` loops.
 ```js
@@ -53,20 +53,21 @@ function getGreeting(user) {
 - JSX Prevents Injection Attacks --> It is safe to embed user input in JSX
   - `const title = response.potentiallyMaliciousInput; const element = <h1>{title}</h1>;`
   - Everything is converted to a string before being rendered. This helps prevent XSS (cross-site-scripting) attacks.
-- Babel compiles JSX down to React.createElement() calls. Thus the 2 are the same:
-```js
-const element = (
-  <h1 className="greeting">
-    Hello, world!
-  </h1>
-);
+- **Babel** compiles JSX down to React.createElement() calls. Thus the 2 are the same:
 
-const element = React.createElement(
-  'h1',
-  {className: 'greeting'},
-  'Hello, world!'
-);
-```
+  ```js
+  const element = (
+      <h1 className="greeting">
+        Hello, world!
+      </h1>
+  );
+
+  const element = React.createElement(
+    'h1',
+    {className: 'greeting'},
+    'Hello, world!'
+  );
+  ```
 - To see how it is converted go to [https://babeljs.io/repl/](Babel)
 
 ## Rendering elements
@@ -74,9 +75,9 @@ const element = React.createElement(
 - `<div id="root"></div>` --> We call this a "root" DOM node because everything inside it will be managed by React DOM. Applications built with just React usually have a single root DOM node. To render an element into this node you will use the following:
 ```js
 const element = <h1>Hello, world</h1>;
-ReactDOM.render(
-  element,
-  document.getElementById('root')
+  ReactDOM.render(
+    element,
+    document.getElementById('root')
 );
 ```
 - React elements are **immutable**. Once you create an element, you can't change its children or attributes.
@@ -112,26 +113,26 @@ Some important rules on Components and Props:
 - **Always** start component names with a capital letter.
 - Components **must** return a **single** root element. (A div e.g.)
 - **All React components must act like pure ("const") functions with respect to their props.**
-```js
-function Welcome(props) {
-  return <h1>Hello, {props.name}</h1>;
-}
+  ```js
+  function Welcome(props) {
+    return <h1>Hello, {props.name}</h1>;
+  }
 
-function App() {
-  return (
-    <div>
-      <Welcome name="Sara" />
-      <Welcome name="Cahal" />
-      <Welcome name="Edite" />
-    </div>
+  function App() {
+    return (
+      <div>
+        <Welcome name="Sara" />
+        <Welcome name="Cahal" />
+        <Welcome name="Edite" />
+      </div>
+    );
+  }
+
+  ReactDOM.render(
+    <App />,
+    document.getElementById('root')
   );
-}
-
-ReactDOM.render(
-  <App />,
-  document.getElementById('root')
-);
-```
+  ```
 - Extract as many small components as you can to maximize the re-usability!
 
 Note that **Functional Components** are **stateless**. Stateless functional components are useful for dumb / presentational components. Presentational components focus on the UI rather than behavior, so it’s important to avoid using state in presentational components. Instead, state should be managed by higher-level “container” components, or via Flux/Redux/etc.
@@ -296,48 +297,50 @@ componentShouldUpdate(nextProps, nextState){
 **Adding class fields**
 - While this.props is set up by React itself and this.state has a special meaning, you are free to add additional fields to the class manually if you need to store something that is not used for the visual output. **If you don't use something in render(), it shouldn't be in the state**.
 - Don't use the React.createClass, as it is going to be obsolete soon!
-```js
-class Clock extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {date: new Date()};
-  } // Look maa, no comma required in JSX based class defs.
+  ```js
+  class Clock extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {date: new Date()};
+    } // Look maa, no comma required in JSX based class defs.
 
-  componentDidMount() {
-    // setInterval(function(){ alert("Hello"); }, 3000);
-    this.timerID = setInterval(
-      () => this.tick(),
-      1000
-    );
+    componentDidMount() {
+      // setInterval(function(){ alert("Hello"); }, 3000);
+      this.timerID = setInterval(
+        () => this.tick(),
+        1000
+      );
+    }
+
+    componentWillUnmount() {
+      clearInterval(this.timerID);
+    }
+
+    tick() {
+      this.setState({
+        date: new Date()
+      });
+    }
+
+    render() {
+      return (
+        <div>
+          <h1>Hello, world!</h1>
+          <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+        </div>
+      );
+    }
   }
 
-  componentWillUnmount() {
-    clearInterval(this.timerID);
-  }
+  module.exports = Clock;
 
-  tick() {
-    this.setState({
-      date: new Date()
-    });
-  }
+  ReactDOM.render(
+    <Clock />,
+    document.getElementById('root')
+  );
+  ```
 
-  render() {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
-      </div>
-    );
-  }
-}
 
-module.exports = Clock;
-
-ReactDOM.render(
-  <Clock />,
-  document.getElementById('root')
-);
-```
 1) When <Clock /> is passed to ReactDOM.render(), React calls the constructor of the Clock component. Since Clock needs to display the current time, it initializes this.state with an object including the current time. We will later update this state.
 
 2) React then calls the Clock component's render() method. This is how React learns what should be displayed on the screen. React then updates the DOM to match the Clock's render output.
@@ -470,5 +473,3 @@ handleClick = () => {
     console.log(this); // the React Component instance
   }
 ```
-
-test
