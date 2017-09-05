@@ -230,6 +230,7 @@ constructor(props){
   };
 }
 ```
+- Why call ``super(props)``? --> "However, no reason is provided. We can speculate it is either because of subclassing or for future compatibility.""
 
 **Forcing proptypes**  
 ```js
