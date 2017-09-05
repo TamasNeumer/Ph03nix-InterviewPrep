@@ -76,3 +76,12 @@ In order to render and show the components we have to register these first.
   - `alignItems` (horizontally)
   - `paddingTop`, `shadowColor / shadowOffset / shadowOpacity` etc.
   - `flex-direction` --> (column / row)
+
+#### Enable scrolling
+- import `Scrollview`
+
+#### Linking library
+- use it to send data / interfere with other apps (write email, open website etc.)
+
+#### The magical index.js
+- Normally you include by `import what from where/file`. However you can also import by `import what from where/foldername` --> in this case the index.js will be picked up from the folder and it will be imported.

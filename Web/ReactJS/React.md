@@ -141,6 +141,22 @@ You only need a class component when you
 1. need component state or
 2. need the lifecycle methods such as componentDidMount etc.
 
+#### Rendering children via props
+- To get the children of a tag (and list them / style them etc. in this case Card's children) we can use the `props.children` expression.
+  ```js
+  //...
+  <Card>
+      <Text>{props.album.title}</Text>
+  </Card>
+  //...
+
+  return (
+      <View style={styles.containerStyle}>
+          {props.children}
+      </View>
+  );
+  ```
+
 ## State and Lifecycle --> Class Component
 ### Converting a function component to class component:  
 
