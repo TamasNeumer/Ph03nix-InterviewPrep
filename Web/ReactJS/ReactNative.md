@@ -12,12 +12,13 @@ In order to render and show the components we have to register these first.
 
 #### Exporting components for consumption
   ```js
+  // Function component
   const Header = () => {
     return <Text>Albums!</Text>;
   };
   export default Header;
 
-  // Or using react's boilerplate
+  // Class component
   export default class App extends Component {
     render() {
       return (
@@ -51,7 +52,6 @@ In order to render and show the components we have to register these first.
   };
 
   // Or using the boilerplate
-  //...
   <Text style={styles.welcome}>Welcome to React Native!</Text>
 
   const styles = StyleSheet.create({
