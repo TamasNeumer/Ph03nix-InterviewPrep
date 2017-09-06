@@ -432,61 +432,80 @@ var CommentBox = reactCreateClass({
 });
 ```
 #### Nesting without children
-```js
 - This is the style where A composes B and B composes C.
-var CommentList = reactCreateClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        <ListTitle/>
-        Hello, world! I am a CommentList.
-      </div>
-    );
+  ```js
+  var CommentList = reactCreateClass({
+    render: function() {
+      return (
+        <div className="commentList">
+          <ListTitle/>
+          Hello, world! I am a CommentList.
+        </div>
+      );
+    }
+  });
+  ```
+
+## Event handling, this keyword, binding
+#### Event handling of components
+- Some components (such as a button) has unique event handles (such as onClick). You can add event handlers as the following:
+
+  ```js
+  function handleClick(e) {
+    e.preventDefault();
+    console.log('The link was clicked.');
   }
-});
-```
 
-## The THIS keyword
+  <button onClick={handleClick}>
+    Activate Lasers
+  </button>
+  ```
+- Also note that in order to disable a default property you have to call the `e.preventDefault()` explicitly.
+
 - With ES6 classes this is null by default, **properties of the class do not automatically bind to the React class (component) instance.** (= ES6 React.Component doesn't auto bind methods to itself.))
-```js
-var React = require('react');
-var ReactDOM = require('react-dom');
 
+- When you define a component using an ES6 class, a common pattern is for an event handler to be a method on the class. For example, this Toggle component renders a button that lets the user toggle between "ON" and "OFF" states:
 
-class MyComponent extends React.Component {
+  ```js
+  class Toggle extends React.Component {
     constructor(props) {
-        super(props);
-    }
-    handleClick() {
-        console.log(this); // null!!!
-    }
-    render() {
-        return (
-            <div onClick={this.handleClick}>Test</div>
-        );
-    }
-}
+      super(props);
+      this.state = {isToggleOn: true};
 
-ReactDOM.render(
-  <MyComponent/>,
-    document.getElementById('app'));
-```
+      // This binding is necessary to make `this` work in the callback
+      this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick() {
+      this.setState(prevState => ({
+        isToggleOn: !prevState.isToggleOn
+      }));
+    }
+
+    render() {
+      return (
+        <button onClick={this.handleClick}>
+          {this.state.isToggleOn ? 'ON' : 'OFF'}
+        </button>
+      );
+    }
+  }
+  ```
+- You have to be careful about the meaning of this in JSX callbacks. In JavaScript, class methods are not bound by default. If you forget to bind this.handleClick and pass it to onClick, this will be undefined when the function is actually called. This is not React-specific behavior; it is a part of how functions work in JavaScript. Generally, if you refer to a method without () after it, such as onClick={this.handleClick}, you should bind that method.
+
 There are a few ways we could bind the right this context.
 #### Inline binding:
+
 ```js
 <div onClick={this.handleClick.bind(this)}></div>
 ```
+
 #### Class constructor binding
 (Avoiding inline repetitions) Considered by many as a better approach that avoids touching JSX at all.
+
 ```js
 constructor(props) {
   super(props);
   this.handleClick = this.handleClick.bind(this);
 }
-```
-#### ES6 Anyonymous function calls (no binding required)
-```js
-handleClick = () => {
-    console.log(this); // the React Component instance
-  }
 ```
