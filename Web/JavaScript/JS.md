@@ -56,3 +56,53 @@ boundGetX(); // 81
 
 - Solution:
   - bind the "this" concept to the function. In this case we bound the module, thus when calling the function, the `this.x` will evaluate to `module.x`
+
+## Object.assign()
+The ``Object.assign()`` method is used to copy the values of all enumerable own properties from one or more source objects to a target object. It will return the target object. `Object.assign(target, ...sources)`
+
+The ``Object.assign()`` method only copies enumerable and own properties from a source object to a target object. It uses [[Get]] on the source and [[Set]] on the target, so it will invoke getters and setters. Therefore it assigns properties versus just copying or defining new properties.
+
+```js
+// Normal copy (assignment)
+var obj = { a: 1 };
+var copy = Object.assign({}, obj);
+console.log(copy); // { a: 1 }
+
+let obj1 = { a: 0 , b: { c: 0}};
+let obj2 = Object.assign({}, obj1);
+console.log(JSON.stringify(obj2)); // { a: 0, b: { c: 0}}
+
+obj1.a = 1;
+console.log(JSON.stringify(obj1)); // { a: 1, b: { c: 0}}
+console.log(JSON.stringify(obj2)); // { a: 0, b: { c: 0}}
+
+obj2.a = 2;
+console.log(JSON.stringify(obj1)); // { a: 1, b: { c: 0}}
+console.log(JSON.stringify(obj2)); // { a: 2, b: { c: 0}}
+
+// Whoops !!!!
+obj2.b.c = 3;
+console.log(JSON.stringify(obj1)); // { a: 1, b: { c: 3}}
+console.log(JSON.stringify(obj2)); // { a: 2, b: { c: 3}}
+
+// Deep Clone
+obj1 = { a: 0 , b: { c: 0}};
+let obj3 = JSON.parse(JSON.stringify(obj1));
+obj1.a = 4;
+obj1.b.c = 4;
+console.log(JSON.stringify(obj3)); // { a: 0, b: { c: 0}}
+```
+
+## Object spread syntax
+Spread syntax allows an iterable such as an array expression to be expanded in places where zero or more arguments or elements are expected, or an object expression to be expanded in places where zero or more key-value pairs are expected. Syntax:
+- For function calls: ``myFunction(...iterableObj);``
+- For array literals: `[...iterableObj, 4, 5, 6];`
+
+```js
+function myFunction(v, w, x, y, z) { }
+var args = [0, 1];
+myFunction(-1, ...args, 2, ...[3]);
+
+var parts = ['shoulders', 'knees'];
+var lyrics = ['head', ...parts, 'and', 'toes'];
+```

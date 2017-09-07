@@ -33,7 +33,7 @@ Other than type, the structure of an action object is really up to you.
 }
 ```
 
-#### Action Creators
+**Action Creators**
 Action creators are functions that create actions. It's easy to conflate the terms “action” and “action creator,” so do your best to use the proper term.
 
 ```js
@@ -49,11 +49,64 @@ dispatch(addTodo(text))
 ```
 To actually initiate a dispatch, pass the result to the ``dispatch()`` function.
 
+#### Reducers
+Readucers describe HOW the application's state changes in response to an action.
+**The reducer is a pure function that takes the previous state and an action, and returns the next state.**
+```js
+(previousState, action) => newState
+```
 
+Things you should never do inside a reducer:
+- Mutate its arguments;
+- Perform side effects like API calls and routing transitions;
+- Call non-pure functions, e.g. Date.now() or Math.random().  
+**Given the same arguments, it should calculate the next state and return it. No surprises. No side effects. No API calls. No mutations. Just a calculation.**
 
+**1. Initialize the state of our app**  
+Redux will call our reducer with an undefined state for the first time. This is our chance to return the initial state of our app:
 
+```js
+import { VisibilityFilters } from './actions'
 
+const initialState = {
+  visibilityFilter: VisibilityFilters.SHOW_ALL,
+  todos: []
+}
 
+// if state === 'undefined' => state = initialState
+function todoApp(state = initialState, action) {
+  switch (action.type) {
+    case SET_VISIBILITY_FILTER:
+      return Object.assign({}, state, {
+        visibilityFilter: action.filter
+      })
+    case ADD_TODO:
+      return Object.assign({}, state, {
+        todos: [
+          ...state.todos,
+          {
+            text: action.text,
+            completed: false
+          }
+        ]
+      })
+    case TOGGLE_TODO:
+      return Object.assign({}, state, {
+        todos: state.todos.map((todo, index) => {
+          if (index === action.index) {
+            return Object.assign({}, todo, {
+              completed: !todo.completed
+            })
+          }
+          return todo
+        })
+      })
+    default:
+      return state
+  }
+}
+```
+- You **must** supply an empty object as the first parameter in order to create a new state. You can also enable the object spread operator proposal to write { ``...state``, ``...newState`` } instead.
 
 
 #### [Playground](https://stephengrider.github.io/JSPlaygrounds/)
