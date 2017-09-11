@@ -108,6 +108,8 @@ function todoApp(state = initialState, action) {
 ```
 - You **must** supply an empty object as the first parameter in order to create a new state. You can also enable the object spread operator proposal to write { ``...state``, ``...newState`` } instead.
 
+**Reducer composition**
+Reducer composition is the fundamental pattern of building Redux apps.
 
 #### [Playground](https://stephengrider.github.io/JSPlaygrounds/)
 

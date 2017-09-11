@@ -65,7 +65,7 @@ In order to render and show the components we have to register these first.
 - width and height can be used just as in CSS
 - ``flex``
   - Use flex in a component's style to have the component expand and shrink dynamically based on available space.
-  - Normally you will use** flex: 1**, which tells a component to fill all available space
+  - Normally you will use **flex: 1**, which tells a component to fill all available space
   - **flexDirection: [row/column]** --> determines the primary axis of its layout
   - **justifyContent: [flex-start, center, flex-end, space-around, space-between]** --> determines the distribution of children along the primary axis
   - **alignItems: [lex-start, center, flex-end, stretch]** --> determines the alignment of children along the secondary axis
