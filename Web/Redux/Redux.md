@@ -26,6 +26,7 @@ To specify how the state tree is transformed by actions, you write pure reducers
 #### Actions
 Actions are payloads of information that send data from your application to your store. They are the only source of information for the store. You send them to the store using ``store.dispatch()``.  
 Other than type, the structure of an action object is really up to you.
+
 ```js
 {
   type: ADD_TODO,
