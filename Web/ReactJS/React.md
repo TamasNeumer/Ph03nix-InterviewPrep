@@ -446,6 +446,25 @@ var CommentBox = reactCreateClass({
   });
   ```
 
+#### Presentational and Container components
+**Presentational components**  
+- Are concerned with how things look.
+- May contain both presentational and container components inside, and usually have some DOM markup and styles of their own.
+- Have no dependencies on the rest of the app, such as Flux actions or stores.
+- Don’t specify how the data is loaded or mutated.
+- Receive data and callbacks exclusively via props.
+- Are written as _functional components_ unless they need state, lifecycle hooks, or performance optimizations.
+
+**Container components**  
+- Are concerned with how things work.
+- May contain both presentational and container components inside but usually don’t have any DOM markup of their own except for some wrapping divs, and never have any styles.
+- Provide the data and behavior to presentational or other container components.
+- Call Flux/Redux actions and provide these as callbacks to the presentational components.
+- Are often stateful, as they tend to serve as data sources.
+- Are usually generated using higher order components such as _connect()_ from React Redux, _createContainer()_ from Relay, or _Container.create()_ from Flux Utils, rather than written by hand.
+
+**Benefints**  
+- Reusability, better understanding,
 ## Event handling, this keyword, binding
 #### Event handling of components
 - Some components (such as a button) has unique event handles (such as onClick). You can add event handlers as the following:
@@ -494,6 +513,7 @@ var CommentBox = reactCreateClass({
 - You have to be careful about the meaning of this in JSX callbacks. In JavaScript, class methods are not bound by default. If you forget to bind this.handleClick and pass it to onClick, this will be undefined when the function is actually called. This is not React-specific behavior; it is a part of how functions work in JavaScript. Generally, if you refer to a method without () after it, such as onClick={this.handleClick}, you should bind that method.
 
 There are a few ways we could bind the right this context.
+
 #### Inline binding:
 
 ```js
