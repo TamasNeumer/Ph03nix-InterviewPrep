@@ -111,6 +111,25 @@ function todoApp(state = initialState, action) {
 **Reducer composition**
 Reducer composition is the fundamental pattern of building Redux apps.
 
+#### Async with Redux
+Usually, for any API request you'll want to dispatch at least three different kinds of actions:
+- An action informing the reducers that the request began.
+  - The reducers may handle this action by toggling an isFetching flag in the state. This way the UI knows it's time to show a spinner.
+- An action informing the reducers that the request finished successfully.
+  - The reducers may handle this action by merging the new data into the state they manage and resetting isFetching. The UI would hide the spinner, and display the fetched data.
+- An action informing the reducers that the request failed.
+  - The reducers may handle this action by resetting isFetching. Additionally, some reducers may want to store the error message so the UI can display it.
+
+```js
+{ type: 'FETCH_POSTS_REQUEST' }
+{ type: 'FETCH_POSTS_FAILURE', error: 'Oops' }
+{ type: 'FETCH_POSTS_SUCCESS', response: { ... } }
+```
+
+
+
+
+
 #### [Playground](https://stephengrider.github.io/JSPlaygrounds/)
 
 ```js
