@@ -328,6 +328,12 @@ const VisibleTodoList = connect(
 
 export default VisibleTodoList
 ```
+
+#### React Thunk
+- Action creators must return functions (instead of action)
+- This function will be called (automatically) with 'dispatch'
+
+
 #### [Playground](https://stephengrider.github.io/JSPlaygrounds/)
 ```js
 // Reducer that initializes state.
