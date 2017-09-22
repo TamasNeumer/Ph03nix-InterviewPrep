@@ -9,6 +9,7 @@ double, __int64, long double, long long  |  8 bytes
 ___
 
 ## Bitwise operations
+#### C++
 - Left shift: `>>`
 - Right shift: `<<`
 - Bitwise NOT: `~`
