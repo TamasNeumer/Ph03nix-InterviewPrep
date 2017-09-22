@@ -14,6 +14,7 @@
 - Passing to function also via std::move() (since no copy!)
 - In Cpp11 the preferred way to write factory functions is to return by std::unique_ptr --> it makes the ownership clear.
 - std::unique_ptr supports arrays via std::make_unique (cpp14)
+
 ```cpp
 std::unique_ptr<type> ptr = std::make_unique<type>(); // Cpp14
 auto ptr2 = std::unique_ptr<type>(new Type());
@@ -37,6 +38,8 @@ std::unique_ptr<int[]> ptr = std::make_unique<int[]>(14); // Array
   - Shared_ptr can point to a sub-object that it owns.
   - Transfer of ownership allowed, via std::move
   - Don't cast normal pointers to shared_ptr. It is a bad practice and can end in corruption.
+
+
 ```cpp
 std::shared_ptr<type> ptr = std::make_shared<type>(/*args*/);
 auto ptr2 = ptr; // copy assignment
@@ -61,6 +64,8 @@ std::shared_ptr<int> p2(p1, &p1->x);
 parent via std::weak_ptr. When the root node is reset at the end of main(), the root is destroyed.
 Since the only remaining std::shared_ptr references to the child nodes were contained in the root's collection children,
  all child nodes are subsequently destroyed as well.
+
+
 ```cpp
 struct TreeNode {
     std::weak_ptr<TreeNode> parent;
@@ -81,10 +86,12 @@ int main() {
     root.reset();
 }
 ```
+
 - Use the `use_count()` function, to get the number of strong references.
 - Use the `expired()` to see if the object, that is pointed to by the weak_ptr is still alive.
 - casting weak to shared: since std::weak_ptr does not keep its referenced object alive, direct data access through a std::weak_ptr is not possible.
 Instead it provides a lock() member function that attempts to retrieve a std::shared_ptr to the referenced object:
+
 ```cpp
 std::weak_ptr<int> wk;
          std::shared_ptr<int> sp;
@@ -101,6 +108,8 @@ std::weak_ptr<int> wk;
 ## Additional Problems and Use-cases
 ### Using custom deleters to create wrapper for C interface (webasto project)
 - In order to delete the `SDL_Surface` struct you need to call the `SDL_FreeSurface()` method.
+
+
 ```cpp
 std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> a(pointer, SDL_FreeSurface);
 
@@ -116,6 +125,7 @@ std::unique_ptr<SDL_Surface, SurfaceDeleter> a(pointer, SurfaceDeleter{}); // sa
 // OR:
 std::shared_ptr<Test> sptr1(new Test[5], [](Test* p){delete[] p;});
 ```
+
 ### Common mistakes
 1. Using a shared pointer where an unique pointer suffices
 2. Thinking that using shared_ptr makes your program threadsafe
@@ -124,6 +134,7 @@ std::shared_ptr<Test> sptr1(new Test[5], [](Test* p){delete[] p;});
 5. Not avoiding cyclic references with std::shared_ptr
 6. Not deleting a raw pointer after releasing it via ptr.release()
 7. Not using threadsafe lock of weak_ptr:
+
 ```cpp
 std::shared_ptr<type> ptr = myWeakptr.lock();
 if(ptr)
