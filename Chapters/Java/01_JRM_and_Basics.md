@@ -6,3 +6,6 @@
 - (+) Portability
 - (-) JIT compilation --> Slower than fully compiled languages.
 - Compile using `javac MyProg.java` and run using `java MyProg`
+
+#### Java facts
+- Java doesn't support implicit int-->bool conversion.
