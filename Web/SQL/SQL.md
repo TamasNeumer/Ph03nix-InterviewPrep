@@ -307,7 +307,7 @@ INSERT INTO table2 SELECT * FROM table1 WHERE condition;
 - **IFNULL(Mysql) ISNULL(SQLServer) COALESCE(MSaccess) NVL(Oracle)**
   - `IFNULL()` function lets you return an alternative value if an expression is NULL:
     - `SELECT ProductName, UnitPrice * (UnitsInStock + IFNULL(UnitsOnOrder, 0)) FROM Products`
-  
+
 
 #### Update
 - The UPDATE statement is used to modify the existing records in a table.
@@ -328,4 +328,114 @@ UPDATE table_name SET column1 = value1, column2 = value2 WHERE condition;
 ```SQL
 DELETE FROM table_name WHERE condition;
 DELETE * FROM table_name;
+```
+
+#### Database operations
+- **CREATE DATABASE**
+  - The CREATE DATABASE statement is used to create a new SQL database.
+- **DROP DATABASE**
+  - The DROP DATABASE statement is used to drop an existing SQL database.
+- **CREATE TABLE**
+  - The CREATE TABLE statement is used to create a new table in a database.
+- **DROP TABLE**
+  - The DROP TABLE statement is used to drop an existing table in a database.
+- **ALTER TABLE**
+  - The ALTER TABLE statement is used to add, delete, or modify columns in an existing table.
+
+
+```sql
+CREATE DATABASE databasename;
+DROP DATABASE databasename;
+
+CREATE DATABASE testDB;
+DROP DATABASE testDB;
+
+CREATE TABLE table_name (column1 datatype, column2 datatype);
+DROP TABLE table_name;
+
+CREATE TABLE Persons (PersonID int, LastName varchar(255));
+DROP TABLE Shippers;
+
+ALTER TABLE table_name ADD column_name datatype;
+ALTER TABLE table_name DROP COLUMN column_name;
+```
+
+#### Constrains
+- Constraints can be specified when the table is created with the CREATE TABLE statement, or after the table is created with the ALTER TABLE statement.
+
+```sql
+CREATE TABLE table_name (column1 datatype constraint);
+```
+
+- **NOT NULL** Ensures that a column cannot have a NULL value
+- **UNIQUE** Ensures that all values in a column are different
+  - Both the UNIQUE and PRIMARY KEY constraints provide a guarantee for uniqueness for a column or set of columns. A PRIMARY KEY constraint automatically has a UNIQUE constraint. However, you can have many UNIQUE constraints per table, but only one PRIMARY KEY constraint per table.
+- **PRIMARY KEY** A combination of a NOT NULL and UNIQUE. Uniquely identifies each row in a table. A FOREIGN KEY is a field (or collection of fields) in one table that refers to the PRIMARY KEY in another table. The table containing the foreign key is called the child table, and the table containing the candidate key is called the referenced or parent table.
+- **FOREIGN KEY** Uniquely identifies a row/record in another table.
+  - A FOREIGN KEY is a key used to link two tables together.
+- **CHECK** Ensures that all values in a column satisfies a specific condition
+- **DEFAULT** Sets a default value for a column when no value is specified
+- **INDEX** Use to create and retrieve data from the database very quickly.
+  - Indexes are used to retrieve data from the database very fast. The users cannot see the indexes, they are just used to speed up searches/queries.
+  - Note: Updating a table with indexes takes more time than updating a table without (because the indexes also need an update). So, only create indexes on columns that will be frequently searched against.
+- **AUTO INCREMENT**
+  - Auto-increment allows a unique number to be generated automatically when a new record is inserted into a table.
+  - Often this is the primary key field that we would like to be created automatically every time a new record is inserted.
+
+```sql
+CREATE TABLE Persons (ID int NOT NULL, Age int, UNIQUE (ID));
+
+CREATE TABLE Persons (ID int NOT NULL, Age int, PRIMARY KEY (ID));
+
+CREATE TABLE Orders (OrderID int NOT NULL, OrderNumber int NOT NULL,
+    PersonID int, PRIMARY KEY (OrderID),
+    FOREIGN KEY (PersonID) REFERENCES Persons(PersonID));
+
+CREATE TABLE Persons (ID int NOT NULL, Age int, CHECK (Age>=18));
+ALTER TABLE Persons ADD CHECK (Age>=18);
+
+CREATE TABLE Orders (ID int NOT NULL, OrderDate date DEFAULT GETDATE());
+
+CREATE INDEX index_name ON table_name (column1, column2, ...);
+CREATE INDEX idx_lastname ON Persons (LastName);
+CREATE INDEX idx_pname ON Persons (LastName, FirstName); --Index on combination of columns
+DROP INDEX index_name ON table_name; --drop index
+
+CREATE TABLE Persons (ID int NOT NULL AUTO_INCREMENT, Age int, PRIMARY KEY (ID));
+ALTER TABLE Persons AUTO_INCREMENT=100;
+```
+
+#### Dates
+- The most difficult part when working with dates is to be sure that the format of the date you are trying to insert, matches the format of the date column in the database.
+- As long as your data contains only the date portion, your queries will work as expected. However, if a time portion is involved, it gets more complicated.
+- MySQL vs SQL server comes with slightly different types.
+- MySQL:
+  - DATE - format YYYY-MM-DD
+  - DATETIME - format: YYYY-MM-DD HH:MI:SS
+  - TIMESTAMP - format: YYYY-MM-DD HH:MI:SS
+  - YEAR - format YYYY or YY
+
+#### View
+- In SQL, a view is a virtual table based on the result-set of an SQL statement.
+- Views are also useful when transitioning from OLD to new DB. You code is littered with references to `T_OLD`. You create T_NEW that contains additional stuff and create a VIEW `T_OLD` that mimics the old table. Thus your stuff keeps working... (?!)
+
+```sql
+CREATE VIEW view_name AS SELECT column1, column2, ... FROM table_name WHERE condition;
+```
+
+#### SQL Injection
+- SQL injection usually occurs when you ask a user for input, like their username/userid, and instead of a name/id, the user gives you an SQL statement that you will unknowingly run on your database.
+
+```sql
+txtUserId = getRequestString("UserId");
+txtSQL = "SELECT * FROM Users WHERE UserId = " + txtUserId;
+SELECT * FROM Users WHERE UserId = 105 OR 1=1;
+```
+
+- To protect a web site from SQL injection, you can use SQL parameters. SQL parameters are values that are added to an SQL query at execution time, in a controlled manner.
+
+```sql
+txtUserId = getRequestString("UserId");
+txtSQL = "SELECT * FROM Users WHERE UserId = @0";
+db.Execute(txtSQL,txtUserId);
 ```
