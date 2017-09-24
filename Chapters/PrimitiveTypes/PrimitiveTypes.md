@@ -1,5 +1,6 @@
-# Primitive Types
-## Size of fundamental types (MSDN)
+## Primitive Types
+#### Size of fundamental types (MSDN)
+In C/C++ the actual size depends on the processor for which a program is compiled. In Java it is not the case.
 Type  |  Size
 --|--
 bool, char, unsigned char, signed char, __int8  |  1 byte
@@ -8,8 +9,31 @@ float, __int32, int, unsigned int, long, unsigned long  |  4 bytes
 double, __int64, long double, long long  |  8 bytes
 ___
 
-## Bitwise operations
-#### C++
+#### Representing primitive types
+- `0xABC` --> Hex (Java,C++, )
+- `0b1001` --> binary (Java, Cpp14+)
+- `010` --> Octal. (Octab1l numbers have leading zero. Java, Cpp)
+
+#### Chars
+- Chars are using UTF-16
+- You need to escape the backlash --> `\\`
+
+#### Bools
+- booleans can have two values: `false` and `true`. There is no relation between bools and 0/1 as in C/C++. (Hence no implicit conversion.)
+
+#### Additional notes
+- Java has Double.NEGATIVE_INFINITY and POSITIVE_INFINITY defined. 1.0/0.0 yields positive infinity. Computing 0.0/0.0 yields NaN. (Not a number)
+- Java uses camelCase for function and variable naming (starting with a lower character). Class names start with a capital letter.
+- Cpp uses `const`, java uses `final`
+  - In Java use UPPERCASE variable names for constants. (Bit like `#define` in Cpp)
+  - In Java you can define and later initialize. But once initialized with final you can't change it's value. (Hence you can define and initialize using a switch case.)
+- In Java type-conversion is always legal if there is no loss of information. Also if you add float + int the int is casted to float.
+  - Be cautious int->float is legal, but can cause loss of info.
+- It is advised to use the Math.round(x) instead of casting floats to integers.
+- In Java if you are dealing with huge numbers use the `BigInteger` or `BigDecimal`, both members of the java.math package. However in this case you have to use the class' methods: k.multiply(...) k.add(...) etc, as java doesn't permit the use operators with objects. [No, Java doesn't support user-defined operator overloading!] Operators are only overloaded on the string objects.
+
+
+#### Bitwise operations
 - Left shift: `>>`
 - Right shift: `<<`
 - Bitwise NOT: `~`
@@ -17,12 +41,12 @@ ___
 - Bitwise OR: `|`
 - Bitwise XOR: `^`
 
-## Endianness
+#### Endianness
 Endianness refers to the sequential order used to numerically interpret a range of bytes **in computer memory** as a larger, composed word value.
 - Big-Endian: The digits are written starting from the left and to the right, with the most significant digit, 1, written first. (just like in decimal - e.g.: 123) This is analogous to the lowest address of memory being used first.
 - Little-Endian: The little-endian way of writing the same number, one hundred twenty-three, would place the hundreds-digit 1 in the right-most position: 321.
 
-## Bitwise operation on Endianness
+#### Bitwise operation on Endianness
 - The bitwise operators abstract away the endianness. For example, the >> operator always shifts the bits towards the least significant digit.
 - However when referring to bytes **from memory** you have to consider endianness!
 ```cpp
@@ -32,7 +56,7 @@ temp = temp >> 8; // -> temp = 0x0012, regardless endianness
 char c=((char*)&temp)[0];
 ```
 
-## Shifting (un)signed values
+#### Shifting (un)signed values
 - Right shift of a negative signed number has implementation-defined behaviour.
   - Shifting right may fill "empty" bits with the original MSB (i.e. perform sign extension) or it may shift in zeros, depending on platform and/or compiler.
 - A left shift, if the number either starts out negative (with 0 e.g.: 01010...), or the shift operation would shift a 1 either to or beyond the sign bit, has undefined behaviour (as do most operations on signed values which cause an overflow).
@@ -41,7 +65,7 @@ char c=((char*)&temp)[0];
 Conclusion: Don't use shifting on singed numbers.
 
 
-## Bitwise operation tricks
+#### Bitwise operation tricks
 - Find the right-most (1) bit: `y = x & ~(x-1)`
   - x-1 flips all bits until the right-most 1: x = 10100, x-1 = 10011.
   - Negating it results in 01100, making the numbers before the right-most 1 flip.
@@ -52,6 +76,6 @@ Conclusion: Don't use shifting on singed numbers.
 - Multiply by 2: Left shift <<
 - Divide by 2: Right shift >>
 
-# Examples
+#### Examples
 1. Count the number of "1s" in the binary representation of a number.
 2. Compute the party of a number. (Parity if the number of "1"s is odd, 0 otherwise.) --> Do better than the brute-force O(n)!
