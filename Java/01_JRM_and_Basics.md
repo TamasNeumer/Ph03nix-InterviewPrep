@@ -1,5 +1,7 @@
 # JVM and basics
 
+#### [Docs](https://docs.oracle.com/javase/8/docs/api/)
+
 #### The compilation process
 - Java translates the code into **bytecode** (that is NOT machine code).
 - Later the Java Virtual Machine (JVM) compiles this bytecode (via Just In Time) into machine code. The segments that were once compiled are saved. (i.e. if you run a function twice no need to re-compile)

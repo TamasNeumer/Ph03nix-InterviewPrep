@@ -199,4 +199,13 @@ person.sort(key=by_birthday) #sort by birthday
   - Check for emptiness via `if not lst:`
   - Check if value is in list via `'test' in lst`
   - `zip` returns a list of tuples, where the i-th tuple contains the i-th element from each of the argument sequences or iterables. (2 * 1D vectors --> 1 * 2D Vector)
-## shallow vs deep copy
+
+## Java arrays
+- Syntax: `Type[] varName;`
+- To initialize: `names = new String[100];`
+- Length: `arrayName.length` --> it's a property! (not a function like size())
+- List initialization: `int[] primes = {2,3,5,7,11,13}`
+- **Array size is immutable** --> once fixed, it can't be changed.
+  - Solution Array Lists: `ArrayLists<String> friends;` or `friends = new ArrayList<String>()`
+  - No initializer syntax for array lists.
+  - The `size()` **method** yields the size.
