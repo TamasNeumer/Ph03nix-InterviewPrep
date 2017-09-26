@@ -207,5 +207,16 @@ person.sort(key=by_birthday) #sort by birthday
 - List initialization: `int[] primes = {2,3,5,7,11,13}`
 - **Array size is immutable** --> once fixed, it can't be changed.
   - Solution Array Lists: `ArrayLists<String> friends;` or `friends = new ArrayList<String>()`
-  - No initializer syntax for array lists.
-  - The `size()` **method** yields the size.
+    - No initializer syntax for array lists.
+    - The `size()` **method** yields the size.
+    - You cannot use primitive types as type parameter. --> `ArrayList<Integer> numbers = new ArrayList<>();`
+- Java works with references.
+  - `int[] numbers = primes` --> now you have two vars pointing to the same object in memory!
+  - If you want to hard copy you need to use the `Arrays.copyOf(arrayToCopy, arrayToCopy.length);`
+  - To copy an array list use the copy constructor!
+- `Arrays.fill(arrayVarName, 0);` --> to fill an array with 0s
+- `Arrays.sort(arrayVarName);`
+- `Arrays.toString(primes)` --> [2, 3, 5] as String (arrayLists have this function in the object --> .toString())
+- `int[][] multiDimArray = {{1,2},{3,4}};`
+
+- **Variadic arguments (arrays)** `public static double average(double... values){ for(double val : values){...}}`
