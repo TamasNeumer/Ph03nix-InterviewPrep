@@ -5,3 +5,5 @@
 - 03 Judge Route Circle
 https://leetcode.com/problems/judge-route-circle/description/
 - 04 Merge Two Binary Trees https://leetcode.com/problems/merge-two-binary-trees/discuss/
+- 05 Array Partition I https://leetcode.com/problems/array-partition-i/description/
+- 
