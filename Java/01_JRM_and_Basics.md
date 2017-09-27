@@ -15,12 +15,10 @@
 #### Java packages
 **Basics**
 - **A package is a grouping of related types providing access protection and name space management.** Note that types refers to classes, interfaces, enumerations, and annotation types.
-- You bundle related classes, interfaces and enumerations, because:
-  - You and other programmers can easily determine that these types are related.
-  - You and other programmers know where to find types that can provide related functions.
-  - The names of your types won't conflict with the type names in other packages because the package creates a new namespace.
-  - You can allow types within the package to have unrestricted access to one another yet still restrict access for types outside the package.
+- Put your classes in packages.
+- Use the name of your domain in reverse --> com.example.corejava
 - If you do not use a package statement, your type ends up in an unnamed package. Generally speaking, an unnamed package is only for small or temporary applications or when you are just beginning the development process. Otherwise, classes and interfaces belong in named packages.
+- If not defined public/privte you define the var/funct into the package scope!
 
 **Naming**
 - Package names are written in all lower case to avoid conflict with the names of classes or interfaces.
@@ -37,12 +35,15 @@
 - Classpath is a parameter in the Java Virtual Machine or the Java compiler that specifies the location of user-defined classes and packages.
 -  The parameter may be set either on the command-line, or through an environment variable.
 - (i.e.) you create your own classes and you put all the compiled mystuff.class into this CLASSPATH for later re-use.
+- Your CLASSPATH will contain JAR files (classes that were "archived")
+
+
 
 
 Verwendete Technologien: Java, JPA, Hibernate, Spring, Springboot, JSF, AWS, Elasticsearch, Docker, Maven, Jenkins, Git, Tomcat, JBoss, REST, HTML5, CSS, JavaScript, jQuery etc.
 
-reaktív streamek
-meg functional pr
+**reaktív** streamek
+meg **functional pr**
 ezek most nagyon menők
 és javasoknál ez a mérce
 3 fő téma van ami a testert és a devet megkülönbözteti ( jvm , reactive, és framework-ök) + 1 a devops
