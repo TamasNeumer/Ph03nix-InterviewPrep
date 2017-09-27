@@ -7,6 +7,9 @@
 #### Constructors
 - Constructors don't have return type. (just like in C++)
 - You can overload constructors and call the other constructor in the current constructor. Here the this keyword is not a reference to the instance, but a special keyword!
+- Numbers are initialized to 0 by default, object references to null! Or you can specify the default value when defining the class variable. (private int salary = 50;)
+- **final** instance variables must be initialized by the end of the constructor.
+  - Note: When used on references that refer to mutable objects (e.g. ArrayLists) it is okay to add elements to the array. It merely states, that the reference to the array never changes! (i.e. they can't replace it nor set it to null!)
 
 ```java
 public Employee(double salary){

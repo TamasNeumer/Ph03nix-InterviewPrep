@@ -19,6 +19,7 @@
 - Use the name of your domain in reverse --> com.example.corejava
 - If you do not use a package statement, your type ends up in an unnamed package. Generally speaking, an unnamed package is only for small or temporary applications or when you are just beginning the development process. Otherwise, classes and interfaces belong in named packages.
 - If not defined public/privte you define the var/funct into the package scope!
+- Importing do not include headers! It's more like "using namespace" from C++!
 
 **Naming**
 - Package names are written in all lower case to avoid conflict with the names of classes or interfaces.
