@@ -16,6 +16,28 @@ public Employee(double salary){
   this("", salary); //Calls Employee(String, double)
 }
 ```
+#### Inner and nested classes
+**Nested Class**
+- `private static class NestedClass {...}` --> 	The	class	is private	in	Invoice,	so	only	Invoice	methods	can	access	it.
+- `public	static	class	Item` --> Now	anyone	can	construct	Item	objects	by	using	the	qualified	name	`Invoice.Item` Nesting	the	class	just	makes	it	obvious that	the	Item	class	represents	items	in	an	invoice.
+
+**Inner Class**
+- `static` modifier dropped.
+- A method	of	an	inner	class	can	access	instance	variables	of	its	outer	class.
+- Use	a	static	nested	class	when	the	instances	of	the	nested	class	don’tneed	to	know	to	which	instance	of	the	enclosing	class	they	belong.	Use	an	inner	class	only if	this	information	is	important.
+```java
+public	class	Network	{
+				public	class	Member	{
+								...
+								public	void	leave()	{
+												members.remove(this);
+								}
+				}
+				private	ArrayList<Member>	members;
+				...
+}
+```
+
 
 #### Notes
 - 2 types of functions: mutators and accessors

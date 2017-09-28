@@ -3,14 +3,28 @@
 #### [Docs](https://docs.oracle.com/javase/8/docs/api/)
 
 #### The compilation process
-- Java translates the code into **bytecode** (that is NOT machine code).
+- Java translates the code into **bytecode** (that is NOT machine code). Extension is `.class`
 - Later the Java Virtual Machine (JVM) compiles this bytecode (via Just In Time) into machine code. The segments that were once compiled are saved. (i.e. if you run a function twice no need to re-compile)
 - (+) Portability
 - (-) JIT compilation --> Slower than fully compiled languages.
 - Compile using `javac MyProg.java` and run using `java MyProg`
 
+#### Hello word analyzed
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+- `System` call System class from `java.lang`
+- `.` Dot operators provide you access to a classes members1; i.e. its fields (variables) and its methods. In this case, this dot operator allows you to reference the `out` static field within the `System` class.
+- `out` this is the name of the static field of PrintStream type within the System class containing the standard output functionality.
+- `println` this is the name of a method within the PrintStream class. This method in particular prints the contents of the parameters into the console and inserts a newline after.
+
 #### Random Java facts
 - Java doesn't support implicit int-->bool conversion.
+- A single application may have multiple classes containing an entry point (main) method. The entry point of the application is determined by the class name passed as an argument to the java command.
 
 #### Java packages
 **Basics**
