@@ -9,6 +9,7 @@
   - `\password postgres`
   - `sudo -u postgres createdb mydb`
 
+  - `sudo service postgresql restart`
   - `service postgresql status` to check status
 
   - As postgres superuser
