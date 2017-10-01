@@ -92,7 +92,7 @@ DATABASES = {
 #### Managing data in the DATABASE
 - Once you’ve created your data models, Django automatically gives you a database-abstraction API that lets you create, retrieve, update and delete objects.
 
-- In dir containing manage.py: `export DJANGO_SETTINGS_MODULE="mysite.setting`
+- In dir containing manage.py: `export DJANGO_SETTINGS_MODULE="mysite.settings"`
 - `python`
 - `import django` --> (wait a bit, be patient)
 - `django.setup()`
@@ -367,3 +367,129 @@ def was_published_recently(self):
   - `from django.urls import reverse`
   - `response = client.get(reverse('polls:index'))`
   - `response.status_code`
+
+#### Improving our view
+- The list of polls shows polls that aren’t published yet (i.e. those that have a pub_date in the future). Let’s fix that. We need to amend the get_queryset() method and change it so that it also checks the date by comparing it with timezone.now().
+
+```python
+from django.utils import timezone
+
+def get_queryset(self):
+    """
+    Return the last five published questions (not including those set to be
+    published in the future).
+    """
+    return Question.objects.filter(pub_date__lte=timezone.now()).order_by('-pub_date')[:5]
+```
+
+#### Testing the new view
+
+```python
+from django.urls import reverse
+
+def create_question(question_text, days):
+    """
+    Create a question with the given `question_text` and published the
+    given number of `days` offset to now (negative for questions published
+    in the past, positive for questions that have yet to be published).
+    """
+    time = timezone.now() + datetime.timedelta(days=days)
+    return Question.objects.create(question_text=question_text, pub_date=time)
+
+
+class QuestionIndexViewTests(TestCase):
+    def test_no_questions(self):
+        """
+        If no questions exist, an appropriate message is displayed.
+        """
+        response = self.client.get(reverse('polls:index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
+
+    def test_past_question(self):
+        """
+        Questions with a pub_date in the past are displayed on the
+        index page.
+        """
+        create_question(question_text="Past question.", days=-30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['latest_question_list'],
+            ['<Question: Past question.>']
+        )
+
+    def test_future_question(self):
+        """
+        Questions with a pub_date in the future aren't displayed on
+        the index page.
+        """
+        create_question(question_text="Future question.", days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
+
+    def test_future_question_and_past_question(self):
+        """
+        Even if both past and future questions exist, only past questions
+        are displayed.
+        """
+        create_question(question_text="Past question.", days=-30)
+        create_question(question_text="Future question.", days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['latest_question_list'],
+            ['<Question: Past question.>']
+        )
+
+    def test_two_past_questions(self):
+        """
+        The questions index page may display multiple questions.
+        """
+        create_question(question_text="Past question 1.", days=-30)
+        create_question(question_text="Past question 2.", days=-5)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['latest_question_list'],
+            ['<Question: Past question 2.>', '<Question: Past question 1.>']
+        )
+```
+
+- What we have works well; however, even though future questions don’t appear in the index, users can still reach them if they know or guess the right URL. So we need to add a similar constraint to DetailView.
+- In `polls/view.py`
+
+```python
+class DetailView(generic.DetailView):
+    ...
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
+```
+
+- In `test.py`:
+
+```python
+class QuestionDetailViewTests(TestCase):
+    def test_future_question(self):
+        """
+        The detail view of a question with a pub_date in the future
+        returns a 404 not found.
+        """
+        future_question = create_question(question_text='Future question.', days=5)
+        url = reverse('polls:detail', args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question(self):
+        """
+        The detail view of a question with a pub_date in the past
+        displays the question's text.
+        """
+        past_question = create_question(question_text='Past Question.', days=-5)
+        url = reverse('polls:detail', args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.question_text)
+
+```
