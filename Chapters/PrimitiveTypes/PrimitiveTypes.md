@@ -9,29 +9,44 @@ float, __int32, int, unsigned int, long, unsigned long  |  4 bytes
 double, __int64, long double, long long  |  8 bytes
 ___
 
-#### Representing primitive types
+#### Representing numbers in binary, decimal and octal
 - `0xABC` --> Hex (Java,C++, )
 - `0b1001` --> binary (Java, Cpp14+)
 - `010` --> Octal. (Octab1l numbers have leading zero. Java, Cpp)
 
-#### Chars
+#### Chars (Java)
 - Chars are using UTF-16
-- You need to escape the backlash --> `\\`
+- Minimum value is `\u0000` (default), maximum is `\uffff`
+- Special chars such as single quote, backlash have to be escaped. (`\t \b \n \r \f \' \" \\`)
+- `char a = 'a'; char A = 65`
 
-#### Bools
+#### Bools (Java)
 - booleans can have two values: `false` and `true`. There is no relation between bools and 0/1 as in C/C++. (Hence no implicit conversion.)
 
-#### Additional notes
-- Java has Double.NEGATIVE_INFINITY and POSITIVE_INFINITY defined. 1.0/0.0 yields positive infinity. Computing 0.0/0.0 yields NaN. (Not a number)
+#### Bytes (Java)
+- A byte is a 8-bit signed integer. It can store a minimum value of -27 (-128), and a maximum value of 27 - 1 (127)
+
+#### Long / Short (Java)
+- By default, long is a 64-bit signed integer (in Java 8, it can be either signed or unsigned).
+- Shorts are 16-bit signed integers.
+
+#### Floats / Doubles (Java)
+- A float is a single-precision 32-bit IEEE 754 floating point number. By default, decimals are interpreted as doubles. To create a float, simply append an f to the decimal literal. (`float floatExample = 0.5f;`)
+- While using float is fine for most applications, neither float nor double should be used to store exact representations of decimal numbers (like monetary amounts), or numbers where higher precision is required. Instead, the `BigDecimal` class should be used.
+  - In this case you have to use the class' methods: k.multiply(...) k.add(...) etc, as java doesn't permit the use operators with objects. [No, Java doesn't support user-defined operator overloading!] Operators are only overloaded on the string objects.
+- A float is precise to roughly an error of 1 in 10 million.
+
+#### Converting primitive types (Java)
+- Widening conversion vs Narrowing conversion.
+  - Java performs widening conversions automatically.
+  - For narrowing you have to use case (`(int)0.5f`) explicitly, otherwise exception thrown at compile time.
+- `boolean` is the only primitive data-type that cannot be converted.
+
+#### Naming convention (Java)
 - Java uses camelCase for function and variable naming (starting with a lower character). Class names start with a capital letter.
 - Cpp uses `const`, java uses `final`
   - In Java use UPPERCASE variable names for constants. (Bit like `#define` in Cpp)
   - In Java you can define and later initialize. But once initialized with final you can't change it's value. (Hence you can define and initialize using a switch case.)
-- In Java type-conversion is always legal if there is no loss of information. Also if you add float + int the int is casted to float.
-  - Be cautious int->float is legal, but can cause loss of info.
-- It is advised to use the Math.round(x) instead of casting floats to integers.
-- In Java if you are dealing with huge numbers use the `BigInteger` or `BigDecimal`, both members of the java.math package. However in this case you have to use the class' methods: k.multiply(...) k.add(...) etc, as java doesn't permit the use operators with objects. [No, Java doesn't support user-defined operator overloading!] Operators are only overloaded on the string objects.
-
 
 #### Bitwise operations
 - Left shift: `>>`
