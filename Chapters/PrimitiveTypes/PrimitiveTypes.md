@@ -14,6 +14,10 @@ ___
 - `0b1001` --> binary (Java, Cpp14+)
 - `010` --> Octal. (Octab1l numbers have leading zero. Java, Cpp)
 
+#### Java Notes
+- Primitive types don't have reference, thus in `object.id = id;` --> you only set the value (20) on the primitive variable st.id. There is no connection between st.id and id.
+- Otherwise when you use Integer, st.id and id are references.
+
 #### Chars (Java)
 - Chars are using UTF-16
 - Minimum value is `\u0000` (default), maximum is `\uffff`

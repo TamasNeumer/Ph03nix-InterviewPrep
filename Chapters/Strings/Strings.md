@@ -27,6 +27,12 @@ class Strings
         System.out.println(a == b);
         System.out.println(a != c);
         System.out.println(b != c);
+
+        // changing b this way won't affect a
+        b = "betha";
+        // Since strings are immutable the b is
+        // NEW with a NEW reference. (a!=b) now on!
+
     }
 }
 ```
