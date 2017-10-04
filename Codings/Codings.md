@@ -12,3 +12,5 @@ https://leetcode.com/problems/judge-route-circle/description/
   - You were wasted last night and now you should blur some images.For each pixel you take the surrounding 8 and the current, and calculate their average. Then you round down the value.
   - You do this only for the inner pixels. (= you crop down the 1px round of the picture)
   - Input is a std::vector<std::vector<int>> and the answer should be in the same format.
+- 08 MineSweeper
+  - Given a 2D array of bools, in which true indicates a mine. For each field calculate the number of the neighboring mines, and return a 2D int array that contains these numbers.
