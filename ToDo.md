@@ -1,5 +1,12 @@
 # TODO
 
+- Input Output in Cpp/Java
+- FileRead/Out in Java/Cpp
+
+
+
+
+
 Pflichtaufgaben:
 1. Masterthesis (3*8h)
 2. Motius Job (2*8h)
