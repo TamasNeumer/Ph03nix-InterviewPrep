@@ -491,5 +491,66 @@ class QuestionDetailViewTests(TestCase):
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+```
 
+## Part 6 - Styling
+#### Customizing look and feel
+- Static files should be stored in `django.contrib.staticfiles`
+- Create a new directory: `polls/static/polls` and create a file named `style.css`
+
+Add the following to the `index.html`
+
+```html
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
+```
+
+And the following to `style.css`
+
+```css
+li a {
+    color: green;
+}
+```
+
+## Part 7 - Tuning the admin interface
+- Any time you want to add some "model class" to the admin interface you will do the following:
+  - create a model admin class
+  - pass it as the second argument to `admin.site.register()`
+
+```python
+from django.contrib import admin
+from .models import Choice, Question
+
+
+class ChoiceInline(admin.TabularInline):
+    model = Choice
+    extra = 3
+
+
+class QuestionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,               {'fields': ['question_text']}),
+        ('Date information', {'fields': ['pub_date'], 'classes': ['collapse']}),
+    ]
+    inlines = [ChoiceInline]
+    list_display = ('question_text', 'pub_date', 'was_published_recently')
+    list_filter = ['pub_date']
+    search_fields = ['question_text']
+
+admin.site.register(Question, QuestionAdmin)
+```
+
+-  “Choice objects are edited on the Question admin page. By default, provide enough fields for 3 choices.”
+- By default, Django displays the str() of each object. But sometimes it’d be more helpful if we could display individual fields. To do that, use the list_display admin option, which is a tuple of field names to display.
+- We added an extra column "was_published_recently" to the admin interface, however sorting for it is not yet working. For this we had to define the following function in the `polls/models.py`
+
+```python
+def was_published_recently(self):
+       now = timezone.now()
+       return now - datetime.timedelta(days=1) <= self.pub_date <= now
+   was_published_recently.admin_order_field = 'pub_date'
+   was_published_recently.boolean = True
+   was_published_recently.short_description = 'Published recently?'
 ```
