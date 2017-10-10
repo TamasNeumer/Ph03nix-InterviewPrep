@@ -15,6 +15,7 @@ Methods without keywords (might) have bodies  |  Methods without keywords don't 
 *abstract* keyword lets you to remove body  | *default* keyowrd lets you add a body  
 Methods can be public, private, protected, or package-private (by default)  | All methods are public  
 
+
 ```java
 // Abstract class and usage as extension
 abstract Class RevenueCalculator{}
@@ -23,3 +24,5 @@ class Hourly extends RevenueCalculator{}
 interface RevenueCalculator{}
 class Hourly implements RevenueCalculator{}
 ```
+
+**Abstractions**

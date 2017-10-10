@@ -14,3 +14,6 @@ https://leetcode.com/problems/judge-route-circle/description/
   - Input is a std::vector<std::vector<int>> and the answer should be in the same format.
 - 08 MineSweeper
   - Given a 2D array of bools, in which true indicates a mine. For each field calculate the number of the neighboring mines, and return a 2D int array that contains these numbers.
+- 09 Replacing vector values
+  - Given an int vector / array replace each occurrence of "x" with "y"
+- 10 Check if a number (n) contains only even digits.

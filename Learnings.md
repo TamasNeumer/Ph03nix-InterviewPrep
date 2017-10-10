@@ -13,3 +13,14 @@
     - int -> Integer: `Integer.valueOf(i)`
     - Integer -> int: `i.intValue()`
     - This conversion process is **automatic**, and is called **Autoboxing** and **Unboxing**
+- It's not easy to convert int[] to ArrayList<Integer>...
+  - `List<Integer> list = Arrays.stream(ints).boxed().collect(Collectors.toList());`
+- To replace elements in int[] you convert it to stream, and apply a map function with a lambda :-)
+
+  ```java
+  int[] arrayReplace(int[] inputArray, int elemToReplace, int substitutionElem) {
+      return Arrays.stream(inputArray)
+      .map(o -> o == elemToReplace ? substitutionElem : o)
+         .toArray();
+  }
+  ```

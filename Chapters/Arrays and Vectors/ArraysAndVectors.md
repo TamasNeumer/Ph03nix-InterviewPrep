@@ -41,13 +41,15 @@ std::vector<int>::difference_type index = std::distance(v.begin(), it);`
     - If the requested value is not part of the vector, `std::lower_bound()` will return an iterator to the first element that is greater than the requested value. This behavior allows us to insert a new element at its right place in an already sorted vector.
     - If you need to insert a new element after the last element of the searched value, you should use the function `std::upper_bound()`
   - To find the largest or smallest element stored in a vector, you can use the methods `std::max_element` and `std::min_element`
-```cpp
-int maxElementIndex = std::max_element(v.begin(),v.end()) - v.begin();
-int maxElement = *std::max_element(v.begin(), v.end());
-auto minmax = std::minmax_element(v.begin(), v.end());
-std::cout << "minimum element: " << *minmax.first << '\n';
-std::cout << "maximum element: " << *minmax.second << '\n';
-```
+
+    ```cpp
+    int maxElementIndex = std::max_element(v.begin(),v.end()) - v.begin();
+    int maxElement = *std::max_element(v.begin(), v.end());
+    auto minmax = std::minmax_element(v.begin(), v.end());
+    std::cout << "minimum element: " << *minmax.first << '\n';
+    std::cout << "maximum element: " << *minmax.second << '\n';
+    ```
+
 - Removing Elements
   - `pop_back()` --> deletes last element
   - `clear()` --> deleting all elements
@@ -60,17 +62,19 @@ A std::vector automatically increases its capacity upon insertion as needed, but
   - To erase **by value** the *erase-remove* idiom is used.
     - First `std::remove` moves some elements to the end of the vector, and then `erase()` chops them off.
   - Deleting elements by condition: `std::remove_if(startIt,endIt, condition)`
-```cpp
-// Remove by value: erase-remove idiom
-std::vector<int> v{ 1, 1, 2, 2, 3, 3 };
-int value_to_remove = 2;
-v.erase(std::remove(v.begin(), v.end(), value_to_remove), v.end());
 
-// Remove by "expression"
-std::vector<int> v{ 1, 2, 3, 4, 5, 6 };
-v.erase(std::remove_if(v.begin(), v.end(),
-     [](auto& element){return element > 3;} ), v.end());
-```
+    ```cpp
+    // Remove by value: erase-remove idiom
+    std::vector<int> v{ 1, 1, 2, 2, 3, 3 };
+    int value_to_remove = 2;
+    v.erase(std::remove(v.begin(), v.end(), value_to_remove), v.end());
+
+    // Remove by "expression"
+    std::vector<int> v{ 1, 2, 3, 4, 5, 6 };
+    v.erase(std::remove_if(v.begin(), v.end(),
+         [](auto& element){return element > 3;} ), v.end());
+    ```
+
 - Reserving space for elements
   - Using 1000 times `push_back()` is inefficient. You can manually reserve capacity by` reserve( N )` function (it changes vector capacity to N). --> `v_good.reserve( 10000 );`
 - Iterating over a vector:
