@@ -10,9 +10,10 @@ Wanna Do:
     - Swimming
 2. Java
     - Interfaces and Abstractions
-    - Lambdas 
+    - Lambdas
     - Input Output in Cpp/Java
     - FileRead/Out in Java/Cpp
+    - Regex
 1. Web development:
       - Web FW:
         - React, Django Summary

@@ -17,3 +17,5 @@ https://leetcode.com/problems/judge-route-circle/description/
 - 09 Replacing vector values
   - Given an int vector / array replace each occurrence of "x" with "y"
 - 10 Check if a number (n) contains only even digits.
+- 11 Check if the string argument would be a valid variable name. (Not starting with digits, only containing letters, numbers and underscore.)
+- 12 Shift each char in string by one. (z becomes a).

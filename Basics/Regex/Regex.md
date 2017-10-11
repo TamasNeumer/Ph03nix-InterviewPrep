@@ -10,7 +10,7 @@ Regex  |  Meaning
 `[a-z]`  | Any character in range of `a-z`
 `[^a-z]`  | Any character **not** in range of `a-z`
 `[a-zA-Z]`  | Any character in range of `a-z` or `A-Z`
-`.`  |  Single character
+`.`  |  (Any) Single character
 `\s`  | Any whitespace character (space, tab, newline)
 `\d`  | Any digit
 `\D`  | Any **non** digit
