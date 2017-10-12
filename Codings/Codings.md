@@ -19,3 +19,4 @@ https://leetcode.com/problems/judge-route-circle/description/
 - 10 Check if a number (n) contains only even digits.
 - 11 Check if the string argument would be a valid variable name. (Not starting with digits, only containing letters, numbers and underscore.)
 - 12 Shift each char in string by one. (z becomes a).
+- 13 determine if two board cells are of the same color on a chess board. (input: "A1", "B1")
