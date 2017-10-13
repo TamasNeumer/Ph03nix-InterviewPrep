@@ -1,6 +1,6 @@
 # Interfaces and lambda expressions
 
-#### Interfaces
+## Interfaces
 **General Info**
 - All interface members must be **public**.
   - "The Java programming language provides mechanisms for access control, to prevent the users of a package or class from depending on unnecessary details of the implementation of that package or class."
@@ -10,6 +10,13 @@
   - `object instanceof Type` --> `System.out.println(myObj instanceof Integer)`
 - Interfaces can extend another interface.
 - Any variable defined in an interface is **public static final**
+
+Abstract class | Interface
+--|--
+Methods without keywords (might) have bodies  |  Methods without keywords don't have bodies
+*abstract* keyword lets you to remove body  | *default* keyowrd lets you add a body  
+Methods can be public, private, protected, or package-private (by default)  | All methods are public  
+
 
 **Static and Default methods**
 In interfaces no method can be implemented. There are however two exceptions:
@@ -79,3 +86,42 @@ if (comp.compare(words[i], words[j]) > 0) ...
   Thread thread = new Thread(task);
   thread.start();
   ```
+
+## Lambda expressions
+**Basics**
+- A lambda expression is a block of code that you can pass around so it can be executed later once or multiple times.
+- Point of lambda expressions is deferred executions (run on separate thread, run multiple times etc.)
+- **Syntax:** `(type varName1, type varName2) -> varName2 - varName1`
+- If the type of a lambda expression can be inferred you can omit them.
+  - `Arrays.stream(inputArray)
+  .map(o -> o == elemToReplace ? substitutionElem : o)`
+- In Java there is only one thing you can do with a lambda expression: put it in a variable whose type is a functional interface.
+- A *method reference* is equivalent to a lambda expression.
+   - (`String::compareToIgnoreCase same as (x,y) -> x.compareToIgnoreCase(y)`) x.compareToIgnoreCase(y)`)
+  - `Employee::new` is a reference to an Employee constructor
+
+**Implementing deferred execution**
+```java
+public static void repeat(int n, Runnable action){
+  for (int i = 0; i < n; i++) action.run();
+}
+```
+- Now you can pass a lambda to the function that will be called via the Runnable interfaces's run function.
+
+**Scope**
+- The body of a lambda expression has the same scope as a nested block.
+- Thus the `this` keyword in a lambda denotes the `this` of the method that creates the lambda.
+- A lambda expression can only reference variables whose value don't change. --> Lambda can only access local variables from an enclosing scope that are effectively final.
+  - You can't capture the `i` of a forloop, however you can the arg of the enhanced forloop (`String arg: args`)
+- Lambda cannot mutate any captured variables.
+
+**Anonymous classes**
+```java
+public static IntSequence randomInts(int low, int high) {
+	return new IntSequence()
+		{
+			public int next() {return low + generator.nextInt(high - low + 1);}
+			public boolean hasNext() {return true;}
+		}
+}
+```
