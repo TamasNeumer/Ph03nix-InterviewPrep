@@ -7,6 +7,7 @@
 
 ## Java
 - Java doesn't represent boolean values with numbers, thus if(1){...} is wrong!
+  - It's **boolean** and **not** bool.
 - The bitwise "AND" is "&" (as in C++)
 - Java doesn't allow to create ArrayList<E> of primitive types...
   - ArrayList can only reference types, not primitives. Integer is a class, not a primitive, thus you should use Integer instead of int.
@@ -24,3 +25,12 @@
          .toArray();
   }
   ```
+
+  - String class has no `reverse`. However! **StringBuilder:** A mutable sequence of *characters*.
+    - `new StringBuilder(myStringVar).reverse().toString()`
+
+- **Anonymous arrays:** `new int[]{3, 6, -2, -5, 7, 3}`
+- There is no such thing as `!<`... Gettin tired?
+
+## Recap
+- 07 Intro
