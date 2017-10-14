@@ -31,6 +31,26 @@
 
 - **Anonymous arrays:** `new int[]{3, 6, -2, -5, 7, 3}`
 - There is no such thing as `!<`... Gettin tired?
+- You can break the outerloop in nested scenario if you add a label to the outerloop e.g.:
+
+```java
+public class _08_matrixElementsSum {
+    int matrixElementsSum(int[][] matrix) {
+        int sum = 0;
+
+        outerloop:
+        for (int column = 0; column < matrix[0].length; column++)
+        {
+            for(int row = 0; row < matrix.length; row++){
+                if(matrix[row][column] == 0) continue outerloop;
+                sum += matrix[row][column];
+            }
+        }
+        return sum;
+    }
+}
+```
+
 
 ## Recap
 - 07 Intro
