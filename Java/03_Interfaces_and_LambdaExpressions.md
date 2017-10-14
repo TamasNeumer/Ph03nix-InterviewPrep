@@ -35,7 +35,7 @@ In interfaces no method can be implemented. There are however two exceptions:
   ```
 
 **The Comparable Interface**
-- To enable comparing custom objects you have to implement the Comparable interface
+- A comparable object is capable of **comparing itself with another object.** The class itself must implements the java.lang.Comparable interface in order to be able to compare its instances.
 - When calling `x.compareTo(y)` the method returns an integer value to indicate which one should come first. A negative integer (not necessarily -1) indicates that x should come after y. If equal 0 is returned.
 
 ```java
@@ -52,6 +52,7 @@ public class Employee implements Comparable<Employee> {
 - **In Java a method can access private features of ANY object of its class.**
 
 **The Comparator Interface**
+- A comparator object is capable of comparing two different objects. The class is not comparing its instances, but some other class’s instances. This comparator class must implement the java.util.Comparator interface.
 - In some cases you cannot define your own `comapreTo` method. (e.g.: the string class has it already defined and you can't override it.) In such cases you create your own `Comparator` object, that implements the `compare` method.
 
 ```java
@@ -114,6 +115,13 @@ public static void repeat(int n, Runnable action){
 - A lambda expression can only reference variables whose value don't change. --> Lambda can only access local variables from an enclosing scope that are effectively final.
   - You can't capture the `i` of a forloop, however you can the arg of the enhanced forloop (`String arg: args`)
 - Lambda cannot mutate any captured variables.
+
+**Examples**
+- Sorting an array of strings based on their lengths:
+
+```java
+Arrays.sort(arrayVar, (s1,s2) -> Integer.compare(s1.length(), s2.length()));
+```
 
 **Anonymous classes**
 ```java

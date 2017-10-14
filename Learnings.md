@@ -51,6 +51,12 @@ public class _08_matrixElementsSum {
 }
 ```
 
+- Filtering arrays:
+  - Use streaming, that has a filter() method.
+```java
+return Arrays.stream(inputArray).filter(currentString ->
+                currentString.length() == inputArray[inputArray.length - 1].length()).toArray(String[]::new);
+```
 
 ## Recap
 - 07 Intro
