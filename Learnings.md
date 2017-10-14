@@ -53,6 +53,8 @@ public class _08_matrixElementsSum {
 
 - Filtering arrays:
   - Use streaming, that has a filter() method.
+  - It accepts a lambda, and the elements where it's value is false are "removed".
+  - Collect the stream `toArray()` that is accepts a generator: `<A> A[] toArray(IntFunction<A[]> generator)`
 ```java
 return Arrays.stream(inputArray).filter(currentString ->
                 currentString.length() == inputArray[inputArray.length - 1].length()).toArray(String[]::new);
