@@ -21,6 +21,7 @@ Regex  |  Meaning
 a?  | Zero or one of `a`  
 a*  | Zero or more of `a`  
 a+  | One or more of `a`
+`+,*,?` Are greedy. Use `?` AFTER, to make it lazy. |  e.g.: `a+?`
 a{3}  |  Exactly 3 of `a`
 a{3,6}  | Between 3 and 6 of `a`
 ^  |  Start of string
@@ -32,9 +33,9 @@ $  |  End of string
 \0 | Null character
 
 ## Greediness and laziness
-Most people new to regular expressions will attempt to use <.+>. They will be surprised when they test it on a string like This is a <EM>first</EM> test. You might expect the regex to match <EM> and when continuing after that match, </EM>.
+Most people new to regular expressions will attempt to use `<.+>`. They will be surprised when they test it on a string like "`This is a <EM>first</EM> test.`" You might expect the regex to match `<EM>` and when continuing after that match, `</EM>`.
 
-But it does not. The regex will match <EM>first</EM>.**The reason is that the `+, *, ?` are greedy**.
+But it does not. The regex will match `<EM>first</EM>`.**The reason is that the `+, *, ?` are greedy**.
 
 #### Inside the regex engine: greediness
 The first token in the regex is `<`. This is a literal. As we already know, the first place where it will match is the first `<` in the string. The next token is the dot, which matches any character except newlines. The dot is repeated by the plus. The plus is greedy. Therefore, the engine will repeat the dot as many times as it can. The dot matches `E`, so the regex continues to try to match the dot with the next character. `M` is matched, and the dot is repeated once more. The next character is the `>`. You should see the problem by now. **The dot matches the `>`**, and the engine continues repeating the dot. The dot will match all remaining characters in the string. The dot fails when the engine has reached the void after the end of the string. Only at this point does the regex engine continue with the next token: `>`.
