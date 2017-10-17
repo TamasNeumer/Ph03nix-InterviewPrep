@@ -60,5 +60,35 @@ return Arrays.stream(inputArray).filter(currentString ->
                 currentString.length() == inputArray[inputArray.length - 1].length()).toArray(String[]::new);
 ```
 
+- Char shifting
+  - `String(char[] value, int offset, int count)`
+    - Allocates a new String that contains characters from a subarray of the character array argument.
+  - `CharSequence` inteface's `IntStream chars()`
+    - Returns a stream of int zero-extending the char values from this sequence.
+  - `currentChar - 'a' + 1` shifts the value by one
+  - `% 26 ` makes sure that a "z" will be transformed back to "a"
+```java
+return new String(inputString.chars().map(
+                currentChar -> (currentChar - 'a' + 1) % 26 + 'a').toArray(), 0, inputString.length());
+```
+
+Math & Logs
+- LOGb(n) = LOGe(n) / LOGe(b)
+
+- Java automatically widens int -> double in a division of one of them is double. (100/15.0) --> automatically double result, no need to typecast the 100.
+
+#### Important
+**If you are only aiming "to pass the test" you don't think of corner cases as much as you should. Whenever writing a code (i.e. loop ranges, breaking vs not breaking out) think of corner cases istead of hoping that the "current fix" will make the tests pass...**
+
+
+- Remove each k-th elements
+  - `IntStream.range(a,b)` Returns a sequential ordered IntStream from startInclusive (inclusive) to endExclusive (exclusive) by an incremental step of 1. (This will represent our indexes)
+  - The list of indexes are filtered, so that only indexes ! %k ==0 remain.
+  - Then for each index you take inputArray[i] and put it into an Array.
+
+  ```java
+  return IntStream.range(0, inputArray.length).filter(i -> ((i+1) % k) != 0).map(i -> inputArray[i]).toArray();
+  ```
+
 ## Recap
 - 07 Intro
