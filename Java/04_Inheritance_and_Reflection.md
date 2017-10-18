@@ -124,3 +124,86 @@ public Message clone(){
 }
 ```
 - You can use the `@SuppressWarnings("unchecked")` to supress warnings.
+
+
+#### Enums
+- Syntax: `public enum Size {SMALL, MEDIUM, LARGE};`
+- Enums have methods:
+  - `.values()` returns an array in a `Size[]` array.
+- Enums can have constructors. Each instance of the enum is guaranteed to be constructed once. These constructors are private however.
+- Enums are nice to use in switch cases.
+
+  ```java
+  public enum Size {
+    SMALL("S"), MEDIUM("M");
+    private String abbreviation;
+    Size(String abbreviation){this.abbreviation = abbreviation;}
+    public String getAbbreviation(){return abbreviation;}
+  }
+  ```
+
+#### The Class class
+- You have an object and you want to know more about it. --> `Class<?>	cl = obj.getClass();`
+- Then you can get its name etc:
+  - `System.out.println(“This	object is	an instance	of	”	+	cl.getName());`
+- Alternatively, you can get a Class object by using	the	static Class.forName method:
+  - `Class<?>	cl = Class.forName(className);`
+
+**Loading resources**
+- One useful service of the Class class is to locate resources that your program may need, such as configuration files or images. If	you	place	a	resource	into	the	same	directory	as	the class	file,	you	can	open	an	input	stream	to	the	file	like	this:
+  - `InputStream stream = MyClass.class.getResourceAsStream(“config.txt”);`
+
+#### Reflection
+- Reflection	allows	a	program	to	inspect	the	contents	of	arbitrary	objects	at	runtime	and	to
+invoke	arbitrary	methods	on	them. (=manipulate classes and everything in it)
+- Nice example: You get a string: `methodToExecute` and then you call the method called `methodToExecute`, all done at runtime.
+
+Use-cases:
+- Remote procedure calling -- treat part of a message received over the network as a method name.
+- Serialization and deserialization -- convert field names to string so you can write the object's fields to a stream and later convert it back into an object.
+- Object-relational mappings -- maintain a relationship between fields in an object and columns in a database.
+- Interfaces with dynamically typed scripting languages -- turn a string value produced by a scripting language into a reference to a field or method on an object.
+
+```java
+Class reflectClass = classVar.class;
+
+String className = refelctClass.getName();
+
+int classModifier = reflectClass.getModifiers();
+if(Modifier.isPublic(classModifier)) {...}
+if(Modifier.isFinal(classModifier)) {...}
+if(Modifier.isInterface(classModifier)) {...}
+if(Modifier.isPrivate(classModifier)) {...}
+if(Modifier.isPtatic(classModifier)) {...}
+
+Class[] interfaces = reflectClass.getInterfaces();
+Class classSuper = reflectClass.getSuperclass();
+Method[] classMethods = reflectClass.getMethods();
+for(Method m : classMethods)
+{
+  if(method.getName().startsWith("get")) {...}
+}
+
+Constructor constructor = null;
+Object constructor2 = null;
+try {
+  constructor = reflectClass.getConstructor(new Class[]{OtherClassName.class})
+  // reflectClass's has 2ctors one taking a Factory (see above) and other takes 2 args (below)
+  constructor2 = reflectClass.getConstructor(int.class, String.class)).newInstance(12, "Random");
+} catch ...
+
+// Accessing private fields
+Field privateStringName = null;
+UFOEnemyShip enemyShipPrivate = new UFOEnemyShip(shipFactory);
+try{
+  String privateVarName = "idcode";
+  privateStringName = UFOEnemyShip.class.getDeclaredField(privateVarName);
+  privateStringName.setAccessible(true);
+  String valueOfName = (String) privateStringName.get(enemyShipPrivate);
+} catch ....
+
+// Accessing method
+Method privateMethod = UFOEnemyShip.class.getDeclaredMethod(methodName, null);
+privateMethod.setAccessible(true);
+String privateReturnVal = (String) privateMethod.invoke(enemyShipPrivate, null);
+```
