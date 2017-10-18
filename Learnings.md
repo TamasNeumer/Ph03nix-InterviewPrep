@@ -14,7 +14,7 @@
     - int -> Integer: `Integer.valueOf(i)`
     - Integer -> int: `i.intValue()`
     - This conversion process is **automatic**, and is called **Autoboxing** and **Unboxing**
-- It's not easy to convert int[] to ArrayList<Integer>...
+- It's not easy to convert int[] to List<Integer>...
   - `List<Integer> list = Arrays.stream(ints).boxed().collect(Collectors.toList());`
 - To replace elements in int[] you convert it to stream, and apply a map function with a lambda :-)
 
@@ -53,7 +53,7 @@ public class _08_matrixElementsSum {
 
 - Filtering arrays:
   - Use streaming, that has a filter() method.
-  - It accepts a lambda, and the elements where it's value is false are "removed".
+  - It accepts a lambda, and the elements where its value is false are "removed".
   - Collect the stream `toArray()` that is accepts a generator: `<A> A[] toArray(IntFunction<A[]> generator)`
 ```java
 return Arrays.stream(inputArray).filter(currentString ->
@@ -94,6 +94,9 @@ Math & Logs
   - `inputString.replaceAll("^(\\d*).*", "$1");`
     - "$1" refers to the first back-reference (last mached), $2 would refer to the previously matched etc.
     - If the string starts with a number, the number is captured in the first capture group. Basically then you match the whole string and replace it with the content of the first capturing group. HOWEVER if it starts with another character, then it's a full match and the 1st capturing group is empty, thus you replace the entire string with an empty string.
+
+- Max value of array:
+  - `double max = Arrays.stream(array).max().getAsInt();`
 
 ## Recap
 - 07 Intro

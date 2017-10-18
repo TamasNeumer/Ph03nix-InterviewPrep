@@ -31,7 +31,9 @@ $  |  End of string
 \r | Carriage return
 \t | Tab
 \0 | Null character
-
+(pattern){2}   | repeat pattern 2 times   
+(pattern){1-6}   | repeat pattern between 1-5 times  
+  
 ## Greediness and laziness
 Most people new to regular expressions will attempt to use `<.+>`. They will be surprised when they test it on a string like "`This is a <EM>first</EM> test.`" You might expect the regex to match `<EM>` and when continuing after that match, `</EM>`.
 
