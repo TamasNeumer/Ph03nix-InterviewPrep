@@ -90,5 +90,10 @@ Math & Logs
   return IntStream.range(0, inputArray.length).filter(i -> ((i+1) % k) != 0).map(i -> inputArray[i]).toArray();
   ```
 
+- Using back-references in regexp:
+  - `inputString.replaceAll("^(\\d*).*", "$1");`
+    - "$1" refers to the first back-reference (last mached), $2 would refer to the previously matched etc.
+    - If the string starts with a number, the number is captured in the first capture group. Basically then you match the whole string and replace it with the content of the first capturing group. HOWEVER if it starts with another character, then it's a full match and the 1st capturing group is empty, thus you replace the entire string with an empty string.
+
 ## Recap
 - 07 Intro
