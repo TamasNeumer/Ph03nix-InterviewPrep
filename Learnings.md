@@ -98,5 +98,9 @@ Math & Logs
 - Max value of array:
   - `double max = Arrays.stream(array).max().getAsInt();`
 
+- String vs StringBuffer
+  - String is immutable, if you try to alter their values, another object gets created, whereas StringBuffer and StringBuilder are mutable so they can change their values.
+  - In a loop where you want to add/append use StringBuilder / StringBuffer.
+
 ## Recap
 - 07 Intro
