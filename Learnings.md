@@ -102,5 +102,4 @@ Math & Logs
   - String is immutable, if you try to alter their values, another object gets created, whereas StringBuffer and StringBuilder are mutable so they can change their values.
   - In a loop where you want to add/append use StringBuilder / StringBuffer.
 
-## Recap
-- 07 Intro
+ - `return Arrays.stream(text.split("\\W+")).max((a,b) -> a.length() - b.length()).get();`
