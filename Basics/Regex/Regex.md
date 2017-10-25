@@ -230,3 +230,12 @@ public class MatcherFindStartEndExample {
         }
     }
 ```
+
+**Replacing Matches**
+```java
+String result = input.replaceAll("\\s*,\\s*", ",");
+String result = "3:45".replaceAll(
+"(\\d{1,2}):(?<minutes>\\d{2})",
+"$1 hours and ${minutes} minutes");
+```
+- In this example we have both used `$1` that referred to the first capturing group, as well as `?<Minues>` where we captured by name.
