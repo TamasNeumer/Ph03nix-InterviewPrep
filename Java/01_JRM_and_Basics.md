@@ -66,10 +66,19 @@ public class HelloWorld {
 - (i.e.) you create your own classes and you put all the compiled mystuff.class into this CLASSPATH for later re-use.
 - Your CLASSPATH will contain JAR files (classes that were "archived")
 
-#### Conclusion
+#### Conclusion on Java Classpath
 - When programming in Java, you make other classes available to the class you are writing by putting something like this at the top of your source file: `mport org.javaguy.coolframework.MyClass;` or `import org.javaguy.coolframework.*;` so that later you can use the class.
 - It would be impractical to have the VM look through every folder on your machine, so you have to provide the VM a list of places to look. This is done by putting folder and jar files on your classpath.
 - First, let's suppose that MyClass is something you built as part of your project, and it is in a directory in your project called `output`. The .class file would be at `output/org/javaguy/coolframework/MyClass.class` (along with every other file in that package). In order to get to that file, your path would simply need to contain the folder `output`, not the whole package structure, since your import statement provides all that information to the VM.
 - Now let's suppose that you bundle CoolFramework up into a .jar file, and put that CoolFramework.jar into a lib directory in your project. You would now need to put lib/CoolFramework.jar into your classpath. The VM will look inside the jar file for the org/javaguy/coolframework part, and find your class.
 - **So, classpaths contain:** JAR files, and Paths to the top of package hierarchies.
 - You can **either** add this path to your envoronment variables (`export CLASSPATH=/home/myaccount/myproject/lib/CoolFramework.jar:/home/myaccount/myproject/output/`) or you can specify it when starting Java: `java -cp "/home/myaccount/myproject/lib/CoolFramework.jar:/home/myaccount/myproject/output/"  MyMainClass`
+
+
+#### Reading input
+```java
+import java.util.Scanner; // (!!!)
+
+Scanner scanner = new Scanner(System.in);
+String str = scanner.nextLine();
+```
