@@ -34,11 +34,25 @@ public class HelloWorld {
 - If you do not use a package statement, your type ends up in an unnamed package. Generally speaking, an unnamed package is only for small or temporary applications or when you are just beginning the development process. Otherwise, classes and interfaces belong in named packages.
 - If not defined public/privte you define the var/funct into the package scope!
 - Importing do not include headers! It's more like "using namespace" from C++!
+- **In Java, classes should be placed into source code files with the same names.**
 
 **Naming**
 - Package names are written in all lower case to avoid conflict with the names of classes or interfaces.
 - Companies use their reversed Internet domain name to begin their package names—for example, com.example.mypackage for a package named mypackage created by a programmer at example.com.
 - Packages in the Java language itself begin with java. or javax.
+- Identifier names can contain letters, digits, the dollar sign, ``$``, and underscores, ``“_”``, but they cannot begin with a digit. Identifier names are case sensitive.
+- In Java, developers often use a technique called Camel Case for naming our identifiers.
+- When naming classes, Java programmers often use uppercase for the first letter of all words, including the first.
+- It is common to name final variables (similar to constants in other languages) with all capital letters. (PI, E, DAYS_IN_JUNE etc.)
+
+
+**Keywords to know**
+- Access modifiers (public, private protected)
+- Volatile
+- final
+- static
+- void
+- etc.
 
 **Consuming packages**
 - To use a public package member from outside its package, you must do one of the following:

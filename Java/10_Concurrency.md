@@ -188,3 +188,159 @@ newValue);
 **Blocking queue**
 One commonly used tool for coordinating work between tasks is a blocking queue. Producer tasks insert items into the queue, and consumer tasks retrieve them. The
 queue lets you safely hand over data from one task to another. When you try to add an element and the queue is currently full, or you try to remove an element when the queue is empty, the operation blocks. In this way, the queue balances the workload. If the producer tasks run slower than the consumer tasks, the consumers block while waiting for the results. If the producers run faster, the queue fills up until the consumers catch up.
+
+#### Locks
+There are a number of classes in the java.util.concurrent.atomic package that use safe and efficient machine-level instructions to guarantee atomicity of operations on integers, long and boolean values, object references, and arrays thereof.
+- `long id = nextNumber.incrementAndGet();`
+
+It is guaranteed that the correct value is computed and returned, even if multiple threads access the same instance concurrently.
+
+```java
+public static AtomicLong largest = new AtomicLong();
+// In some thread...
+largest.set(Math.max(largest.get(), observed)); // Error—race condition!
+```
+- This update is not atomic. Instead, call `updateAndGet` with a lambda expression for updating the variable. In our example, we can call.
+  - `largest.updateAndGet(x -> Math.max(x, observed));` or `largest.accumulateAndGet(observed, Math::max);`
+
+
+If you anticipate high contention, you should simply use a LongAdder instead of an AtomicLong.
+
+#### Locks
+Code that must be executed in its entirety, without interruption, is called a critical section. One can use a lock to implement a critical section:
+```java
+Lock countLock = new ReentrantLock();
+int count; // Shared among multiple threads
+...
+countLock.lock();
+try {
+  count++; // Critical section
+} finally {
+  countLock.unlock(); // Make sure the lock is unlocked
+}
+```
+- Note that, by placing the unlock method into a finally clause, the lock is released if any exception happens in the critical section. Otherwise, the lock would be permanently locked, and no other thread would be able to proceed past it.
+- For that reason, application programmers should use locks as a matter of last resort. First try to avoid sharing, by using immutable data or handing off mutable data from
+one thread to another. If you must share, use prebuilt threadsafe structures such as a ConcurrentHashMap or a LongAdder. Still, it is useful to know about locks so you can understand how such data structures can be implemented.
+
+**The synchronized Keyword**
+- In Java, every object has an intrinsic lock. So it's **not** a prop of the object, which you lock via `obj.intrinsicLock.lock()`. The synchronized keyword is used to lock the intrinsic lock.
+
+```java
+synchronized (obj) {
+  Critical section
+}
+```
+
+You can also declare a method as synchronized. Then its body is locked on the receiver parameter `this`.
+
+**Waiting condition**
+```java
+public synchronized Object take() {
+  if (head == null) ... // Now what?
+  Node n = head;
+  head = n.next;
+  return n.value;
+}
+```
+- If the head is null there are no process to fetch from the queue. -> Have to wait until somebody puts there an element. --> **wait()**
+
+```java
+public synchronized Object take() throws InterruptedException {
+  while (head == null) wait();
+  ...
+}
+```
+- Note that the wait method is a method of the Object class. It relates to the lock that is associated with the object.
+- The thread is not made runnable when the lock is available.
+Instead, it stays deactivated until another thread has called the notifyAll method on the same object.
+
+```java
+public synchronized void add(Object newValue) {
+  ...
+  notifyAll();
+}
+```
+
+When implementing data structures with blocking methods, the wait, notify, and notifyAll methods are appropriate. But they are not easy to use properly. Application programmers should never have a need to use these methods. Instead, use prebuilt data structures such as LinkedBlockingQueue or ConcurrentHashMap.
+
+
+#### Threads
+**Strting threads**
+Starting a thread:
+```java
+Runnable task = () -> { ... };
+Thread thread = new Thread(task);
+thread.start();
+```
+- The static sleep method makes the current thread sleep for a given period: `Thread.sleep(millis);`
+- If you want to wait for a thread to finish, call the join method: `thread.join(millis);`
+
+**Thread interrupt**
+Each thread has an interrupted status that indicates that someone would like to “interrupt” the thread. A Runnable can check for this status, which is typically done in a loop:
+```java
+Runnable task = () -> {
+  while (more work to do) {
+    if (Thread.currentThread().isInterrupted()) return;
+    Do more work
+  }
+};
+```
+- If the thread is interrupted while it waits or sleeps, it is immediately reactivated—but in this case, the interrupted status is not set. Instead, an InterruptedException is thrown.
+
+**Thread local variables**
+Sometimes, you can avoid sharing by giving each thread its own instance, using the `ThreadLocal` helper class.
+
+```java
+ublic static final ThreadLocal<NumberFormat> currencyFormat
+= ThreadLocal.withInitial(() -> NumberFormat.getCurrencyInstance());
+
+String amountDue = currencyFormat.get().format(total);
+```
+
+#### Processes
+Start the building process by specifying the command that you want to execute. You can supply a List<String> or simply the strings that make up the command.
+
+Each process has a working directory, which is used to resolve relative directory names. By default, a process has the same working directory as the virtual machine, which is typically the directory from which you launched the java program. You can change it with the directory method:
+
+```java
+ProcessBuilder builder = new ProcessBuilder("gcc", "myapp.c");
+builder = builder.directory(path.toFile());
+
+Process p = new ProcessBuilder(command).directory(file).start();
+```
+
+Next, you will want to specify what should happen to the standard input, output, and error streams of the process. By default, each of them is a pipe that you can access with
+
+```java
+OutputStream processIn = p.getOutputStream();
+InputStream processOut = p.getInputStream();
+InputStream processErr = p.getErrorStream();
+```
+
+After you have configured the builder, invoke its start method to start the process. If you configured the input, output, and error streams as pipes, you can now write to
+the input stream and read the output and error streams.
+
+```java
+Process process = new ProcessBuilder("/bin/ls", "-l")
+  .directory(Paths.get("/tmp").toFile())
+  .start();
+try (Scanner in = new Scanner(process.getInputStream())) {
+  while (in.hasNextLine())
+  System.out.println(in.nextLine());
+}
+```
+
+To wait for the process to finish, call `int result = process.waitFor();``or:
+
+```java
+long delay = ...;
+if (process.waitfor(delay, TimeUnit.SECONDS)) {
+  int result = process.exitValue();
+  ...
+} else {
+  process.destroyForcibly();
+}
+```
+
+Finally, you can receive an asynchronous notification when the process has completed. The call`` process.onExit()`` yields a ``CompletableFuture<Process> ``that you can use to schedule any action.
