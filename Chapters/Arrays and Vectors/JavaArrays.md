@@ -36,10 +36,15 @@ int[][] numbers6 = new int[5][4];              // Multidimensional array: 5x4
     - `List<String> stringList = new ArrayList<String>(Arrays.asList(stringArray));`
     - `List<String> stringList = new ArrayList<>(Arrays.asList(stringArray));` (Java SE7+ Diamond notation --> Type inferrence)
   - This **doesn't work for POD types**. In order to convert a primitive array to a List, first of all, convert the primitive array to an array of the corresponding wrapper type (i.e. call Arrays.asList on an Integer[] instead of an int[])
-    - `int[] arr = {1, 2, 3};`
-    - `System.out.println(Arrays.asList(arr).contains(1));` --> False
-    - `Integer[] arr = {1, 2, 3};`
-    - `System.out.println(Arrays.asList(arr).contains(1));` --> True
+
+    ```java
+    int[] arr = {1, 2, 3};
+    System.out.println(Arrays.asList(arr).contains(1)); //--> False
+    Integer[] arr2 = {1, 2, 3};
+    System.out.println(Arrays.asList(arr2).contains(1)); //--> True
+    ```
+    - Explanation: Autoboxing only happens for a single element, not for arrays of primitives. When you pass an array of primitives (int[] in your case) to Arrays.asList, it creates a List<int[]> with a single element - the array itself. Therefore contains(3) returns false. contains(array) would return true.
+
     - Note that every primitive type in Java has an equivalent wrapper class: class:
       - byte has Byte
       - short has Short

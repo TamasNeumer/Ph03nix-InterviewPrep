@@ -3,9 +3,6 @@ The collections framework in `java.util` provides a number of generic classes fo
 
 Collections framework contains interfaces for `Collection<O>`, with main sub-interfaces `List<O> `and `Set<O>`, and mapping collection `Map<K,V>`. Collections are the root interface and are being implemented by many other collection frameworks.
 
-
-
-
 #### Removing items from a List wihin a loop
 - It is tricky to remove items from a list while within a loop, this is due to the fact that the index and length of the list gets changed. (Normally if you would do `list.remove(index)` inside the loop, you would skip the next element.) --> Thus the original index[1] is skipped.
 - Removing in the enhanced for statement Throws Exception

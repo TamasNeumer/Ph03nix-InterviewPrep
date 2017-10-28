@@ -82,3 +82,14 @@ import java.util.Scanner; // (!!!)
 Scanner scanner = new Scanner(System.in);
 String str = scanner.nextLine();
 ```
+
+#### Primitive types and Strings
+**Primitive types and their size**
+- byte(1), short(2), int(4), ling(8), double(8), boolean(1), char(2)
+- Use `BigInteger` if int is not enough.
+
+**String to int and int to String**
+- `Integer.toString(int)`, `String.valueOf(int)`
+- `Integer.parseInt(string)`
+- When using concatenation operator (`+`) with strings and ints, ints are automatically converted.
+-

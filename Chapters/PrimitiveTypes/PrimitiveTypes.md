@@ -1,13 +1,14 @@
 ## Primitive Types
 #### Size of fundamental types (MSDN)
 In C/C++ the actual size depends on the processor for which a program is compiled. In Java it is not the case.
+
 Type  |  Size
 --|--
-bool, char, unsigned char, signed char, __int8  |  1 byte
-__int16, short, unsigned short, wchar_t, __wchar_t  |  	2 bytes
-float, __int32, int, unsigned int, long, unsigned long  |  4 bytes
-double, __int64, long double, long long  |  8 bytes
-___
+bool, char, unsigned char, signed char int8|  1 byte
+int16, short, unsigned short, wchar_t, wchar_t  |  	2 bytes
+float, int32, int, unsigned int, long, unsigned long  |  4 bytes
+double, int64, long double, long long  |  8 bytes
+
 
 #### Representing numbers in binary, decimal and octal
 - `0xABC` --> Hex (Java,C++, )
@@ -15,19 +16,18 @@ ___
 - `010` --> Octal. (Octab1l numbers have leading zero. Java, Cpp)
 
 #### Java Notes
-- Primitive types don't have reference, thus in `object.id = id;` --> you only set the value (20) on the primitive variable st.id. There is no connection between st.id and id.
-- Otherwise when you use Integer, st.id and id are references.
+- Primitive types are not packed in an ojbect. They don't have reference, hence when passed to functions they are passed by value!
 
-#### Chars (Java)
-- Chars are using UTF-16
+#### Char (Java)
+- Chars are using UTF-16. (16 -> 16 bits. get it?)
 - Minimum value is `\u0000` (default), maximum is `\uffff`
 - Special chars such as single quote, backlash have to be escaped. (`\t \b \n \r \f \' \" \\`)
 - `char a = 'a'; char A = 65`
 
-#### Bools (Java)
+#### Boolean (Java)
 - booleans can have two values: `false` and `true`. There is no relation between bools and 0/1 as in C/C++. (Hence no implicit conversion.)
 
-#### Bytes (Java)
+#### Byte (Java)
 - A byte is a 8-bit signed integer. It can store a minimum value of -27 (-128), and a maximum value of 27 - 1 (127)
 
 #### Long / Short (Java)
@@ -37,7 +37,7 @@ ___
 #### Floats / Doubles (Java)
 - A float is a single-precision 32-bit IEEE 754 floating point number. By default, decimals are interpreted as doubles. To create a float, simply append an f to the decimal literal. (`float floatExample = 0.5f;`)
 - While using float is fine for most applications, neither float nor double should be used to store exact representations of decimal numbers (like monetary amounts), or numbers where higher precision is required. Instead, the `BigDecimal` class should be used.
-  - In this case you have to use the class' methods: k.multiply(...) k.add(...) etc, as java doesn't permit the use operators with objects. [No, Java doesn't support user-defined operator overloading!] Operators are only overloaded on the string objects.
+  - In this case you have to use the class' methods: k.multiply(...) k.add(...) etc, as java doesn't permit the use operators with objects. [**No, Java doesn't support user-defined operator overloading!**] Operators are only overloaded on the string objects.
 - A float is precise to roughly an error of 1 in 10 million.
 
 #### Converting primitive types (Java)

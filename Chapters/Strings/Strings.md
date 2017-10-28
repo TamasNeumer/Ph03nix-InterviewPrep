@@ -2,7 +2,7 @@
 
 ## Java
 - Strings (java.lang.String) are pieces of text stored in your program. Strings are not a primitive data type in Java, however, they are very common in Java programs.
-- Strings are **immutable** --> returning new objects.
+- Strings are **immutable** --> returning new objects if you want to modify --> Don't use `varString += "appendedString";` in loops, as you are creating new variables on each iteration.
 
 #### String memory management
 - Like many Java objects, all String instances are created on the heap, even literals. When the JVM finds a String literal that has no equivalent reference in the heap, the JVM creates a corresponding String instance on the heap and it also stores a reference to the newly created String instance in the String pool. Any other references to the same String literal are replaced with the previously created String instance in the heap.
@@ -43,7 +43,7 @@ class Strings
   - Test == null with the `==` operator.
 - Switch statements: As of Java 1.7, it is possible to compare a String variable to literals in a switch statement. Make sure that the String is not null, otherwise it will always throw a NullPointerException. Values are compared using String.equals, i.e. case sensitive.
 - Comparing vs constant values:
-  - When comparing a String to a constant value, you can put the constant value on the left side of equals to ensure that you won't get a NullPointerException if the other String is null. --> `"baz".equals(foo)`
+  - **When comparing a String to a constant value, you can put the constant value on the left side of equals to ensure that you won't get a NullPointerException if the other String is null.** --> `"baz".equals(foo)`
   - A more readable alternative is to use Objects.equals(), which does a null check on both parameters: Objects.equals(foo, "baz").
 - You can `intern` a string, meaning that you create a new reference to it: `String internedStr = strObj.intern();` Since Java 7 the internalized strings do NOT belong anymore to the Permanent Generation area of the JVM, thus it is more safe to use (wrt. overflow). [Link](https://stackoverflow.com/questions/10578984/what-is-string-interning)
 
