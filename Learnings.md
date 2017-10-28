@@ -4,8 +4,18 @@
 - `int main(int argc, char* argv[])` is the correct line!
 - Compile using the `g++ -Wall file.cpp -o File`
   - `-Wall` means that all warnings will be shown.
+- Using cpp11:
+  - g++ -std=c++11 your_file.cpp -o your_program
 
 ## Java
+#### Creating and compiling java from scratch
+- Filename: `ClassName.java`
+- public `ClassName` --> important, name has to be the same + public!
+- public static void `main` --> with small M
+- javac ClassName.java
+- java -cp . Composite
+
+
 - Java doesn't represent boolean values with numbers, thus if(1){...} is wrong!
   - It's **boolean** and **not** bool.
 - The bitwise "AND" is "&" (as in C++)

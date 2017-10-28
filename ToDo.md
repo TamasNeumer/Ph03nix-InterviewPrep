@@ -26,3 +26,18 @@ Wanna Do:
     - Primer into NLP lesen
     - Standford course
     - http://nlpforhackers.io/
+
+
+
+
+    Verwendete Technologien: Java, JPA, Hibernate, Spring, Springboot, JSF, AWS, Elasticsearch, Docker, Maven, Jenkins, Git, Tomcat, JBoss, REST, HTML5, CSS, JavaScript, jQuery etc.
+
+    **reaktív** streamek
+    meg **functional pr**
+    ezek most nagyon menők
+    és javasoknál ez a mérce
+    3 fő téma van ami a testert és a devet megkülönbözteti ( jvm , reactive, és framework-ök) + 1 a devops
+
+    meg iratkozz fel a dzone-ra , javas újság
+    a jvm alatt memory mgmt-t értek
+    tényleg ezeket nem a kisújamból szopom ki
