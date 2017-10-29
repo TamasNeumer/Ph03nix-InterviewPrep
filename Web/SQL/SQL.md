@@ -62,6 +62,7 @@ SELECT column1 FROM table_name WHERE column2 IS NOT NULL;
 - **TOP, LIMIT, RWONUM**
   - Use to limit the number of returned entries.
   - Not all database systems support the SELECT TOP clause. MySQL supports the LIMIT clause to select a limited number of records, while Oracle uses ROWNUM.
+  - Limit can be also used to select matches from n-th to m-th row via `SELECT * FROM TableName LIMIT StartIndexRow, RowsToReturn`
 
 ```SQL
 SELECT TOP 3 * FROM Customers;
@@ -431,6 +432,43 @@ ALTER TABLE Persons AUTO_INCREMENT=100;
 
 ```sql
 CREATE VIEW view_name AS SELECT column1, column2, ... FROM table_name WHERE condition;
+```
+
+#### Functions
+**Strings [Link](https://dev.mysql.com/doc/refman/5.7/en/string-functions.html)**
+- MySql and other SQLs have so called "String functions"
+- `LEFT/RIGHT()` return the left or rightmost n characters in a string
+```sql
+SELECT * FROM Table ORDER BY LEFT(columnNameContainingString, lengthInInt )
+SELECT * FROM Table ORDER BY LEFT(name, 3 )
+```
+
+- `FIELD(str,str1,str2,str3,...)` Returns the index (position) of str in the str1, str2, str3, ... list. Returns 0 if str is not found.
+  - `ORDER BY FIELD(Language,'ENU','JPN','DAN'), ID`
+
+**Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
+- DAYNAME(date) --> returns the name of the day in string
+
+
+#### Logical Structures
+**Switch CASE**
+
+```sql
+CASE case_value
+    WHEN when_value THEN statement_list
+    [WHEN when_value THEN statement_list] ...
+    [ELSE statement_list]
+END
+```
+
+**BEGIN, END**
+
+BEGIN ... END syntax is used for writing compound statements, which can appear within stored programs. A compound statement can contain multiple statements, enclosed by the BEGIN and END keywords. statement_list represents a list of one or more statements, each terminated by a semicolon (;) statement delimiter. The statement_list itself is optional, so the empty compound statement (BEGIN END) is legal. BEGIN ... END blocks can be nested.
+
+```sql
+[begin_label:] BEGIN
+    [statement_list]
+END [end_label]
 ```
 
 #### SQL Injection
