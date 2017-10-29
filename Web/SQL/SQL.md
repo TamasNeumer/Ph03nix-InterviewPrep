@@ -85,6 +85,9 @@ SELECT MIN(column_name) FROM table_name WHERE condition;
 SELECT MAX(column_name) FROM table_name WHERE condition;
 ```
 
+  - Select [greatest-n-per-group](https://stackoverflow.com/questions/tagged/greatest-n-per-group) is a very typical interview question.
+  -
+
 - **COUNT AVG SUM**
   - Number of elements, avg of elements, sum of elements
 
