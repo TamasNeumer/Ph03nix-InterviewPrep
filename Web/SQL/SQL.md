@@ -145,6 +145,13 @@ SELECT CustomerName, Address + ', ' + PostalCode + ' ' + City + ', ' +
 Country AS Address FROM Customers;
 ```
 
+**Cahcluated values in columns**
+- You can also display calculated values of columns using aliases. E.g:
+
+  ```sql
+  SELECT id, scholarship / 12 AS scholarship FROM scholarships;
+  ```
+
 #### Joins
 - **SQL Join**
   - A JOIN clause is used to combine rows from two or more tables, based on a related column between them.

@@ -48,3 +48,10 @@
   - To test your connection using psql, run the following command:
     - `psql -U postgres -W`
     - and enter your password when prompted. You should be able to access the psql console.
+
+#### Integrating with JDBC
+- Download the [JDBC Driver](https://jdbc.postgresql.org/download.html) for postgres.
+- Copy this file to your class path.
+- (add `export CLASSPATH=/usr/local/lib/javalibs/*` to your bash.rc)
+- Compile .java file with `javac Main.java`
+- Execute with `java -cp $CLASSPATH:. Main`

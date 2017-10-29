@@ -28,7 +28,9 @@ Wanna Do:
     - http://nlpforhackers.io/
 
 
-
+    Spring 5 - Async
+      - ORM = object relation mapping
+      - Hybernate (99%)
 
     Verwendete Technologien: Java, JPA, Hibernate, Spring, Springboot, JSF, AWS, Elasticsearch, Docker, Maven, Jenkins, Git, Tomcat, JBoss, REST, HTML5, CSS, JavaScript, jQuery etc.
 
