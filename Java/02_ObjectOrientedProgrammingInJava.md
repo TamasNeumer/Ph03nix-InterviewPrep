@@ -89,9 +89,84 @@ public class Foo {
 }
 ```
 
-#### Clone
-- In order to use the `clone()` function the class has to implement the `Cloneable` interface, thus implementing the `clone()` function.
-- This means to essentially create a "deep copy" by also copying any of the mutable objects that make up the internal structure of the object being cloned. If this is not implemented correctly the cloned object will not be independent and have the same references to the mutable objects as the object that it was cloned from. This would result in inconsistent behaviour as any changes to those in one would affect the other.
+#### Clone vs Copy constructor
+- In order to use the `clone()` function the **class has to implement the `Cloneable` interface**, thus implementing / **override the `clone()` function**.
+- This means to essentially create a "deep copy" by also copying any of the mutable objects that make up the internal structure of the object being cloned. If this is not implemented correctly the cloned object will not be independent and have the same references to the mutable objects as the object that it was cloned from. This would result in inconsistent behavior as any changes to those in one would affect the other.
+
+```java
+@Override
+public Employee clone() throws CloneNotSupportedException {
+	return (Employee) super.clone();
+}
+```
+- This method **never calls constructor** to create copy of an object. So if you have a static value that counts the instances of objects which is incremented in the ctor, it wont work.
+- Also this method will **copy-by-value the references**, but not the underlying values!
+
+```java
+@Override
+public Employee clone() throws CloneNotSupportedException {
+	Employee employee = (Employee)super.clone();
+	employee.packDetails = packDetails.clone();
+	return employee;
+}
+```
+- Primitive fix seems to work on first glance, but:
+  - if PayPackDetails is composed with other object references, we have to override clone method for that object too and call its clone method inside PayPackDetails.
+  - `packDetails` is a final field in the `Employee` class it is even worse, as you can't modify its value.
+
+**Solution**  
+ Use a copy constructor and return the new instance from the clone.
+
+```java
+public class PayPackDetails {
+
+	private double basicSalary = 500000d;
+	private double incentive = 50000d;
+
+	public PayPackDetails(PayPackDetails details){
+		basicSalary = details.getBasicSalary();
+		incentive = details.getIncentive();
+	}
+
+	public static void main(String[] args) {
+		Employee employee1 = new Employee("Ram","1",new PayPackDetails());
+		employee1.print();
+		Employee employee2 = new Employee(employee1);
+		employee2.print();
+	}
+}
+
+public class Employee {
+
+	private String name;
+	private String identifier;
+	private final PayPackDetails packDetails;
+
+	public Employee(String name, String identifier, PayPackDetails packDetails) {
+		this.name = name;
+		this.identifier = identifier;
+    packDetails = new PayPackDetails(emp.packDetails);
+	}
+
+  protected Employee(Employee emp) {
+		name = emp.name;
+		identifier = emp.identifier;
+		packDetails = new PayPackDetails(emp.packDetails);
+	}
+
+	public Employee clone() {
+		return new Employee(this);
+	}
+
+	public void print() {
+		System.out.println(Objects.toStringHelper(this).add("name:", name).add("id:", identifier).add("package:", packDetails.getSalary()).toString());
+	}
+}
+```
+- **Note that copy constructor is protected!** Also note that PayPackDetails class has a copy constructor as well. :-)
+- **None of the classes have to implement the marker interface Cloneable**
+- **As clone is not needed, there is no need of catching CloneNotSupportedException**
+- **As clone is not needed, there is no need of typecasting the object on calling super.clone()**
 
 #### getClass() method
 - The getClass() method can be used to find the runtime class type of an object.
