@@ -446,11 +446,30 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 - `FIELD(str,str1,str2,str3,...)` Returns the index (position) of str in the str1, str2, str3, ... list. Returns 0 if str is not found.
   - `ORDER BY FIELD(Language,'ENU','JPN','DAN'), ID`
 
+- `%` matches any number of characters, even zero characters.
+- `_` matches exactly one character.
+- `CONCAT(str1,str2,...)` Returns the string that results from concatenating the arguments. May have one or more arguments. If all arguments are nonbinary strings, the result is a nonbinary string. If the arguments include any binary strings, the result is a binary string.
+  - `SELECT CONCAT('My', 'S', 'QL');`
+  - `WHERE attribute LIKE CONCAT('%_\%',first_name,'_',second_name,'\%%') COLLATE utf8_bin`
+
+- Case Sensitivity
+  - The default character set and collation are latin1 and latin1_swedish_ci, so nonbinary string comparisons are case insensitive by default. This means that if you search with col_name LIKE 'a%', you get all column values that start with A or a. To make case sensitive  make sure that one of the operands has a case sensitive or binary collation.
+    - `col_name LIKE 'a%' COLLATE latin1_bin`
+
+
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - DAYNAME(date) --> returns the name of the day in string
 
 
-#### Logical Structures
+#### CCntrol Flow Structures
+**IF(expr1,expr2,expr3)**
+- If expr1 is TRUE (expr1 <> 0 and expr1 <> NULL), IF() returns expr2. Otherwise, it returns expr3.
+  - `SELECT IF(1<2,'yes','no');` --> yes
+  - `SELECT IF(STRCMP('test','test1'),'no','yes');` --> no
+    - STRCMP() returns 0 if the strings are the same, -1 if the first argument is smaller than the second according to the current sort order, and 1 otherwise.
+- You can also do "inner" checks:
+  - `SELECT id, IF (given_answer = correct_answer, 'correct', IF(given_answer <=> NULL, 'no answer','incorrect')) AS checks`
+
 **Switch CASE**
 
 ```sql
