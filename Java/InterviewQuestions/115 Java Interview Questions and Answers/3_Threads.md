@@ -17,7 +17,7 @@ Also, the thread pool is very efficient and can be implemented and used very eas
 
 #### 13. Explain the available thread states in a high-level.
 During its execution, a thread can reside in one of the following states:
-
+* New: A new thread begins its life cycle in the new state. It remains in this state until the program starts the thread. It is also referred to as a born thread.
 * Runnable: A thread becomes ready to run, but does not necessarily start running immediately.
 * Running: The processor is actively executing the thread code.
 * Waiting: A thread is in a blocked state waiting for some external processing to finish.

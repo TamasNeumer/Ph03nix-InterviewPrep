@@ -285,6 +285,40 @@ The collections in the java.util.concurrent package have been cleverly implement
 
 For that reason, application programmers should **use locks as a matter of last resort**. First try to avoid sharing, by using immutable data or handing off mutable data from one thread to another. If you must share, use pre-built thread-safe structures such as a ConcurrentHashMap or a LongAdder. Still, it is useful to know about locks so you can understand how such data structures can be implemented.
 
+
+**Waiting condition**  
+Imagine a scenario where there is a master thread that is putting the tasks into a pipeline. The worker threads keep taking the elements from this "stack".
+
+```java
+public synchronized Object take() {
+  if (head == null) ... // Now what?
+  Node n = head;
+  head = n.next;
+  return n.value;
+}
+```
+- If the head is null there are no process to fetch from the queue. -> Have to wait until somebody puts there an element. --> **wait()**
+
+```java
+public synchronized Object take() throws InterruptedException {
+  while (head == null) wait();
+  ...
+}
+```
+- Note that the wait method is a method of the Object class. It relates to the lock that is associated with the object.
+- The thread is not made runnable when the lock is available.
+Instead, it stays deactivated until another thread has called the `notifyAll()` method on the same object.
+
+```java
+public synchronized void add(Object newValue) {
+  ...
+  notifyAll();
+}
+```
+
+When implementing data structures with blocking methods, the wait, `notify`, and `notifyAll` methods are appropriate. But they are not easy to use properly. Application programmers should never have a need to use these methods. Instead, use prebuilt data structures such as LinkedBlockingQueue or ConcurrentHashMap.
+
+
 #### Futures and Callables
 A `Runnable` carries out a task, but it doesn't yield a value. If you have a task that computes a result, use the `Callable<V>` interface instead. Its `call` method, unlike the `run` method of the `Runnable` interface, returns a value of type `V`.
 
@@ -361,91 +395,161 @@ The Future interface is limited as a model of asynchronously executed tasks. Fut
 #### Asynchronous Computations
 When you have a `Future` object, you need to call `get` to obtain the value, blocking until the value is available. The `CompletableFuture` class implements the `Future` interface, and it provides a second mechanism for obtaining the result. You register a callback that will be invoked (in some thread) with the result once it is available.
 
+Beside implementing the Future interface, `CompletableFuture` also implements the `CompletionStage` interface.
+A `CompletionStage` is a promise. It promises that the computation eventually will be done.
+The great thing about the `CompletionStage` is that it offers a vast selection of methods that let you attach callbacks that will be executed on completion.
+This way we can build systems in a non-blocking fashion.
+
+You can create a CompletableFuture simply by using the following no-arg constructor: `CompletableFuture<String> completableFuture = new CompletableFuture<String>();` All the clients who want to get the result of this CompletableFuture can call CompletableFuture.get() method: `String result = completableFuture.get()` The `get()` method blocks until the Future is complete. So, the above call will block forever because the Future is never completed. You can use `CompletableFuture.complete()` method to manually complete a Future: `completableFuture.complete("Future's Result")` All the clients waiting for this Future will get the specified result. And, Subsequent calls to `completableFuture.complete()` will be ignored.
+
+**runAsync()**
+If you want to run some background task asynchronously and don’t want to return anything from the task, then you can use `CompletableFuture.runAsync()` method. It takes a Runnable object and returns `CompletableFuture<Void>`.
+
 ```java
-CompletableFuture<String> f = ...;
-f.thenAccept((String s) -> Process the result s);
+// Using Lambda Expression
+CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(1);
+        System.out.println("I'll run in a separate thread than the main thread.");
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+});
+
+// Block and wait for the future to complete
+future.get()
+```
+`CompletableFuture.runAsync()` is useful for tasks that don’t return anything. But what if you want to return some result from your background task?
+
+
+**supplyAsync()**  
+supplyAsync Example: `CompletableFuture.supplyAsync(this::sendMsg);`
+- `supplyAsync` takes a Supplier containing the code we want to execute asynchronously — in our case the `sendMsg` method.
+
+```java
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    return "My name is Tom.";
+});
+
+// Block and get the result of the Future
+String result = future.get();
+System.out.println(result);
 ```
 
-For example, the HttpClient class can fetch a web page asynchronously
+You might be wondering that - Well, I know that the runAsync() and supplyAsync() methods execute their tasks in a separate thread. But, we never created a thread right?
+*CompletableFuture executes these tasks in a thread obtained from the global ForkJoinPool.commonPool()!!!* However all the functions have a form where you can pass your own executor (`static CompletableFuture<Void>	runAsync(Runnable runnable, Executor executor)`)
+
+The CompletableFuture.get() method is blocking. It waits until the Future is completed and returns the result after its completion. Let's fix this issue of ours. You can attach a callback to the CompletableFuture using `thenApply(), thenAccept() and thenRun()` methods!
+
+**thenApply()**  
+You can use thenApply() method to process and transform the result of a CompletableFuture when it arrives. It takes a Function<R,T> as an argument. Function<R,T> is a simple functional interface representing a function that accepts an argument of type T and produces a result of type R. Taking the previous future we can write:
 
 ```java
-HttpClient client = HttpClient.newHttpClient();
-HttpRequest request = HttpRequest.newBuilder(new
-URI(urlString)).GET().build();
-CompletableFuture<HttpResponse<String>> f =
-  client.sendAsync(request, BodyHandler.asString());
-CompletableFuture<String> f = CompletableFuture.supplyAsync(
-  () -> { String result; Compute the result; return result; },
-  executor);
+CompletableFuture<String> greetingFuture = whatsYourNameFuture.thenApply(name -> {
+   return "Hello " + name;
+});
 
-f.whenComplete((s, t) -> {
-  if (t == null) { Process the result s; }
-  else { Process the Throwable t; }
+// Block and get the result of the future.
+System.out.println(greetingFuture.get()); // Hello Rajeev
+```
+
+You can also write a sequence of transformations on the CompletableFuture by attaching a series of thenApply() callback methods. The result of one thenApply() method is passed to the next in the series. ("Chaining")
+
+**thenAccept(), thenRun()**  
+If you don’t want to return anything from your callback function and just want to run some piece of code after the completion of the Future, then you can use `thenAccept()` and `thenRun()` methods. These methods are consumers and are often used as the last callback in the callback chain.
+
+While `thenAccept()` has access to the result of the `CompletableFuture` on which it is attached, `thenRun()` doesn’t even have access to the Future’s result. It takes a Runnable and returns `CompletableFuture<Void>`.
+
+```java
+CompletableFuture.supplyAsync(() -> {
+	return ProductService.getProductDetail(productId);
+}).thenAccept(product -> {
+	System.out.println("Got product detail from remote service " + product.getName())
+});
+
+// thenRun() example
+CompletableFuture.supplyAsync(() -> {
+    // Run some computation  
+}).thenRun(() -> {
+    // Computation Finished.
 });
 ```
 
-A `CompletableFuture` can complete in two ways: either **with a result**, or with an **uncaught exception**. In order to handle both cases, use the `whenComplete`
-method.
-
-The `isDone` method tells you whether a Future object has been completed (normally or with an exception).
-
-In a usual scenario you start chaining callbacks after each other. Also if you have to handle exceptions the code gets even more dirty. The `CompletableFuture` class solves this problem by providing a mechanismfor composing asynchronous tasks into a processing pipeline.
-
-For example, suppose we want to extract all links from a web page in order to build a web crawler. Let's say we have a method `public void CompletableFuture<String> readPage(URI url)` that yields the text of a web page when it becomes available. If the method `public static List<URI> getLinks(String page)` yields the URIs in an HTML page, you can schedule it to be called when the page is available:
+**Example 1: Combine two dependent futures using thenCompose()**
+Let’s say that you want to fetch the details of a user from a remote api service and once the user’s detail is available, you want to fetch his Credit rating from another service.
 
 ```java
-CompletableFuture<String> contents = readPage(url);
-CompletableFuture<List<URI>> links =
-  contents.thenApply(Parser::getLinks);
+CompletableFuture<User> getUsersDetail(String userId) {
+	return CompletableFuture.supplyAsync(() -> {
+		UserService.getUserDetails(userId);
+	});
+}
+
+CompletableFuture<Double> getCreditRating(User user) {
+	return CompletableFuture.supplyAsync(() -> {
+		CreditRatingService.getCreditRating(user);
+	});
+}
+
+// Nested CompletableFuture, not good.
+CompletableFuture<CompletableFuture<Double>> result = getUserDetail(userId)
+.thenApply(user -> getCreditRating(user));
+
+CompletableFuture<Double> result = getUserDetail(userId)
+.thenCompose(user -> getCreditRating(user));
 ```
 
-The `thenApply` method doesn’t block either. It returns another future. When the first future has completed, its result is fed to the `getLinks` method, and the return value of that method becomes the final result.
+*!!! In earlier examples, the `Supplier` function passed to `thenApply()` callback would return a simple value but in this case it is returning a `CompletableFuture`. Therefore, the final result in the above case is a nested `CompletableFuture` !!!* If you want the final result to be a top-level Future, use `thenCompose()` method instead. (So, Rule of thumb here - If your callback function returns a `CompletableFuture`, and you want a flattened result from the `CompletableFuture` chain (which in most cases you would), then use `thenCompose()`)
 
-Now we could dig down and deeper into the methods and params but for now it was enough. :-)
-
-Remember - if you have long running actions such as loading sites on user inputs and you want to maintain a responsible GUI use the `Runnable`:
+**Example 2: Combine two independent futures using thenCombine()**
+While `thenCompose()` is used to combine two Futures where one future is dependent on the other, `thenCombine()` is used when you want two Futures to run independently and do something after both are complete. The callback function passed to `thenCombine()` will be called when both the Futures are complete.
 
 ```java
-read.setOnAction(event -> { // Good—long-running action in separate thread
-  Runnable task = () -> {
-    Scanner in = new Scanner(url.openStream());
-    while (in.hasNextLine()) {
-    String line = in.nextLine();
-    ...
-  }
-}
-executor.execute(task);
+System.out.println("Retrieving weight.");
+CompletableFuture<Double> weightInKgFuture = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    return 65.0;
 });
-```
-**Waiting condition**
-```java
-public synchronized Object take() {
-  if (head == null) ... // Now what?
-  Node n = head;
-  head = n.next;
-  return n.value;
-}
-```
-- If the head is null there are no process to fetch from the queue. -> Have to wait until somebody puts there an element. --> **wait()**
 
-```java
-public synchronized Object take() throws InterruptedException {
-  while (head == null) wait();
-  ...
-}
-```
-- Note that the wait method is a method of the Object class. It relates to the lock that is associated with the object.
-- The thread is not made runnable when the lock is available.
-Instead, it stays deactivated until another thread has called the notifyAll method on the same object.
+System.out.println("Retrieving height.");
+CompletableFuture<Double> heightInCmFuture = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    return 177.8;
+});
 
-```java
-public synchronized void add(Object newValue) {
-  ...
-  notifyAll();
-}
+System.out.println("Calculating BMI.");
+CompletableFuture<Double> combinedFuture = weightInKgFuture
+        .thenCombine(heightInCmFuture, (weightInKg, heightInCm) -> {
+    Double heightInMeter = heightInCm/100;
+    return weightInKg/(heightInMeter*heightInMeter);
+});
+
+System.out.println("Your BMI is - " + combinedFuture.get());
 ```
 
-When implementing data structures with blocking methods, the wait, notify, and notifyAll methods are appropriate. But they are not easy to use properly. Application programmers should never have a need to use these methods. Instead, use prebuilt data structures such as LinkedBlockingQueue or ConcurrentHashMap.
+**"Spin-offs":**
+- `CompletableFuture.allOf()`
+  - CompletableFuture.allOf is used in scenarios when you have a List of independent futures that you want to run in parallel and do something after all of them are complete.
+- `CompletableFuture.anyOf()`
+  -  as the name suggests, returns a new CompletableFuture which is completed when any of the given CompletableFutures complete, with the same result
+
+**Exception handling**
+- The `exceptionally()` callback gives you a chance to recover from errors generated from the original Future. You can log the exception here and return a default value.
+- The API also provides a more generic method - `handle()` to recover from exceptions. It is called whether or not an exception occurs.
+// TODO Maybe more research here!
 
 #### Parallel algorithms
 - Streams can be parallelized via `parallelStream()`
