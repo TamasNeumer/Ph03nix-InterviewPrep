@@ -234,6 +234,7 @@ ORDER BY A.City;
       - The columns in each SELECT statement must also be in the same order.
     - The UNION operator selects only distinct values by default. To allow duplicate values, use `UNION ALL`.
     - E.g. Union --> List cities of customers + suppliers
+    - Using Union you can add custom columns.
 
 ```sql
 SELECT column_name(s) FROM table1 UNION SELECT column_name(s) FROM table2;
@@ -241,18 +242,16 @@ SELECT column_name(s) FROM table1 UNION ALL SELECT column_name(s) FROM table2;
 
 SELECT City FROM Customers UNION SELECT City FROM Suppliers ORDER BY City;
 SELECT City FROM Customers UNION ALL SELECT City FROM Suppliers ORDER BY City;
-```
 
-- **GROUP BY**
-  - The GROUP BY statement is often used with aggregate functions (COUNT, MAX, MIN, SUM, AVG) to group the result-set by one or more columns.
-  - In the example it sums the number of users per country.
-```sql
-SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country;
+SELECT  age, name
+FROM    users
+UNION
+SELECT  25 AS age, 'Betty' AS name
 ```
 
 - **HAVING**
   - The HAVING clause was added to SQL because the WHERE keyword could not be used with aggregate functions. (Group by etc.)
-
+  - "Select movies made after 2000 and select the directors, who got more than 2 oscars in total for such movies."
 ```sql
 SELECT column_name(s) FROM table_name
 WHERE condition GROUP BY column_name(s)
@@ -260,6 +259,8 @@ HAVING condition ORDER BY column_name(s);
 
 SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country
 HAVING COUNT(CustomerID) > 5;
+
+SELECT director FROM moviesInfo WHERE year >= 2000 GROUP BY director HAVING SUM(oscars) > 2;
 ```
 
 - **EXISTS**
@@ -460,8 +461,48 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - DAYNAME(date) --> returns the name of the day in string
 
+**Aggregates**
+- `SUM()` - Returns the sum of expr. If the return set has no rows, SUM() returns NULL.
+- `COUNT()` - Returns a count of the number of rows with different non-NULL expr values.
+- `GROUP BY`
+  - The GROUP BY statement is often used with aggregate functions (COUNT, MAX, MIN, SUM, AVG) to group the result-set by one or more columns.
+  - In the example it sums the number of users per country.
+    - `SELECT COUNT(CustomerID), Country FROM Customers GROUP BY Country;`
+  - `Group By X` means put all those with the same value for X in the one group.
+  - `Group By X, Y` means put all those with the same values for both X and Y in the one group.
+    - Group them so that all of those with the same Subject and Semester are in the same group, and then calculate all the aggregate functions (Count, Sum, Average, etc.) for each of those groups.
 
-#### CCntrol Flow Structures
+```sql
+SELECT item_name, item_type, COUNT(*) AS item_count FROM availableItems
+GROUP BY item_name, item_type
+ORDER BY item_type ASC, item_name ASC;
+
+select Subject, Semester, Count(*)
+from Subject_Selection
+group by Subject, Semester
+
+SELECT year, SUM(profit) AS profit
+      FROM sales
+      GROUP BY year ASC WITH ROLLUP
+
+      +------+--------+
+      | year | profit |
+      +------+--------+
+      | 2000 |   4525 |
+      | 2001 |   3010 |
+      | NULL |   7535 |
+      +------+--------+
+```
+
+- `GROUP_CONCAT(expr)` This function returns a string result with the concatenated non-NULL values from a group.
+  - `SELECT GROUP_CONCAT(DISTINCT country) AS countries FROM diary;` --> Concatenates and outputs a list of countries.
+  - You can also add a `SEPERATOR`: i.e.: `GROUP_CONCAT(artists.artistname SEPARATOR '----')`
+
+- `ROLLUP`
+  - The GROUP BY clause permits a WITH ROLLUP modifier that causes summary output to include extra rows that represent higher-level (that is, super-aggregate) summary operations. ROLLUP thus enables you to answer questions at multiple levels of analysis with a single query.
+  - "Adding a WITH ROLLUP modifier to the GROUP BY clause causes the query to produce another row that shows the grand total over all year values"
+
+#### Cntrol Flow Structures
 **IF(expr1,expr2,expr3)**
 - If expr1 is TRUE (expr1 <> 0 and expr1 <> NULL), IF() returns expr2. Otherwise, it returns expr3.
   - `SELECT IF(1<2,'yes','no');` --> yes
@@ -469,6 +510,9 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
     - STRCMP() returns 0 if the strings are the same, -1 if the first argument is smaller than the second according to the current sort order, and 1 otherwise.
 - You can also do "inner" checks:
   - `SELECT id, IF (given_answer = correct_answer, 'correct', IF(given_answer <=> NULL, 'no answer','incorrect')) AS checks`
+
+**IFNULL(expr1,expr2)**
+- If expr1 is not NULL, IFNULL() returns expr1; otherwise it returns expr2.
 
 **Switch CASE**
 
