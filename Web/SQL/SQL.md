@@ -456,7 +456,7 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 - Case Sensitivity
   - The default character set and collation are latin1 and latin1_swedish_ci, so nonbinary string comparisons are case insensitive by default. This means that if you search with col_name LIKE 'a%', you get all column values that start with A or a. To make case sensitive  make sure that one of the operands has a case sensitive or binary collation.
     - `col_name LIKE 'a%' COLLATE latin1_bin`
-
+- `TRIM()` trims the string from pre-and after spaces.
 
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - DAYNAME(date) --> returns the name of the day in string
