@@ -534,6 +534,23 @@ BEGIN ... END syntax is used for writing compound statements, which can appear w
 END [end_label]
 ```
 
+#### SET datatype
+- A SET is a string object that can have zero or more values, each of which must be chosen from a list of permitted values specified when the table is created. For example, a column specified as SET('one', 'two') NOT NULL can have any of these values:
+  - '', 'one', 'two', 'one, two'
+- The SET elements are stored in the MySQL table as a bitmap: each element is represented by a single bit.
+
+```sql
+CREATE TABLE set_test(
+   rowid INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+   myset SET('Travel','Sports','Dancing','Fine Dining')
+ );
+```
+- Each element in our set is assigned a single bit in our bitmap (note that in spite of there only being 4 elements our set will still occupy 1 byte). If our row incorporates a given element, the associated bit will be a one. Because of this storage approach, each element also has an associated decimal value.
+  - Travel --> SET Value 000000001, Sports --> SET Value 00000010, etc.
+- Multiple elements can be represented by adding their decimal values (for example, a person's interests in Travel and Fine Dining can be represented as 00001001 or the decimal value of 8 + 1 = 9).
+- Good info [Link](http://download.nust.na/pub6/mysql/tech-resources/articles/mysql-set-datatype.html)
+- IMportant: It should be noted that the bitwise AND exhibits an OR-like behavior when used with combinations of values. Take for example the following query, which involves Travel (1) and Sports (2). `SELECT * FROM set_test WHERE myset & 3;` This query actually returns rows that contain Travel OR Sports, and not just rows that contain both. For rows with have both Travel AND Sports, we need to also check the result of our bitwise AND (&) operation against the value we are performing the bitwise AND (&) against, or use an AND clause in our query: `SELECT * FROM set_test WHERE myset & 3 = 3;` OR `SELECT * FROM set_test WHERE myset & 1 AND myset & 2;` --> use decimal values when doing & !!!
+
 #### SQL Injection
 - SQL injection usually occurs when you ask a user for input, like their username/userid, and instead of a name/id, the user gives you an SQL statement that you will unknowingly run on your database.
 
