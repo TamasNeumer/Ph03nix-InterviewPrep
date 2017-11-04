@@ -524,6 +524,12 @@ CASE case_value
 END
 ```
 
+**Variables using SET @var**
+SET syntax for variable assignment enables you to assign values to different types of variables that affect the operation of the server or clients.
+- `SET @var_name = expr;`
+- `SET @firstwin = (SELECT COUNT(match_id) FROM scores WHERE first_team_score > second_team_score);`
+- *PARANTHESES ARE IMPORTANT* around the whole expression.
+
 **BEGIN, END**
 
 BEGIN ... END syntax is used for writing compound statements, which can appear within stored programs. A compound statement can contain multiple statements, enclosed by the BEGIN and END keywords. statement_list represents a list of one or more statements, each terminated by a semicolon (;) statement delimiter. The statement_list itself is optional, so the empty compound statement (BEGIN END) is legal. BEGIN ... END blocks can be nested.
