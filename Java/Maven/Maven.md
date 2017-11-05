@@ -64,6 +64,9 @@ hetype` is the identifier of a plugin and `generate` is the identifier of a goal
 - To build the project run `mvn install`
   - You’ve just created, compiled, tested, packaged, and installed the simplest possible Maven project. To prove to yourself that this program works, run it from the command line:
   - `java -cp target/simple-1.0-SNAPSHOT.jar org.sonatype.mavenbook.App` (where org.sonatype.mavenbook was the package name)
+  - Or you can use [Mojohouse plugin](http://www.mojohaus.org/exec-maven-plugin/usage.html) that was designed to execute maven projects.
+    - `mvn exec:java -Dexec.mainClass=com.puppy.App`
+    - For this you have to include the dependencies as described [here](http://www.mojohaus.org/exec-maven-plugin/usage.html)
 
 **Core concepts: plugins and goals**  
   - A Maven **Plugin is a collection of one or more goals**. Examples of Maven plugins can be simple core plugins like the Jar plugin, which contains goals for creating JAR files, Compiler plugin, which contains goals for compiling source code and unit tests, or the Surefire plugin, which contains goals for executing unit tests and generating reports.
@@ -135,7 +138,7 @@ mvn resources:resources \
 - Add java classes (the code you write)
 - Add resources
 - `mvn install`
-
+- IF for some reason you want to skip the unit tests you can do this with `mvn install -Dmaven.test.skip=true`
 
 
 #### Working with Maven
