@@ -63,7 +63,7 @@ plugin goals which did things like compile and create a JAR.
 hetype` is the identifier of a plugin and `generate` is the identifier of a goal
 - To build the project run `mvn install`
   - You’ve just created, compiled, tested, packaged, and installed the simplest possible Maven project. To prove to yourself that this program works, run it from the command line:
-  - `java -cp target/simple-1.0-SNAPSHOT.jar org.sonatype.mavenbook.App` (where org.sonatype.mavenbook was the groupID name (?))
+  - `java -cp target/simple-1.0-SNAPSHOT.jar org.sonatype.mavenbook.App` (where org.sonatype.mavenbook was the package name)
 
 **Core concepts: plugins and goals**  
   - A Maven **Plugin is a collection of one or more goals**. Examples of Maven plugins can be simple core plugins like the Jar plugin, which contains goals for creating JAR files, Compiler plugin, which contains goals for compiling source code and unit tests, or the Surefire plugin, which contains goals for executing unit tests and generating reports.
@@ -113,6 +113,30 @@ mvn resources:resources \
     - The SNAPSHOT value refers to the 'latest' code along a development branch, and provides no guarantee the code is stable or unchanging. In other words, a SNAPSHOT version is the 'development' version before the final 'release' version.
 - `packaging`
   - The type of project, defaulting to jar, describing the packaged output produced by a project. A project with packaging jar produces a JAR archive; a project with packaging war produces a web application.
+
+**Dependency Management with Maven**
+- You can simply add dependencies in the `<dependencies>` section.
+- Support for transitive dependencies is one of Maven’s most powerful features. (i.e. If you depend on other maven project those dependencies will be added automatically)
+- Maven also works out conflicts with dependencies.
+- View your dependencies with `mvn dependency:resolve` or view the tree with `mvn dependency:tree`
+
+- Test-scoped dependency
+  - A test-scoped dependency is a dependency that is available on the classpath only during test compilation and test execution
+  - `<scope>test</scope>` to mark it as a test-scope dependency!
+
+
+#### Customizing a Maven project
+- Adding informative stuff
+  - License infomation
+  - Organization infomation
+  - Developer list (Email, timezone etc.)
+- Adding build plugins. (`<build><plugins><plugin>...</...>`)
+- Add dependencies
+- Add java classes (the code you write)
+- Add resources
+- `mvn install`
+
+
 
 #### Working with Maven
 - Creating project
