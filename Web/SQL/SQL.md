@@ -230,7 +230,8 @@ ORDER BY A.City;
   - Basically getting all combinations of two columns from different tables. (aka. carthesian product)
 
 ```sql
-SELECT * FROM departments CROSS JOIN employees ORDER BY departments.dep_name, employees.emp_name;
+SELECT * FROM departments CROSS JOIN employees
+ORDER BY departments.dep_name, employees.emp_name;
 ```
 
 
