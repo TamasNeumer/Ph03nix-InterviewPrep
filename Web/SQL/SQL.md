@@ -226,6 +226,14 @@ AND A.City = B.City
 ORDER BY A.City;
 ```
 
+- **CROSS JOIN**
+  - Basically getting all combinations of two columns from different tables. (aka. carthesian product)
+
+```sql
+SELECT * FROM departments CROSS JOIN employees ORDER BY departments.dep_name, employees.emp_name;
+```
+
+
 #### Other fancy stuff
   - **UNION**
     - The `UNION` operator is used to combine the result-set of two or more SELECT statements.
