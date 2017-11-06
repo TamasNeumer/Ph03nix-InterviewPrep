@@ -458,8 +458,18 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
     - `col_name LIKE 'a%' COLLATE latin1_bin`
 - `TRIM()` trims the string from pre-and after spaces.
 
+- `expr REGEXP pat, expr RLIKE pat` Performs a pattern match of a string expression expr against a pattern pat.
+  - `SELECT 'Michael!' REGEXP '.*';` --> 1
+  - You "regexp" escape stuff by a single slash "\." etc.
+  - However Mysql symbols (e.g. parantheses) have to be escaped with double `\\`
+  - Don't forget to check for `^&`
+
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
-- DAYNAME(date) --> returns the name of the day in string
+- `DAYNAME(date)` --> returns the name of the day in string
+- `Weekday(data)` --> returns the index of the day in a week for a given date (0 for Monday, 1 for Tuesday and ......6 for Sunday).
+- `DATE(expr)` --> create a date var from expression (string/variable)
+- `+/- INTERVAL 1 WEEK `--> add or remove units from a date
+- `QUARTER(date)` --> Returns the quarter of the year for date, in the range 1 to 4.
 
 **Aggregates**
 - `SUM()` - Returns the sum of expr. If the return set has no rows, SUM() returns NULL.
