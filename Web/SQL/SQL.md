@@ -355,10 +355,14 @@ UPDATE table_name SET column1 = value1, column2 = value2 WHERE condition;
 - The DELETE statement is used to delete existing records in a table.
 - The WHERE clause specifies which record(s) that should be deleted. If you omit the WHERE clause, **all** records in the table will be deleted!
 - Use rather an active/archived value to indicate. Once deleted you can never retrieve values.
+- Deleting CROSS REFERENCES can be done by adding the `ON DELETE CASCADE`
 
 ```SQL
 DELETE FROM table_name WHERE condition;
 DELETE * FROM table_name;
+
+ALTER TABLE groupcourses ADD FOREIGN KEY (course_id)
+REFERENCES courses (id) ON DELETE CASCADE;
 ```
 
 #### Database operations
