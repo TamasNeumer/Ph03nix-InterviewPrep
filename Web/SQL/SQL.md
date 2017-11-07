@@ -228,11 +228,21 @@ ORDER BY A.City;
 
 - **CROSS JOIN**
   - Basically getting all combinations of two columns from different tables. (aka. carthesian product)
+  - You can also create a cross join on the same table. Note the following:
+    - You give 2 aliases to the same table.
+    - You select the rows using these aliases.
 
 ```sql
 SELECT * FROM departments CROSS JOIN employees
 ORDER BY departments.dep_name, employees.emp_name;
+
+SELECT s1.name AS place1, s2.name AS place2 FROM sights AS s1 CROSS JOIN sights AS s2
+  ON s1.name < s2.name
+  WHERE SQRT(POW(s1.x - s2.x, 2) + POW(s1.y - s2.y, 2)) < 5
+  ORDER BY s1.name, s2.name;
 ```
+
+
 
 
 #### Other fancy stuff
