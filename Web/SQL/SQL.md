@@ -149,6 +149,10 @@ SELECT CustomerName, Address + ', ' + PostalCode + ' ' + City + ', ' +
 Country AS Address FROM Customers;
 ```
 
+**Subquerries with EXISTS or NOT EXISTS**
+- If a subquery returns any rows at all, EXISTS subquery is TRUE, and NOT EXISTS subquery is FALSE.
+  - `SELECT column1 FROM t1 WHERE EXISTS (SELECT * FROM t2);`
+
 **Cahcluated values in columns**
 - You can also display calculated values of columns using aliases. E.g:
 
@@ -356,6 +360,7 @@ UPDATE table_name SET column1 = value1, column2 = value2 WHERE condition;
 - The WHERE clause specifies which record(s) that should be deleted. If you omit the WHERE clause, **all** records in the table will be deleted!
 - Use rather an active/archived value to indicate. Once deleted you can never retrieve values.
 - Deleting CROSS REFERENCES can be done by adding the `ON DELETE CASCADE`
+- Or setting Foreign key reference to NULL if refernce was deleted in the meantime: `ON DELETE SET NULL;`
 
 ```SQL
 DELETE FROM table_name WHERE condition;
@@ -363,6 +368,15 @@ DELETE * FROM table_name;
 
 ALTER TABLE groupcourses ADD FOREIGN KEY (course_id)
 REFERENCES courses (id) ON DELETE CASCADE;
+```
+
+#### Altering
+- You can modify a table (i.e. changing columns, adding columns etc.)
+
+```sql
+ALTER TABLE table1 ADD COLUMN foo INT DEFAULT 0;
+ALTER TABLE restaurants ADD COLUMN description VARCHAR(100) DEFAULT 'TBD';
+ALTER TABLE restaurants ADD COLUMN active INT DEFAULT 1;
 ```
 
 #### Database operations
