@@ -126,7 +126,7 @@ mvn resources:resources \
 - Test-scoped dependency
   - A test-scoped dependency is a dependency that is available on the classpath only during test compilation and test execution
   - `<scope>test</scope>` to mark it as a test-scope dependency!
-
+- Note that your dependencies are not compiled into your project upon `mvn install`! For this use the [Assembly Plugin](https://maven.apache.org/plugins/maven-assembly-plugin/usage.html)
 
 #### Customizing a Maven project
 - Adding informative stuff
