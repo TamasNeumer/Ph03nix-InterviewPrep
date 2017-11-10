@@ -160,6 +160,25 @@ Country AS Address FROM Customers;
   SELECT id, scholarship / 12 AS scholarship FROM scholarships;
   ```
 
+**Everything + new column**
+- `select rownum, table.* from table`
+
+
+**Nested selection**
+- You need to add names to subquerries (... AS xyz)
+```sql
+SELECT id, IF(value > loss, 0, loss-value) as loss FROM
+(
+    SELECT id,
+    (SELECT SUM(expenditure_sum)
+         FROM expenditure_plan
+         WHERE WEEK(monday_date) >= ae.left_bound AND WEEK(monday_date) <= ae.right_bound
+    ) as loss,
+    value
+    FROM allowable_expenditure as ae
+) as solution;
+```
+
 #### Joins
 - **SQL Join**
   - A JOIN clause is used to combine rows from two or more tables, based on a related column between them.
@@ -256,8 +275,10 @@ SELECT s1.name AS place1, s2.name AS place2 FROM sights AS s1 CROSS JOIN sights 
       - The columns must also have similar data types
       - The columns in each SELECT statement must also be in the same order.
     - The UNION operator selects only distinct values by default. To allow duplicate values, use `UNION ALL`.
+    - Union **does not guarantee** that the internal orders of 2 subquerries are preserves. (a b c UNION d e f --> won't be a b c d e f)
     - E.g. Union --> List cities of customers + suppliers
     - Using Union you can add custom columns.
+    - **Union basically "puts the tables / queries under each other" i.e. extending the columns.**
 
 ```sql
 SELECT column_name(s) FROM table1 UNION SELECT column_name(s) FROM table2;
