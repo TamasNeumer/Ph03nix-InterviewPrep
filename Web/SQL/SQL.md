@@ -40,6 +40,7 @@ SELECT DISTINCT Country FROM Customers;
 
 - **ORDER BY (ASC|DESC)**
   - Ascending order by default.
+  - You can order by custom values
 
 ```sql
 SELECT * FROM Customers
