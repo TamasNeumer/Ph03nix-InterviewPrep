@@ -155,9 +155,20 @@ Country AS Address FROM Customers;
 
 **Cahcluated values in columns**
 - You can also display calculated values of columns using aliases. E.g:
+- In the second example you have a complex query that returns exactly 1 value per column (hence it's valid.)
 
   ```sql
   SELECT id, scholarship / 12 AS scholarship FROM scholarships;
+
+  CREATE PROCEDURE trackingSystem()
+  BEGIN
+  	SELECT DISTINCT anonymous_id AS anonym_id,
+          (SELECT event_name FROM tracks AS b
+               WHERE b.anonymous_id = a.anonymous_id AND b.user_id IS NULL ORDER BY received_at DESC LIMIT 1) AS last_null,
+          (SELECT event_name FROM tracks AS b
+                WHERE b.anonymous_id = a.anonymous_id AND b.user_id IS NOT NULL ORDER BY received_at ASC LIMIT 1) AS first_notnull
+      FROM tracks AS a ORDER BY a.anonymous_id;
+  END
   ```
 
 **Everything + new column**
@@ -491,6 +502,14 @@ ALTER TABLE Persons AUTO_INCREMENT=100;
 
 ```sql
 CREATE VIEW view_name AS SELECT column1, column2, ... FROM table_name WHERE condition;
+
+create or replace view z(a,b,c,d) as select * from scores;
+select a.*
+    from scores a, z
+    group by 1
+    having (first_criterion  in (min(b), max(b)))
+         + (second_criterion in (min(c), max(c)))
+         + (third_criterion  in (min(d), max(d))) < 2;
 ```
 
 #### Functions
