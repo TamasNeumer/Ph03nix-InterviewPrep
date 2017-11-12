@@ -119,7 +119,7 @@ Thread thread = new Thread(task);
 thread.start();
 ```
 
-**Extending the Thread class**
+**Extending the Thread class**  
 This approach provides more flexibility in handling multiple threads created using available methods in Thread class.
 - You will need to override `run( )` method available in Thread class.
 - Create thread object

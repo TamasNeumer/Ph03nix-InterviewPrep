@@ -542,6 +542,10 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
   - However Mysql symbols (e.g. parantheses) have to be escaped with double `\\`
   - Don't forget to check for `^&`
 
+- `SUBSTRING(str,pos), SUBSTRING(str FROM pos), SUBSTRING(str,pos,len), SUBSTRING(str FROM pos FOR len)`
+  - Important to note that the first letter is index `1` in the string.
+    - `SELECT SUBSTRING('Quadratically',5);` --> 'ratically'
+
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - `DAYNAME(date)` --> returns the name of the day in string
 - `Weekday(data)` --> returns the index of the day in a week for a given date (0 for Monday, 1 for Tuesday and ......6 for Sunday).
@@ -644,6 +648,34 @@ CREATE TABLE set_test(
 - Multiple elements can be represented by adding their decimal values (for example, a person's interests in Travel and Fine Dining can be represented as 00001001 or the decimal value of 8 + 1 = 9).
 - Good info [Link](http://download.nust.na/pub6/mysql/tech-resources/articles/mysql-set-datatype.html)
 - IMportant: It should be noted that the bitwise AND exhibits an OR-like behavior when used with combinations of values. Take for example the following query, which involves Travel (1) and Sports (2). `SELECT * FROM set_test WHERE myset & 3;` This query actually returns rows that contain Travel OR Sports, and not just rows that contain both. For rows with have both Travel AND Sports, we need to also check the result of our bitwise AND (&) operation against the value we are performing the bitwise AND (&) against, or use an AND clause in our query: `SELECT * FROM set_test WHERE myset & 3 = 3;` OR `SELECT * FROM set_test WHERE myset & 1 AND myset & 2;` --> use decimal values when doing & !!!
+
+
+#### Preparing and executing querries
+- Imagine that you have a table with 2 columns.
+
+query_name  |  code
+--|--
+AVG_EXEC_PRICE  |  SELECT AVG(execution_price) FROM `execution`
+COUNT_EXECUTIONS  |  SELECT COUNT(execution_id) FROM `execution`
+
+Now you want to dynamically read out the querries from the table, build the query command and execute it on your table.
+
+```sql
+/*Please add ; after each select statement*/
+CREATE PROCEDURE queriesExecution()
+BEGIN
+    set @a = concat((select group_concat(concat('select "', query_name, '" query_name, (', code, ') val') separator ' union ') from queries), ' order by 1');
+
+/* you'll get the following sql in @a, for example test 1:
+select "AVG_EXEC_PRICE" query_name, (SELECT AVG(execution_price) FROM `execution`) val 
+union
+select "COUNT_EXECUTIONS" query_name, (SELECT COUNT(execution_id) FROM `execution`) val
+order by 1
+*/
+    prepare qry from @a;
+    execute qry;
+END
+```
 
 #### SQL Injection
 - SQL injection usually occurs when you ask a user for input, like their username/userid, and instead of a name/id, the user gives you an SQL statement that you will unknowingly run on your database.
