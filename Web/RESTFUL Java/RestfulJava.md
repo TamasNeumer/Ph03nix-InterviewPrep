@@ -41,4 +41,22 @@ file, or an XML stream or a JSON stream, but has to be available through the sam
 - **DELETE/DELETE**
   - Similar process, but REST fw. deletes the entry.
 
--
+## Java APIs for JSON Processing
+- XML and JSON are the two most popular formats used by RESTful web services today.
+- JSON:
+  - objects are represented in the attribute-value pair format
+  - JSON can be:
+    - **unordered** collection of name-value pairs (representing an object). The name and the value in a pair is separated by a colon ( : ) Each name:value pair in a JSON object is separated by a comma ( , ). The entire object is enclosed in curly braces ( { } ).
+    - **ordered** collection of values (representing an array): Arrays are enclosed in square brackets ( [ ] ), and their values are separated by a comma ( , ).
+  - Datatypes:
+    - Number {"totalWeight": 123.456}
+    - String {"firstName": "Jobinesh"}
+    - Boolean {"isValidEntry": true}
+    - Array {"fruits": ["apple", "banana", "orange"]}
+    - Object {"departmentId":10, "departmentName":"IT", "manager":"John Chen"}
+    - null {"error":null}
+  - Processing JSON:
+    - **Object model:** Entire JSOn is read into memory and parsed.
+    - **Streaming model:** It reads one element at a time. The most important point is that instead of letting the parser push the content to the client (push parser), the client can pull the information from the parser as it needs (pull parser). n this model, the client is allowed to skip or stop reading contents in the middle of the process if it has finished reading the desired elements.
+      - Consider this when dealing with huge files.
+      - 

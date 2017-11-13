@@ -195,7 +195,7 @@ SELECT id, IF(value > loss, 0, loss-value) as loss FROM
 - **SQL Join**
   - A JOIN clause is used to combine rows from two or more tables, based on a related column between them.
 
-- **Inner Join**
+- **INNER Join / JOIN / CROSS JOIN**
   - Returns records that have matching values in both tables. (A AND B)
   - Note: The INNER JOIN keyword selects all rows from both tables as long as there is a match between the columns. If there are records in the "Orders" table that do not have matches in "Customers", these orders will not be shown!
   - table_orders: orderID, customerID. table_customers: customerID, customer name. --> list orderID with customerName!
@@ -616,6 +616,15 @@ CASE case_value
 END
 ```
 
+**WHILE**
+```sql
+WHILE v1 > 0 DO
+  ...
+  SET v1 = v1 - 1;
+END WHILE;
+```
+
+
 **Variables using SET @var**
 SET syntax for variable assignment enables you to assign values to different types of variables that affect the operation of the server or clients.
 - `SET @var_name = expr;`
@@ -667,7 +676,7 @@ BEGIN
     set @a = concat((select group_concat(concat('select "', query_name, '" query_name, (', code, ') val') separator ' union ') from queries), ' order by 1');
 
 /* you'll get the following sql in @a, for example test 1:
-select "AVG_EXEC_PRICE" query_name, (SELECT AVG(execution_price) FROM `execution`) val 
+select "AVG_EXEC_PRICE" query_name, (SELECT AVG(execution_price) FROM `execution`) val
 union
 select "COUNT_EXECUTIONS" query_name, (SELECT COUNT(execution_id) FROM `execution`) val
 order by 1
