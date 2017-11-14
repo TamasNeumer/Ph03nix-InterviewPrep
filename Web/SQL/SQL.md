@@ -545,6 +545,11 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 - `SUBSTRING(str,pos), SUBSTRING(str FROM pos), SUBSTRING(str,pos,len), SUBSTRING(str FROM pos FOR len)`
   - Important to note that the first letter is index `1` in the string.
     - `SELECT SUBSTRING('Quadratically',5);` --> 'ratically'
+- The `SUBSTRING_INDEX()` function returns the substring of string before number of occurrences of delimiter.
+  - `SELECT SUBSTRING_INDEX("www.w3schools.com", ".", 1);` --> www
+- `instr(a,b)` MySQL INSTR() takes a string and a substring of it as arguments, and returns an integer which indicates the position of the first occurrence of the substring within the string.
+  - `SELECT INSTR('myteststring', 'st')` --> 4
+
 
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - `DAYNAME(date)` --> returns the name of the day in string
@@ -555,6 +560,7 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 
 **Aggregates**
 - `SUM()` - Returns the sum of expr. If the return set has no rows, SUM() returns NULL.
+  - `sum(1)` is exactly equivalent to `count(*)` - it returns a count of all the rows within the group.
 - `COUNT()` - Returns a count of the number of rows with different non-NULL expr values.
 - `GROUP BY`
   - The GROUP BY statement is often used with aggregate functions (COUNT, MAX, MIN, SUM, AVG) to group the result-set by one or more columns.
@@ -563,6 +569,7 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
   - `Group By X` means put all those with the same value for X in the one group.
   - `Group By X, Y` means put all those with the same values for both X and Y in the one group.
     - Group them so that all of those with the same Subject and Semester are in the same group, and then calculate all the aggregate functions (Count, Sum, Average, etc.) for each of those groups.
+  - `GROUP BY (1)` --> Group by the first column whatever it is
 
 ```sql
 SELECT item_name, item_type, COUNT(*) AS item_count FROM availableItems
