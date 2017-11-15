@@ -199,13 +199,26 @@ SELECT id, IF(value > loss, 0, loss-value) as loss FROM
   - Returns records that have matching values in both tables. (A AND B)
   - Note: The INNER JOIN keyword selects all rows from both tables as long as there is a match between the columns. If there are records in the "Orders" table that do not have matches in "Customers", these orders will not be shown!
   - table_orders: orderID, customerID. table_customers: customerID, customer name. --> list orderID with customerName!
-
+  - Cross Join
+    - Basically getting all combinations of two columns from different tables. (aka. carthesian product)
+    - You can also create a cross join on the same table. Note the following:
+      - You give 2 aliases to the same table.
+      - You select the rows using these aliases.
 ```sql
 SELECT column_name(s) FROM table1 INNER JOIN table2 ON table1.column_name = table2.column_name;
 
 SELECT Orders.OrderID, Customers.CustomerName FROM Orders
 INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;
+
+SELECT * FROM departments CROSS JOIN employees
+ORDER BY departments.dep_name, employees.emp_name;
+
+SELECT s1.name AS place1, s2.name AS place2 FROM sights AS s1 CROSS JOIN sights AS s2
+  ON s1.name < s2.name
+  WHERE SQRT(POW(s1.x - s2.x, 2) + POW(s1.y - s2.y, 2)) < 5
+  ORDER BY s1.name, s2.name;
 ```
+
 
 - **LEFT Join**
   - The LEFT JOIN keyword returns all records from the left table (table1), and the matched records from the right table (table2). The result is NULL from the right side, if there is no match.
@@ -260,25 +273,6 @@ WHERE A.CustomerID <> B.CustomerID
 AND A.City = B.City
 ORDER BY A.City;
 ```
-
-- **CROSS JOIN**
-  - Basically getting all combinations of two columns from different tables. (aka. carthesian product)
-  - You can also create a cross join on the same table. Note the following:
-    - You give 2 aliases to the same table.
-    - You select the rows using these aliases.
-
-```sql
-SELECT * FROM departments CROSS JOIN employees
-ORDER BY departments.dep_name, employees.emp_name;
-
-SELECT s1.name AS place1, s2.name AS place2 FROM sights AS s1 CROSS JOIN sights AS s2
-  ON s1.name < s2.name
-  WHERE SQRT(POW(s1.x - s2.x, 2) + POW(s1.y - s2.y, 2)) < 5
-  ORDER BY s1.name, s2.name;
-```
-
-
-
 
 #### Other fancy stuff
   - **UNION**
