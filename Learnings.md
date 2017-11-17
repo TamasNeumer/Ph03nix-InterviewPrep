@@ -129,5 +129,8 @@ Math & Logs
   - `max`/`min`
   - `range(int startInclusive, int endExclusive)` --> returns IntStream range
     - **Trick:** `IntStream.range(0,3).forEachOrdered(n -> {...})` Nice for loop on the fly! :-)
+
 - String -> int `Integer.parseInt(str_number)`
 - int -> String `Integer.toString(int_number);` or `String.valueOf(int_number)`
+
+- `Arrays.stream(arr)` --> returns a Stream (IntStream etc). If you want to print use `Arrays.toString(arr)`
