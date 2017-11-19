@@ -57,6 +57,12 @@ integers[5] = 5;
     - `remove`
   - A Deque (pronounced “deck”) is an extension of Queue , and allows addition and removal from either end of the data structure.
 
+- **Vectors**
+  - Main differences vs ArrayList:
+    - Vector is synchronized, while ArrayList is NOT!
+    - A Vector defaults to doubling the size of its array, while the ArrayList increases its array size by 50 percent.
+    - ArrayList is newer and 20-30% faster. 
+
 ## Trees
 **Trees**
 - A tree is a data structure in which an element can be succeeded by a number of different elements, known as *children*.
@@ -184,11 +190,11 @@ a *Binary Heap*, which is a balanced tree with the property that children are �
 **TreeMap**
 - An alternative Map implementation is the TreeMap, which uses a binary tree data structure to conform to the Map interface.
 - Each node in the tree is a key-value pair.
-- Each element put into the TreeMap rebalances the tree, so that searching, deletion, and further insertion can always be performed as efficiently as possible: O(log n).
-- One main difference between a TreeMap and a HashMap is that, with a TreeMap the order of the keys is preserved when iterating over the whole collection, because the **collection is stored in order**.
+- Each element put into the TreeMap rebalances the tree, so that searching, deletion, and further insertion can always be performed as efficiently as possible: **O(log n)**.
+- One main difference between a TreeMap and a HashMap is that, with a TreeMap the order of the keys is preserved when iterating over the whole collection, because the **collection is stored in order**. TreeMap will iterate according to the "natural ordering" of the keys according to their compareTo() method (or an externally supplied Comparator).
 
 **LinkedHashMap**
-- This implementation works in the same way as a HashMap, so element retrieval will be O(1) , but it has the added property that iterating over the keys will be in the same order as insertion
+- This implementation works in the same way as a HashMap, so element retrieval will be O(1) , but it has the added property that iterating over the keys will be in the same order as insertion.
 
 **ConcurrentHashMap**
 - You should use this implementation if you ever want to share the map instance with many threads. It is thread safe, and has been specifically designed to be able to return read values while the values are being written to the map.

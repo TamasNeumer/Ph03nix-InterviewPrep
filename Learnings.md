@@ -133,4 +133,6 @@ Math & Logs
 - String -> int `Integer.parseInt(str_number)`
 - int -> String `Integer.toString(int_number);` or `String.valueOf(int_number)`
 
-- `Arrays.stream(arr)` --> returns a Stream (IntStream etc). If you want to print use `Arrays.toString(arr)`
+- Arrays
+  - `Arrays.stream(arr)` --> returns a Stream (IntStream etc). If you want to print use `Arrays.toString(arr)`
+  - `Arrays.fill(arr, value)` --> enables you to fill up your array with values.
