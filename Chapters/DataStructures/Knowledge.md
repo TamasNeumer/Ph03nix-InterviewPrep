@@ -1,4 +1,65 @@
-# Data Structures
+# Data Structures and Java Collections
+
+## Iterable interface
+**Iterators**
+- One of the root interfaces of the Java collection classes
+- Implementing this interface allows an object to be the target of the enhanced for statement (sometimes called the "for-each loop" statement). (Since 1.8 it also allows you to call `forEach​(Consumer<? super T> action)`)
+
+**Fail-fast vs fail-safe**
+- Important when dealing with concurrent approaches.
+- **Fail-fast iterator** while iterating through the collection, instantly throws `ConcurrentModificationException` if there is structural modification  of the collection. Thus, in the face of concurrent modification, the iterator fails quickly and cleanly, rather than risking arbitrary, non-deterministic behavior at an undetermined time in the future.
+  - **In Single threaded environment**: After the creation of the iterator, structure is modified at any time by any method other than iterator's own remove method.
+  - **In multi threaded environment**: If one thread is modifying the structure of the collection while other thread is iterating over it.
+  - Don't write code that depends on the fail-fast iterator's exception, since the behavior is **never guaranteed**, only throws on a best-effort basis".
+  - Detecting change is done via a "mod flag" that is checked before every operation on the iterator.
+- **Fail-safe iterator**: makes copy of the internal data structure (object array) and iterates over the copied data structure. So, original data structure remains  structurally unchanged. Hence, no `ConcurrentModificationException` throws by the fail safe iterator.
+  - Overhead of maintaining the copied data structure i.e memory.
+  - Fail safe iterator does not guarantee that the data being read is the data currently in the original data structure.
+
+
+  | Fail Fast  |  Fail Safe
+--|---|--
+Throw ConcurrentModification Exception  | Yes  |  No
+Clone object  | No  | Yes  
+Memory Overhead  | No  | Yes
+Examples  | HashMap, Vector, ArrayList, HashSet  | ConcurrentHashMap, CopyOnWriteArrayList
+
+**Iterator vs Enumerator**
+- **Iterator** has 3 methods:
+  - `hasNext()`, `next()`, `remove()`
+  - Newer and more efficient.
+  - Has remove method.
+  - Iterator is a **fail-fast** in nature.
+  - According to Java API Docs, Iterator is always preferred over the Enumeration. 
+
+- **Enumeration** has 2 methods:
+  - `hasMoreElements()`, `nextElement()`
+  - Enumeration is a legacy interface used to traverse only the legacy classes like Vector, HashTable and Stack.
+  - Enumeration is **fail-safe**.
+
+## Collection
+- Useful lists for hierarchy:
+  - [1](http://www.falkhausen.de/Java-8/java.util/Collection-Hierarchy.html)
+  - [2](http://wiki3.cosc.canterbury.ac.nz/index.php/User:Jenny_Harlow/Design_study/Java_Collections_Framework)
+
+![](res/collection_overview.png)
+
+- The Collection interface just defines a set of methods (behaviour) that each of these Collection subtypes share.
+
+**Methods to know**
+- `add​(E e)` / `addAll​(Collection<? extends E> c)`
+- `clear​()`
+- `contains​(Object o)` / `containsAll​(Collection<?> c)`
+- `equals​(Object o)`
+- `hashCode​()`
+- `isEmpty​()`
+- `iterator()` (inherited)
+- `remove(Object o)` / `removeAll​(Collection<?> c)`
+- `removeIf​(Predicate<? super E> filter)`
+- `size()`
+- `stream()`
+- `toArray​()`
+
 
 ## Lists and Arrays
 **Arrays**
@@ -28,6 +89,16 @@ integers[5] = 5;
 - Lists are **unbounded**.
 - Whenever you are working with a list, you should always **work to the List interface** where possible.
   - For example, seeding tests with dummy code from the `asList` method on the `Arrays` utility class in the standard Java library returns a list, compliant to the List interface, from the given parameters.
+
+- **List Interface**
+  - Finding elements by index or by value:
+    - `get​(int index)`
+    - `indexOf​(Object o)`
+    - `lastIndexOf​(Object o)`
+      - Searching for objects is linear in time - O(n)
+  - `listIterator​()` - iterator that allows element insertion and replacement, and bidirectional access
+  - `add​(int index, E element)` / `remove​(int index)` adding and removing can be done with indexes.
+  - `sort​(Comparator<? super E> c)`
 
 - **ArrayLists**
   - Uses array internally to store data
@@ -61,7 +132,7 @@ integers[5] = 5;
   - Main differences vs ArrayList:
     - Vector is synchronized, while ArrayList is NOT!
     - A Vector defaults to doubling the size of its array, while the ArrayList increases its array size by 50 percent.
-    - ArrayList is newer and 20-30% faster. 
+    - ArrayList is newer and 20-30% faster.
 
 ## Trees
 **Trees**
@@ -206,3 +277,37 @@ a *Binary Heap*, which is a balanced tree with the property that children are �
 **HashSet**
 - This implementation uses an underlying HashMap, storing the value as the key to the map, and the value is a marker object, signifying that a value is stored.
 - For each of the Map implementations visited earlier, there is an equivalent Set implementation: `HashSet`, `TreeSet`, and `LinkedHashSet` — although there is no Set backed by a ConcurrentHashMap.
+
+**Implementation**
+-  Uniqueness in Set is achieved through a HashMap in Java. Whenever you create an object of HashSet it will create an object of HashMap as you can see:
+
+```java
+public class HashSet<E>
+extends AbstractSet<E>
+implements Set<E>, Cloneable, java.io.Serializable
+
+{
+    private transient HashMap<E,Object> map;
+    private static final Object PRESENT = new Object();
+
+    public HashSet() {
+        map = new HashMap<>();
+    }
+
+    public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+    /* Other Stuff*/
+}
+```
+
+- As we know in HashMap each key is unique . So what we do in the set is that we pass the argument in the add(Elemene E) that is E as a key in the HashMap.
+- Note that HashMap's `put` returns the previous value associated with key, or null if there was no mapping for key. So , in HashSet add() method ,  we check the return value of map.put(key,value) method with null value, if so we return true, if not we return false.
+
+**HashTable vs  (interview question)**
+- HashTable is synchronized --> use HashMap in single threaded environment
+- HashTable does NOT allow null keys, meanwhile HashMap does!
+- HashTable uses Enumerator (so does Vector and they are the only 2 btw.). HashMap uses Iterator.
+- HashTable's enumerators are NOT fail fast!
+- HashTable is slower and uses more resources
+- HashTable
