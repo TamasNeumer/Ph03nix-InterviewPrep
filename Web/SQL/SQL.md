@@ -598,6 +598,13 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
     - Group them so that all of those with the same Subject and Semester are in the same group, and then calculate all the aggregate functions (Count, Sum, Average, etc.) for each of those groups.
   - `GROUP BY (1)` --> Group by the first column whatever it is
 
+<<<<<<< HEAD
+**Any / Single character [Link](https://dev.mysql.com/doc/refman/5.7/en/string-comparison-functions.html#operator_like)**
+- ``%`` matches any number of characters, even zero characters.
+  - `mysql> SELECT 'David!' LIKE 'David_';` --> 1
+- ``_`` matches exactly one character.
+  - `mysql> SELECT 'David!' LIKE '%D%v%';` --> 1
+=======
 ```sql
 SELECT item_name, item_type, COUNT(*) AS item_count FROM availableItems
 GROUP BY item_name, item_type
@@ -639,6 +646,7 @@ SELECT year, SUM(profit) AS profit
 
 **IFNULL(expr1,expr2)**
 - If expr1 is not NULL, IFNULL() returns expr1; otherwise it returns expr2.
+>>>>>>> d5058116502db201eb9bffe50cc5a2b90bc8612b
 
 **Switch CASE**
 
