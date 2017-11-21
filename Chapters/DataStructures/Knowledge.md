@@ -30,7 +30,7 @@ Examples  | HashMap, Vector, ArrayList, HashSet  | ConcurrentHashMap, CopyOnWrit
   - Newer and more efficient.
   - Has remove method.
   - Iterator is a **fail-fast** in nature.
-  - According to Java API Docs, Iterator is always preferred over the Enumeration. 
+  - According to Java API Docs, Iterator is always preferred over the Enumeration.
 
 - **Enumeration** has 2 methods:
   - `hasMoreElements()`, `nextElement()`
@@ -45,6 +45,8 @@ Examples  | HashMap, Vector, ArrayList, HashSet  | ConcurrentHashMap, CopyOnWrit
 ![](res/collection_overview.png)
 
 - The Collection interface just defines a set of methods (behaviour) that each of these Collection subtypes share.
+- Note that Maps are not part of the collection interface!
+- Do not confuse the Collection interface with the CollectionS utility class.
 
 **Methods to know**
 - `add​(E e)` / `addAll​(Collection<? extends E> c)`
@@ -192,6 +194,14 @@ a *Binary Heap*, which is a balanced tree with the property that children are �
   is part of the Java Collections API, but, unlike List , it **does not implement the Collection interface**.
   - Similar to the List interface, it specifies most common operations for map implementations, such as the data structure size and the ability to read, insert, and delete key-value pairs.
 
+**Map methods**
+- `containsKey​(Object key)` / `containsValue​(Object value)`
+- `entrySet​()` return a Set view on the map
+- `keySet​()` Returns a Set view of the keys contained in this map.
+- `put​(K key, V value)` / `putAll​(Map<? extends K,? extends V> m)`
+- `remove​(Object key)` / `remove​(Object key, Object value)`
+- `values()` Returns a Collection view of the values contained in this map.
+
 **HashMap**
 - **Hashing**
   - In the Java programming language, every class implicitly or explicitly provides a hashCode() method, which digests the data stored in an instance of the class into a single hash value (a 32-bit signed integer).
@@ -270,6 +280,10 @@ a *Binary Heap*, which is a balanced tree with the property that children are �
 **ConcurrentHashMap**
 - You should use this implementation if you ever want to share the map instance with many threads. It is thread safe, and has been specifically designed to be able to return read values while the values are being written to the map.
 
+**WeakhashMap**
+- Use it if you are working with large objects and you want them to get cleaned up from the map.
+- This data structure cooperates with the garbage collector to remove key/value pairs when the only reference to the key is the one from the hash table entry.
+
 ## Sets  
 **Sets**
 - A set is an unordered collection of objects that does not contain any duplicates.
@@ -311,3 +325,56 @@ implements Set<E>, Cloneable, java.io.Serializable
 - HashTable's enumerators are NOT fail fast!
 - HashTable is slower and uses more resources
 - HashTable
+
+**Treeset**
+- You use a TreeSet if you want to traverse the set in sorted order.
+- The element type of the set must implement the Comparable interface, or you need to supply a Comparator in the constructor.
+
+```java
+countries = new TreeSet<>((u, v) ->
+u.equals(v) ? 0
+: u.equals("USA") ? -1
+: v.equals("USA") ? 1
+: u.compareTo(v));
+```
+
+## Other collections
+#### Views
+- A collection view is a lightweight object that implements a collection interface, but doesn't store elements.
+- You can get views of the keys, values, and entries of a map by calling these methods:
+  - `Set<K> keySet()`, `Set<Map.Entry<K, V>> entrySet()`, `Collection<V> values()`
+- The collections that are returned are not copies of the map data, but they are connected to the map. If you remove a key or entry from the view, then the entry is also removed from the underlying map.
+- Another example is the `Arrays.asList(a)` method.
+
+#### BitSets
+- The BitSet class stores a sequence of bits. A bit set packs bits into an array of long values, so it is more efficient to use a bit set than an array of boolean values. Bit sets are **useful for sequences of flag bits or to represent sets of non-negative integers**, where the ith bit is 1 to indicate that i is contained in the set.
+- The BitSet class gives you convenient methods for getting and setting individual bits.
+- `set(index)` / `clean(index)` / `flip(index)`
+
+#### Enumeration sets
+- If you collect sets of enumerated values, use the EnumSet.
+- You can use the methods of the Set interface to work with an EnumSet.
+
+```java
+enum Weekday { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
+```
+
+#### Properties
+- The Properties class implements a map that can be easily saved and loaded using a plain text format. Such maps are commonly used for storing configuration options for programs.
+- With the properties class you can also access platform directories (user.home), os.name, os.version etc.
+
+```java
+Properties settings = new Properties();
+  settings.put("width", "200");
+  settings.put("title", "Hello, World!");
+  try (OutputStream out = Files.newOutputStream(path)) {
+    settings.store(out, "Program Properties");
+}
+
+try (InputStream in = Files.newInputStream(path)) {
+  settings.load(in);
+}
+
+String title = settings.getProperty("title", "New Document");
+// To load:
+```
