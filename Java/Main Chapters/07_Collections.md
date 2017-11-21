@@ -1,9 +1,8 @@
-# Collections
-The Java collections framework provides implementations of common data
+# Collection Framework
+The Java collection framework provides implementations of common data
 structures. The main things to remember:  
-
-1. The Collection interface provides common methods for all collections, except
-for maps which are described by the Map interface.
+0. Collections != Collection. Collection is a base interface that is implemented by the different collections, while Collections is a utility class containing nice methods for manipulating the collections.
+1. The Collection interface provides common methods for all collections, except for maps which are described by the Map interface.
 2. A list is a sequential collection in which each element has an integer index.
 3. A set is optimized for efficient containment testing. Java provides HashSet and
 TreeSet implementations.
@@ -60,7 +59,6 @@ reference to the key is the one from the hash table entry.
   - `Set<K> keySet()`, `Set<Map.Entry<K, V>> entrySet()`, `Collection<V> values()`
 - The collections that are returned are not copies of the map data, but they are connected to the map. If you remove a key or entry from the view, then the entry is also removed from the underlying map.
 - Another example is the `Arrays.asList(a)` method.
-
 
 #### Properties
 - The Properties class implements a map that can be easily saved and loaded using a plain text format. Such maps are commonly used for storing configuration options for programs.

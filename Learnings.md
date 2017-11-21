@@ -113,3 +113,26 @@ Math & Logs
   - In a loop where you want to add/append use StringBuilder / StringBuffer.
 
  - `return Arrays.stream(text.split("\\W+")).max((a,b) -> a.length() - b.length()).get();`
+
+
+#### CORE
+- IntStream is a very nice class!
+  - `average()` --> returns average
+  - `boxed()` --> returns a `Stream<Integer>`.
+    - `IntStream i = IntStream.of(1,2,3,4,5,6,7);`
+    - `Stream<Integer> o =  i.boxed();`
+  - `count()` count of elements in IntStream
+  - `distinct()` --> removes duplicate elements and returns IntStream
+  - `filter(IntPredicate predicate)` --> Stream that matches predicate
+  - `forEach()` --> Performs an action for each element of this stream. (Prallel!)
+  - `forEachOrdered(IntConsumer action)` --> forEach in order
+  - `max`/`min`
+  - `range(int startInclusive, int endExclusive)` --> returns IntStream range
+    - **Trick:** `IntStream.range(0,3).forEachOrdered(n -> {...})` Nice for loop on the fly! :-)
+
+- String -> int `Integer.parseInt(str_number)`
+- int -> String `Integer.toString(int_number);` or `String.valueOf(int_number)`
+
+- Arrays
+  - `Arrays.stream(arr)` --> returns a Stream (IntStream etc). If you want to print use `Arrays.toString(arr)`
+  - `Arrays.fill(arr, value)` --> enables you to fill up your array with values.
