@@ -449,6 +449,11 @@ SELECT * FROM Table ORDER BY LEFT(name, 3 )
 **Dates [Link](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html)**
 - DAYNAME(date) --> returns the name of the day in string
 
+**Any / Single character [Link](https://dev.mysql.com/doc/refman/5.7/en/string-comparison-functions.html#operator_like)**
+- ``%`` matches any number of characters, even zero characters.
+  - `mysql> SELECT 'David!' LIKE 'David_';` --> 1
+- ``_`` matches exactly one character.
+  - `mysql> SELECT 'David!' LIKE '%D%v%';` --> 1
 
 #### Logical Structures
 **Switch CASE**
