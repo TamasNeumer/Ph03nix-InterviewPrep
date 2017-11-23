@@ -40,7 +40,8 @@ fruitStream.filter(s -> s.contains("a"))
 
   ```java
   List<String> list = Arrays.asList("FOO", "BAR");
-  Iterable<String> iterable = () -> list.stream().map(String::toLowerCase).iterator();
+  Iterable<String> iterable =
+    () -> list.stream().map(String::toLowerCase).iterator();
   ```
 
 - Creating a frequency map
