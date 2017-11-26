@@ -180,12 +180,30 @@ public boolean isPrime(int num) {
   - **Very nice** collection to map below. (Result: age 23: [Peter, Pamela] etc.)
 - anyMatch()
   - anyMatch returns true as soon as the predicate applies to the given input element.
+- `groupingBy` similar to SQL. Usually used if you want to group elements into a Map:
 
-```java
-Map<Integer, List<Person>> personsByAge = persons
-    .stream()
-    .collect(Collectors.groupingBy(p -> p.age));
-```
+  ```java
+  Map<BlogPostType, List<BlogPost>> postsPerType = posts.stream()
+    .collect(groupingBy(BlogPost::getType));
+  ```
+
+- `partitioningBy` splits elements into those that satisfy a
+Predicate and those that do not.
+- downstream operation: the purpose of a downstream collector is to postprocess the collection of objects produced by an upstream operation, like partitioning or grouping.
+  - Operations: `count`, `min/max`, `IntegerStream.sum` etc.
+
+  ```java
+  Map<Boolean, List<String>> lengthMap = strings.stream()
+  .collect(Collectors.partitioningBy(s -> s.length() % 2 == 0));
+  // false: [a, strings, use, a]
+  // true: [this, is, long, list, of, to, as, demo]
+
+  Map<Boolean, Long> numberLengthMap = strings.stream()
+    .collect(Collectors.partitioningBy(s -> s.length() % 2 == 0,
+    Collectors.counting()));
+  // false: 4
+  // true: 8
+  ```
 
 #### Encounter order
 - Elements in streams are processed in **encounter order**. For lists it is defined, however for sets it is not. Hence if the stream has no encounter order, then any element may be returned when searching with `.findFirst()` (for example)
