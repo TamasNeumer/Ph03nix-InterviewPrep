@@ -9,7 +9,9 @@
 **Sorting with collections**
 - `java.util.Collections.sort(List)` and `java.util.Arrays.sort(Object[])` methods can be used to sort using natural ordering of objects.
 - `java.util.Collections.sort(List, Comparator)` and `java.util.Arrays.sort(Object[], Comparator)` methods can be used if a Comparator is available for comparison.
-- **Since Java 8:** the List interface is supports the `sort` method directly, no need to use Collections.sort anymore.
+- **Since Java 8:**
+  - the List interface is supports the `sort` method directly, no need to use Collections.sort anymore. These are destructive however (i.e. original data is modified)
+  - Since streams are immutable when sorting a new (sorted) stream is returned.
 
 **In Practice I: The class implements the Comparable interface**
 
@@ -44,6 +46,19 @@ Collections.sort(coll, new EmpSortByName());
 **In Practice III: With lambda since Java 8**
 ```java
 istDevs.sort((Employee o1, Employee o2)->o1.getAge()-o2.getAge());
+```
+
+**In Practice IV: Sorting with regard to multiple attributes**
+- Use the `thenComparing`. Just like comparing , it also takes a Function as an argument, again known as a keyExtractor.
+
+```java
+public List<Golfer> sortByScoreThenLastThenFirst() {
+  return golfers.stream()
+    .sorted(comparingInt(Golfer::getScore)
+    .thenComparing(Golfer::getLast)
+    .thenComparing(Golfer::getFirst))
+    .collect(toList());
+}
 ```
 
 ## Stability

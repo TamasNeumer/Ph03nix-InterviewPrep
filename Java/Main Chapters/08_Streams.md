@@ -20,6 +20,19 @@ allow you to split the contents of a stream into groups, and to obtain a result 
   - Intermediate operations return a stream so we can chain multiple intermediate operations without using semicolons.
   - Terminal operations are either void or return a non-stream result.
 - Simply changing `stream` into `parallelStream` allows the stream library to do the filtering and counting in parallel.
+- Note that **a Stream generally does not have to be closed**. It is only required to close streams that operate on IO channels. Most Stream types don't operate on resources and therefore don't require closing.
+  - In this context "closing" as like "closing a file". The stream MUST have a terminal operation!
+- The Stream interface extends `AutoCloseable`. Streams can be closed by calling the close method or by using try-with-resource statements.
+  - An example use case where a Stream should be closed is when you create a Stream of lines from a file:
+
+  ```java
+  try (`Stream<String>` lines = Files.lines(Paths.get("somePath"))) {
+    lines.forEach(System.out::println);
+  }
+  ```
+
+- Streams vs Containers
+  - While some actions can be performed on both Containers and Streams, they ultimately serve different purposes and support different operations. Containers are more focused on how the elements are stored and how those elements can be accessed efficiently. A Stream, on the other hand, doesn't provide direct access and manipulation to its elements; it is more dedicated to the group of objects as a collective entity and performing operations on that entity as a whole. Stream and Collection are separate high-level abstractions for these differing purposes.
 
 **Stream workflor**
 1. Create a stream.
@@ -134,7 +147,6 @@ public boolean isPrime(int num) {
 }
 ```
 
-
 **reduce()**  
  - The `reduction` operation combines all elements of the stream into a single result. There are three forms:
    1. The reduce method accepts a `BinaryOperator` accumulator function. (BinaryOperator = 2input 1 output, all same type)
@@ -208,6 +220,42 @@ Inside divByThree with arg 204
 First even divisible by 3 is Optional[204]
 ```
 
+#### Converting Streams to Collections
+- Use the `toList`, `toSet`, or `toCollection` methods in the `Collectors` utility class.
+- Collectors perform a “mutable reduction operation” that accumulates elements into a result container.
+- The `collect` method in Stream has two overloaded versions:
+  - `<R,A> R collect(Collector<? super T,A,R> collector)`
+  - `<R> R collect(Supplier<R> supplier, BiConsumer<R,? super T> accumulator, BiConsumer<R,R> combiner)`
+- The Collectors class also contains a method to create an array of objects:
+  - `Object[] toArray()`
+  - `<A> A[] toArray(IntFunction<A[]> generator)`
+- As you see the `Function.identity()` is the same as ` b -> b`
+
+```java
+List<String> superHeroes =
+  Stream.of("Mr. Furious", "The Blue Raja", "The Shoveler", "The Bowler", "Invisible Boy", "The Spleen", "The Sphinx")
+  .collect(Collectors.toList());
+
+List<String> actors =
+  Stream.of("Hank Azaria", "Janeane Garofalo", "William H. Macy",
+  "Paul Reubens", "Ben Stiller", "Kel Mitchell", "Wes Studi")
+  .collect(Collectors.toCollection(LinkedList::new));
+
+String[] wannabes =
+  Stream.of("The Waffler", "Reverse Psychologist", "PMS Avenger")
+  .toArray(String[]::new);
+
+Map<String, String> actorMap = actors.stream()
+  .collect(Collectors.toMap(Actor::getName, Actor::getRole));
+
+/*THE FOLLWOING TWO ARE THE SAME:*/
+Map<Integer, Book> bookMap = books.stream()
+  .collect(Collectors.toMap(Book::getId, b -> b));
+
+bookMap = books.stream()
+  .collect(Collectors.toMap(Book::getId, Function.identity()));
+```
+
 
 #### Problems
 **Streaming stings**
@@ -245,4 +293,18 @@ Optional<Integer> firstEvenGT10 = Stream.of(3, 1, 4, 1, 5, 9, 2, 6, 5)
   .findFirst();
 
 // Prints Optional.empty
+```
+
+**Creating frequency map fo words**
+- Workflow:
+  - `collect()` collects the elements of streams into a container
+  - The `groupingBy(classifier, downstream)` collector allows the collection of Stream elements into a Map by classifying each element in a group and performing a downstream operation on the elements classified in the same group.
+    - classifier is simply the identity function, which returns the element as-is
+    - the downstream operation counts the number of equal elements, using counting()
+
+```java
+Stream.of("apple", "orange", "banana", "apple")
+      .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+      .entrySet()
+      .forEach(System.out::println);
 ```
