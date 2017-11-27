@@ -46,6 +46,9 @@ public class Main {
             System.out.println(coordinates);
 
             // Sort based on x
+            // ComparingInt: Accepts a function that extracts an int sort key from a type T,
+            // and returns a Comparator<T> that compares by that sort key.
+
             coordinates.sort(Comparator.comparingInt(Coordinate::getX));
             System.out.println(coordinates);
 
