@@ -1,5 +1,6 @@
 #Codings
 
+#### LeetCode
 - 01_Hamming distance https://leetcode.com/problems/hamming-distance/description/
 - 02_Big Countries https://leetcode.com/problems/big-countries/description/
 - 03 Judge Route Circle
@@ -20,3 +21,6 @@ https://leetcode.com/problems/judge-route-circle/description/
 - 11 Check if the string argument would be a valid variable name. (Not starting with digits, only containing letters, numbers and underscore.)
 - 12 Shift each char in string by one. (z becomes a).
 - 13 determine if two board cells are of the same color on a chess board. (input: "A1", "B1")
+
+#### Usual Interview Questions
+- 14 FizBuz (Write an algorithm that prints all numbers between 1 and n, replacing multiples of 3 with the String Fizz , multiples of 5 with Buzz, and multiples of 15 with FizzBuzz .)
