@@ -24,3 +24,5 @@ https://leetcode.com/problems/judge-route-circle/description/
 
 #### Usual Interview Questions
 - 14 FizBuz (Write an algorithm that prints all numbers between 1 and n, replacing multiples of 3 with the String Fizz , multiples of 5 with Buzz, and multiples of 15 with FizzBuzz .)
+- 15 Write a method that returns the first n elements of the fibonacci sequence.
+- 16 Write a method that returns the n-th value of the Fibonacci sequence. (Note, calculating the whole sequence is not necesseraly the best idea.)
