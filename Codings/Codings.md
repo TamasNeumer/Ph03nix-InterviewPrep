@@ -26,3 +26,7 @@ https://leetcode.com/problems/judge-route-circle/description/
 - 14 FizBuz (Write an algorithm that prints all numbers between 1 and n, replacing multiples of 3 with the String Fizz , multiples of 5 with Buzz, and multiples of 15 with FizzBuzz .)
 - 15 Write a method that returns the first n elements of the fibonacci sequence.
 - 16 Write a method that returns the n-th value of the Fibonacci sequence. (Note, calculating the whole sequence is not necesseraly the best idea.)
+- 17 Write a factorial implementation that does not use recursion.
+- 18 Write a method to reverse a String .
+- 19 How do you test if a word is a palindrome?
+- 20 Write an algorithm that collapses a list of Iterator s into a single Iterator.
