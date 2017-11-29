@@ -27,6 +27,9 @@ control the message format.
 - **unchecked** exceptions are used to signal about erroneous conditions related to program logic and assumptions being made (invalid arguments, null pointers, unsupported operations, …). Any unchecked exception is a subclass of `RuntimeException` and that is how Java compiler understands that a particular exception belongs to the class of unchecked ones. You shouldn't bother catching these, as literally any method can throw them.
 - **checked** exceptions represent invalid conditions in the areas which are outside of the immediate control of the program (like memory, network, file system, …). Any checked exception is a subclass of `Exception`. In contrast to the unchecked exceptions, checked exceptions must be listed as a part of the method signature (using throws keyword). (So that the caller can anticipate the throw.)
 
+  ![](res/exception_hierarchy.png)
+
+
 #### Handling Exceptions
 - **Try-Catch-Finally**
   - a try block that encloses the code section which might throw an exception,

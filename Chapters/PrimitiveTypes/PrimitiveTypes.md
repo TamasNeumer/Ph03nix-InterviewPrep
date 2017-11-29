@@ -1,5 +1,5 @@
 ## Primitive Types
-#### Size of fundamental types (MSDN)
+#### Size of fundamental types (C++)
 In C/C++ the actual size depends on the processor for which a program is compiled. In Java it is not the case.
 
 Type  |  Size
@@ -9,6 +9,13 @@ int16, short, unsigned short, wchar_t, wchar_t  |  	2 bytes
 float, int32, int, unsigned int, long, unsigned long  |  4 bytes
 double, int64, long double, long long  |  8 bytes
 
+#### Size of fundamental types (Java)
+Type  |  Size
+--|--
+bool |  1 byte
+short, char(utf)  |  	2 bytes
+float, int |  4 bytes
+double, long  |  8 bytes
 
 #### Representing numbers in binary, decimal and octal
 - `0xABC` --> Hex (Java,C++, )
@@ -85,6 +92,20 @@ Conclusion: Don't use shifting on singed numbers.
 
 
 #### Bitwise operation tricks
+- Reversing sign of number (+ <--> -)
+  - Negate the number and add 1.
+  - Why?
+    - 01111111 = +127
+    - 01111110 = +126
+    - 01111101 = +125
+      ...
+    - 00000001 = +1
+    - 00000000 =  0
+    - 11111111 = -1
+      ...
+    - 10000010 = -126
+    - 10000001 = -127
+    - 10000000 = -128
 - Find the right-most (1) bit: `y = x & ~(x-1)`
   - x-1 flips all bits until the right-most 1: x = 10100, x-1 = 10011.
   - Negating it results in 01100, making the numbers before the right-most 1 flip.

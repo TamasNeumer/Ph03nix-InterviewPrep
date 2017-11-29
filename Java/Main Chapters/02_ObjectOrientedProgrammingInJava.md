@@ -20,6 +20,16 @@ public Employee(double salary){
 
 - `super()` All constructors in Java must make a call to the Object constructor. This is done with the call `super()`. This has to be the first line in a constructor. The reason for this is so that the object can actually be created on the heap before any additional initialization is performed. If you do not specify the call to `super()` in a constructor the compiler will put it in for you.
 
+#### Access Modifiers
+Visibility  | Modifier  | Scope
+--|---|--
+Least  | private  |  Visible to any instance of that same class, not to subtypes
+  | none  |  Visible to any class in the same package
+  | protected  |  Visible to any subclasses
+Most  |  public |  Visible anywhere
+
+- Note: A private member of an instance of class C1 can be seen by another instance of C1. (Think about the "CompareTo(Object o)" method, where you can access o's private members if it's the same class.)
+
 #### Inner and nested classes
 **Nested Class**
 - `private static class NestedClass {...}` --> 	The	class	is private	in	Invoice,	so	only	Invoice	methods	can	access	it.
