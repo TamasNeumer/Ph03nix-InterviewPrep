@@ -10,7 +10,7 @@ Regex  |  Meaning
 `[a-z]`  | Any character in range of `a-z`
 `[^a-z]`  | Any character **not** in range of `a-z`
 `[a-zA-Z]`  | Any character in range of `a-z` or `A-Z`
-`.`  |  Single character
+`.`  |  (Any) Single character
 `\s`  | Any whitespace character (space, tab, newline)
 `\d`  | Any digit
 `\D`  | Any **non** digit
@@ -21,6 +21,7 @@ Regex  |  Meaning
 a?  | Zero or one of `a`  
 a*  | Zero or more of `a`  
 a+  | One or more of `a`
+`+,*,?` Are greedy. Use `?` AFTER, to make it lazy. |  e.g.: `a+?`
 a{3}  |  Exactly 3 of `a`
 a{3,6}  | Between 3 and 6 of `a`
 ^  |  Start of string
@@ -30,11 +31,14 @@ $  |  End of string
 \r | Carriage return
 \t | Tab
 \0 | Null character
+(pattern){2}   | repeat pattern 2 times   
+(pattern){1-6}   | repeat pattern between 1-5 times  
+(pattern)\1*  | match the SAME captured group zero or more times
 
 ## Greediness and laziness
-Most people new to regular expressions will attempt to use <.+>. They will be surprised when they test it on a string like This is a <EM>first</EM> test. You might expect the regex to match <EM> and when continuing after that match, </EM>.
+Most people new to regular expressions will attempt to use `<.+>`. They will be surprised when they test it on a string like "`This is a <EM>first</EM> test.`" You might expect the regex to match `<EM>` and when continuing after that match, `</EM>`.
 
-But it does not. The regex will match <EM>first</EM>.**The reason is that the `+, *, ?` are greedy**.
+But it does not. The regex will match `<EM>first</EM>`.**The reason is that the `+, *, ?` are greedy**.
 
 #### Inside the regex engine: greediness
 The first token in the regex is `<`. This is a literal. As we already know, the first place where it will match is the first `<` in the string. The next token is the dot, which matches any character except newlines. The dot is repeated by the plus. The plus is greedy. Therefore, the engine will repeat the dot as many times as it can. The dot matches `E`, so the regex continues to try to match the dot with the next character. `M` is matched, and the dot is repeated once more. The next character is the `>`. You should see the problem by now. **The dot matches the `>`**, and the engine continues repeating the dot. The dot will match all remaining characters in the string. The dot fails when the engine has reached the void after the end of the string. Only at this point does the regex engine continue with the next token: `>`.
@@ -50,6 +54,13 @@ The quick fix to this problem is to **make the plus lazy** instead of greedy. La
 Again, `<` matches the first `<` in the string. The next token is the dot, this time repeated by a lazy plus. This tells the regex engine to repeat the dot as few times as possible. The minimum is one. So the engine matches the dot with `E`. The requirement has been met, and the engine continues with `>` and `M`. This fails. Again, the engine will backtrack. But this time, the backtracking will force the lazy plus to expand rather than reduce its reach. So the match of `.+` is expanded to `EM`, and the engine tries again to continue with `>`. Now, `>` is matched successfully. The last token in the regex has been matched. The engine reports that `<EM>` has been successfully matched. That's more like it.
 
 [Source](http://www.regular-expressions.info/repeat.html)
+
+#### Capturing groups
+- By placing part of a regular expression inside round brackets or parentheses, you can group that part of the regular expression together. This allows you to apply a quantifier to the entire group or to restrict alternation to part of the regex.
+- Besides grouping part of a regular expression together, parentheses also create a numbered capturing group. It stores the part of the string matched by the part of the regular expression inside the parentheses.
+  The regex `Set(Value)?` matches `Set` or `SetValue`. In the first case, the first (and only) capturing group remains empty. In the second case, the first capturing group matches Value. You then might refer to the captured groupes. e.g.:
+    - `inputString.replaceAll("^(\\d*).*", "$1");`
+
 ## Regex in C++
 - Note that in C++ you have to escape the `/` characters or use `R` before the regex string:
   - `std::regex r(R"(Speed:\t\d*)");`
@@ -163,3 +174,68 @@ Again, `<` matches the first `<` in the string. The next token is the dot, this 
   print(m.end())  #2
 
   ```
+
+## Regex in Java
+#### Pattern class
+- A compiled representation of a regular expression.
+- Important methods:
+  - `compile(String regex)`
+    - Compiles the given regular expression into a pattern.
+    - e.g.: `Pattern p = Pattern.compile("a*b");`
+  - `String[] split(CharSequence input)`
+    - Splits the given input sequence around matches of this pattern.
+  - `Matcher matcher(CharSequence input)`
+    - Creates a matcher that will match the given input against this pattern.
+    - `Matcher m = p.matcher("aaaaab");`
+  - `String pattern()`
+    - Returns the regular expression from which this pattern was compiled.
+- `boolean b = Pattern.matches("a*b", "aaaaab");`
+  - Matches the **whole** string
+- In summary it mostly used for entire matches, plitting and to create matcher objects.
+
+#### Mather
+- An engine that performs match operations on a character sequence by interpreting a Pattern.
+- Important methods:
+  - `boolean matches()`
+    - Attempts to match the entire region against the pattern. If the match succeeds then more information can be obtained via the start, end, and group methods.
+  - `boolean lookingAt()`
+    - Attempts to match the input sequence, starting at the beginning of the region, against the pattern. Unlike matcher, it does not require that the entire region be matched.
+  - `boolean find()`
+    - Attempts to find the next subsequence of the input sequence that matches the pattern.
+    - If multiple matches can be found in the text, the `find()` method will find the first, and then for each subsequent call to `find()` it will move to the next match.
+    - The methods `start()` and `end()` will give the indexes into the text where the found match starts and ends. Actually `end()` returns the index of the character just after the end of the matching section. Thus, you can use the return values of `start()` and `end()` inside a `String.substring()` call.
+
+```java
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+public class MatcherFindStartEndExample {
+
+    public static void main(String[] args) {
+
+        String text    =
+                "This is the text which is to be searched " +
+                "for occurrences of the word 'is'.";
+
+        String patternString = "is";
+
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(text);
+
+        int count = 0;
+        while(matcher.find()) {
+            count++;
+            System.out.println("found: " + count + " : "
+                    + matcher.start() + " - " + matcher.end());
+        }
+    }
+```
+
+**Replacing Matches**
+```java
+String result = input.replaceAll("\\s*,\\s*", ",");
+String result = "3:45".replaceAll(
+"(\\d{1,2}):(?<minutes>\\d{2})",
+"$1 hours and ${minutes} minutes");
+```
+- In this example we have both used `$1` that referred to the first capturing group, as well as `?<Minues>` where we captured by name.
