@@ -37,4 +37,196 @@
 
 - Minstrel can be applied to BraveKnight without BraveKnight needing to explicitly call on it. In fact, BraveKnight remains completely unaware of Minstrel ’s existence.
 
-- **Templating:** Spring seeks to eliminate boilerplate code by encapsulating it in templates. Spring’s JdbcTemplate makes it possible to perform database operations without all the ceremony required by traditional JDBC .
+- **Templating:** Spring seeks to eliminate boilerplate code by encapsulating it in templates. Spring’s JdbcTemplate makes it possible to perform database operations without all the ceremony required by traditional JDBC.
+
+
+#### 2. Writing Beans
+- When it comes to expressing a bean wiring specification, Spring is incredibly flexible, offering three primary wiring mechanisms:
+  - Explicit configuration in XML
+  - Explicit configuration in Java
+  - Implicit bean discovery and automatic wiring
+- The author recommends: Auto > Java > XML. --> Use XML only if the code you want to use has no equivalent in JavaConfig.
+- As a general rule, he favors constructor injection for hard dependencies and property injection for any optional dependencies.
+
+- Normally your beans are named as your class, but with camelCase. You can overwrite this by: `@Component("lonelyHeartsClub")`
+
+**Enabling Autowiring**
+- Enabling Autowiring and component search:
+  - In order to let Spring find your components and services annotate these classes with `@Component` or `@Service` etc. Also to enable component scanning you have to have a config class:
+
+  ```java
+  @Configuration
+  @ComponentScan
+  public class CDPlayerConfig {
+  }
+  ```
+  - In XML it would look like this: `<context:component-scan base-package="soundsystem"/>`
+  - However new you still have to annotate the class where you want to DI: `@ContextConfiguration(classes=CDPlayerConfig.class)`
+  - To specify different base packages to scan you can `@ComponentScan(basePackages={"soundsystem", "video"})`
+
+**DI and @Autowired**
+- The `@Autowired` annotation makes sure that your dependencies are injected.
+- There are 3 cases of DI:
+  - via public class property
+  - via setter
+  - via constructor
+- Constructor DI is preferred, in this case you don't even have to use the `@Autowire` annotation.
+- If you have multiple implementation you MUST tell spring which implementation to inject.
+  - `@Qualifier("greetingServiceImpl")` is one option. In the constructor it would look like: `ConstructorInjectedController(@Qualifier("constructorGreetingService") GreetingService greetingService)`
+  - `@Primary` -> making an implementation the primary implementation
+  - Using profies, e.g.: `@Profile("de")`, in this case you have to specifiy the used profile in the `application.properties` spring.profiles.active=de.
+- You can make autowiring optional. `@Autowired(required=false)` Spring will attempt to perform autowiring; but if there are no matching beans, it will leave the bean unwired.
+- `@Autowired` is spring specific, if you don't like it you can use `@Inject`
+
+**Manual wiring using Java**
+- The key to creating a JavaConfig class is to annotate it with `@Configuration`.
+- To declare a bean in JavaConfig, you write a method that creates an instance of the desired type and annotate it with `@Bean`. The `@Bean` annotation tells Spring that this method will return an object that should
+be registered as a bean in the Spring application context.
+
+  ```java
+  @Bean
+  // or @Bean(name="lonelyHeartsClubBand")
+  public CompactDisc sgtPeppers() {
+    return new SgtPeppers();
+  }
+  ```
+
+- The simplest way to wire up beans in JavaConfig is to refer to the referenced bean’s method. It appears that the CompactDisc is provided by calling sgtPeppers , but that’s not exactly true. Because the sgtPeppers() method is annotated with `@Bean`, Spring will intercept any calls to it and ensure that the bean produced by that method is returned rather than allowing it to be invoked again. By default, all beans in Spring are singletons, and there’s no reason you need to create a duplicate instance for the second CDPlayer bean.
+
+```java
+@Bean
+public CDPlayer cdPlayer() {
+  return new CDPlayer(sgtPeppers());
+}
+```
+
+- Or simpl name the arg to camelCaseClassName, and it will get autowired. (In constructor as well as in setter.)
+
+```java
+@Bean
+public CDPlayer cdPlayer(CompactDisc compactDisc) {
+  return new CDPlayer(compactDisc);
+}
+
+@Bean
+public CDPlayer cdPlayer(CompactDisc compactDisc) {
+  CDPlayer cdPlayer = new CDPlayer(compactDisc);
+  cdPlayer.setCompactDisc(compactDisc);
+  return cdPlayer;
+}
+```
+
+**Manual wiring using XML**
+- For XML configuration, that means creating an XML file rooted with a `<beans>` element.
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://www.springframework.org/schema/context">
+      <!-- configuration details go here -->
+  </beans>
+  ```
+
+- Declare a bean like: `<bean class="soundsystem.SgtPeppers" />`
+  - When Spring sees this <bean> element, it will create a SgtPeppers bean for you by calling its default constructor.
+- In order to inject the SgtPeppers bean to CDPlayer:
+
+  ```java
+  <bean id="cdPlayer" class="soundsystem.CDPlayer">
+    <constructor-arg ref="compactDisc" />
+  </bean>
+  ```
+
+  Or you use the c-namespace notation:
+
+  ```java
+  <bean id="cdPlayer" class="soundsystem.CDPlayer"
+    c:cd-ref="compactDisc" />
+  ```
+
+    - c --> c-namespace prefix
+    - cd --> constructor argument name (or refer to parameter position e.g.: `_0` --> `c:_0-ref="compactDisc"`)
+    - ref --> injecting a bean reference
+    - "" --> the ID of the bean to inject
+
+- If you have a constructor that takes string arguments you can do the following:
+
+  ```XML
+  <bean id="compactDisc"
+    class="soundsystem.BlankDisc">
+    <constructor-arg value="Sgt. Pepper's Lonely Hearts Club Band" />
+    <constructor-arg value="The Beatles" />
+  </bean>
+
+  <bean id="compactDisc"
+    class="soundsystem.BlankDisc"
+    c:_0="Sgt. Pepper's Lonely Hearts Club Band"
+    c:_1="The Beatles" />
+  ```
+
+- You can pass `null` as argument by: `<constructor-arg><null/></constructor-arg>`
+- Or you inject collection values or collection of references:
+
+  ```XML
+  <list>
+    <value>Sgt. Pepper's Lonely Hearts Club Band</value>
+    <value>With a Little Help from My Friends</value>
+    <value>Lucy in the Sky with Diamonds</value>
+    <value>Getting Better</value>
+    <value>Fixing a Hole</value>
+    <!-- ...other tracks omitted for brevity... -->
+  </list>
+
+  <constructor-arg>
+    <list>
+    <ref bean="sgtPeppers" />
+    <ref bean="whiteAlbum" />
+    <ref bean="hardDaysNight" />
+    <ref bean="revolver" />
+    ...
+    </list>
+</constructor-arg>
+  ```
+
+- If you want to **inject into the setter**:
+  - cdPlayer doesn't require args at Bean definition.
+  - Then in the properties you specify the member value.
+
+```java
+<bean id="cdPlayer" class="soundsystem.CDPlayer">
+  <property name="compactDisc" ref="compactDisc" />
+</bean>
+
+//p-namespace
+<bean id="cdPlayer" class="soundsystem.CDPlayer"
+  p:compactDisc-ref="compactDisc" />
+
+// Injecting literals:
+<property name="artist" value="The Beatles" />
+<property name="tracks">
+<list>
+  <value>Getting Better</value>
+  <value>Fixing a Hole</value>
+</list>
+</property>
+
+// Optionally use util:list ti create a bean and inject that as property
+<util:list id="trackList">
+  <value>Getting Better</value>
+  <value>Fixing a Hole</value>
+  <!-- ...other tracks omitted for brevity... -->
+</util:list>
+
+<bean id="compactDisc"
+  class="soundsystem.BlankDisc"
+  p:title="Sgt. Pepper's Lonely Hearts Club Band"
+  p:artist="The Beatles"
+  p:tracks-ref="trackList" />
+```
+
+**Importing configuration**
+- `@Import({CDPlayerConfig.class, CDConfig.class})` (Java)
+- `@ImportResource("classpath:cd-config.xml")` (XML)
