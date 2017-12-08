@@ -73,8 +73,33 @@
 - Constructor DI is preferred, in this case you don't even have to use the `@Autowire` annotation.
 - If you have multiple implementation you MUST tell spring which implementation to inject.
   - `@Qualifier("greetingServiceImpl")` is one option. In the constructor it would look like: `ConstructorInjectedController(@Qualifier("constructorGreetingService") GreetingService greetingService)`
+    - Note that changing the class names will make qualifiers inefective. Hence it is advised to use aliases
   - `@Primary` -> making an implementation the primary implementation
+
+    ```XML
+    <bean id="iceCream"
+    class="com.desserteater.IceCream"
+    primary="true" />
+    ```
+
   - Using profies, e.g.: `@Profile("de")`, in this case you have to specifiy the used profile in the `application.properties` spring.profiles.active=de.
+    - (Note that you can use `@Profile` both on function and method level.)
+    - In XML Format:
+
+    ```XML
+    <beans profile="dev">
+      <jdbc:embedded-database id="dataSource">
+        <jdbc:script location="classpath:schema.sql" />
+        <jdbc:script location="classpath:test-data.sql" />
+      </jdbc:embedded-database>
+    </beans>
+
+    <context-param>
+      <param-name>spring.profiles.default</param-name>
+      <param-value>dev</param-value>
+    </context-param>
+    ```
+
 - You can make autowiring optional. `@Autowired(required=false)` Spring will attempt to perform autowiring; but if there are no matching beans, it will leave the bean unwired.
 - `@Autowired` is spring specific, if you don't like it you can use `@Inject`
 
@@ -231,3 +256,31 @@ public CDPlayer cdPlayer(CompactDisc compactDisc) {
 **Importing configuration**
 - `@Import({CDPlayerConfig.class, CDConfig.class})` (Java)
 - `@ImportResource("classpath:cd-config.xml")` (XML)
+
+#### 3. Advanced Wiring
+**Conditional beans**
+- ``@Conditional`` annotation that can be applied.
+- The class given to ``@Conditional`` can be any type that implements the Condition interface. As you can see, it’s a straightforward interface to implement, requiring only that you provide an implementation for the ``matches()`` method. If the ``matches()`` method returns true, then the`` @Conditional``-annotated beans are created. If ``matches()`` returns false, then those beans aren’t created.
+
+```java
+@Bean
+@Conditional(MagicExistsCondition.class)
+  public MagicBean magicBean() {
+  return new MagicBean();
+}
+
+public class MagicExistsCondition implements Condition {
+  public boolean matches(
+          ConditionContext context, AnnotatedTypeMetadata metadata) {
+      Environment env = context.getEnvironment();
+      return env.containsProperty("magic");
+  }
+}
+```
+
+- From the ``ConditionContext``, you can:
+  - Check for the presence of beans, and even dig into bean properties
+  - Check for the presence and values of environment variables via the ``Environment``
+  - Read and inspect the contents of resources loaded via the ``ResourceLoader``
+  - Load and check for the presence of classes via the ``ClassLoader`` returned from ``getClassLoader()``.
+- ``AnnotatedTypeMetadata`` offers you a chance to inspect annotations that may also be placed on the ``@Bean`` method.
