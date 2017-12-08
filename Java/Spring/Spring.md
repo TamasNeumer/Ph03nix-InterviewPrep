@@ -284,3 +284,11 @@ public class MagicExistsCondition implements Condition {
   - Read and inspect the contents of resources loaded via the ``ResourceLoader``
   - Load and check for the presence of classes via the ``ClassLoader`` returned from ``getClassLoader()``.
 - ``AnnotatedTypeMetadata`` offers you a chance to inspect annotations that may also be placed on the ``@Bean`` method.
+
+**Spring Bean Scopes**
+- singletons (default) only instance is created in the IoC container.
+- Prototype - A new instance is created each time the bean is requested.
+- Request - A single instance per http request.
+- Session - A single instance per http session.
+- Application - scoped to the life-cycle of a ServletContext.
+- WebSocket - life-cycle of a web socket
