@@ -117,6 +117,7 @@ public CDPlayer cdPlayer(CompactDisc compactDisc) {
 ```
 
 **Manual wiring using XML**
+- Put the XML in the resources folder. New -> XML configuration -> Spring configuration.
 - For XML configuration, that means creating an XML file rooted with a `<beans>` element.
 
   ```xml
