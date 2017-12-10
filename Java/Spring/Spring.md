@@ -292,3 +292,71 @@ public class MagicExistsCondition implements Condition {
 - Session - A single instance per http session.
 - Application - scoped to the life-cycle of a ServletContext.
 - WebSocket - life-cycle of a web socket
+
+
+#### Property values
+**Property values from config file**  
+- Imagine that you want to have a "config" file, in which you store username, pw, dburl etc.
+- Create a file under resources (e.g. `datasource.properties`) and fill it with config values (username=tamas, password=password)
+
+  ```java
+  @Configuration
+  @PropertySource("classpath:datasource.properties")
+  public class PropertyConfig {
+
+      // Read out values from the properties file
+      @Value("${guru.username}")
+      String user;
+
+      @Value("${guru.password}")
+      String password;
+
+      @Value("${guru.dburl}")
+      String url;
+      //...
+    }
+  ```
+
+**Property values from environment vars**  
+- The above mentioned keywords (guru.username) work for environment variables as well. (i.e. if you had a "GURU_USERNAME" environment var, then it would still work!) However probably it is more neat to do it via the `Environment`
+
+  ```java
+  @Autowired
+  Environment env;
+  //...
+  String username = env.getProperty("USERNAME");
+  ```
+
+- You can specify multiple PropertySources via
+
+  ```java
+  @PropertySources({
+          @PropertySource("classpath:datasource.properties"),
+          @PropertySource("classpath:jms.properties")
+  })
+  ```
+
+**Property values form Spring Boot's application.properties**
+- You can also move your properties to spring boot's default properties file.
+- If you are using spring boot then  you can move your property values there and you can start referencing right away!
+
+**Managing Properties with YAML**
+- Create a file named `application.yml` and put your stiff in there. Referencing is the same as before, spring picks up the file and parses it for you.
+
+**Managing propertiees with properties files**
+- Add `application-de.properties` as a file.
+- As profile.active=de --> the part that follows the original config is overwritten by the `application-de.properties`
+- You can pull off the same stuff with yml files.
+
+  ```yml
+  jms:
+    username: JMS Username
+    password: samepass
+    url: SomeURL
+
+  ---
+  spring:
+    profiles: de
+  jms:
+    username: JMS Username $$$ German
+  ```
