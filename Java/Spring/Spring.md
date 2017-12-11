@@ -360,3 +360,32 @@ public class MagicExistsCondition implements Condition {
   jms:
     username: JMS Username $$$ German
   ```
+
+#### Spring Web (MVC)
+**Create Project**
+- Core --> DevTools
+- Web --> Web
+- Template --> Thymeleaf
+- SQL --> JPA (for Hybernate) and H2
+
+**Recap HTTP Methods**
+- **GET** get data (fetch data etc.)
+- **POST** post data to server
+- **PUT** is a request for an entity to be stored at the supplied URI. If entity exists, it is expected to be updated.
+  - POST is a create request, PUT is a create or update request.
+- **DELETE** - request to DELETE
+- **TRACE** - will echo the received request (can be used to see if request was altered by intermediate servers)
+- **CONNECT** - connect TCP/IP channel (for HTTPS)
+- **PATCH** - partial modifications to the resources
+
+- Safe methods (don't cause changes on server)
+  - GET, HEAD, OPTION, TRACE
+- Idempotent (action has only effect once)
+  - PUT, DELETE
+
+- Status codes
+  - 100 informational in nature
+  - 200 successful request (200 okay, 201, created, 204 accepted)
+  - 300 series of redirections (301 moved permanently)
+  - 400 error (401 not authorized, 404 not found)
+  - 500 internal server side error (503 service unavailable)
