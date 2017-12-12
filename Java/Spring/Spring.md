@@ -389,3 +389,34 @@ public class MagicExistsCondition implements Condition {
   - 300 series of redirections (301 moved permanently)
   - 400 error (401 not authorized, 404 not found)
   - 500 internal server side error (503 service unavailable)
+
+#### JPA
+- `@OneToOne`
+- `@OneToMany`(List, Set, Map, SortedSet, SortedMap)
+- `@ManyToOne`
+- `@ManyToMany` (each has a List or Set reference to the other)
+
+**Unidirectional vs Bidirectional**
+- Uni - only one knows about the connection.
+- Bi - both know about the connection. Prefer Bidirectional normally!
+
+**Owning Side**
+- The owning side holds the foregin key in the database.
+
+**Fetch types**
+- Eager vs Lazy
+- Default JPA 2.1:
+  - OneToMany - Lazy
+  - ManyToOne - Eager
+  - ManyToMany - Lazy
+  - OneToOne - Eager
+
+**Cascade Types**
+- How state changes are cascaded from parent objects to child objects
+- PERSIST - Save operations will cascade to related entities
+- MERGE - related entities are merged when the owning entity is merged
+- REFRESH - related entities are refreshed when the owning entity is refreshed.
+- REMOVE - removes all related entities when the owning entity is deleted
+- DETACH - detaches all related entities if a manual detach occurs
+- ALL - applies all the above
+- By default NO operatios are cascaded.
