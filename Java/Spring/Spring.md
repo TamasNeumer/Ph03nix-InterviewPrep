@@ -52,7 +52,8 @@
 
 **Enabling Autowiring**
 - Enabling Autowiring and component search:
-  - In order to let Spring find your components and services annotate these classes with `@Component` or `@Service` etc. Also to enable component scanning you have to have a config class:
+  - In order to let Spring find your components and services annotate these classes with `@Component` or `@Service` etc. Also to enable component scanning you have to have a Config class.
+    - **`@Configuration` "Indicates that a class declares one or more @Bean methods and may be processed by the Spring container to generate bean definitions and service requests for those beans at runtime"**
 
   ```java
   @Configuration
