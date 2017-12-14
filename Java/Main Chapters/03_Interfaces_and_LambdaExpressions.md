@@ -19,10 +19,10 @@ Methods without keywords (might) have bodies  |  Methods without keywords don't 
 Methods can be public, private, protected, or package-private (by default)  | All methods are public  
 
 
-**Static and Default methods**
+**Static and Default methods**  
 In interfaces no method can be implemented. There are however two exceptions:
 - Static methods (that are usually used as factory functions) can have a defined body. (`public static IntSequence digitsOf(int n){return new DigitSequence(n)}`)
-  - Access the method using the interface name. Classes do not need to implement an interface to use its static methods.
+  - Access the method using the interface name. **Classes do not need to implement an interface to use its static methods.**
 - Default methods (you can supply a default implementation to any interface method)
   - Reason: Adding a non-default method while extending an interface is not compile-friendly, meaning that old classes that rely on that interface don't have the new method implemented --> won't compile. **Use default when extending interfaces!!!**
 
@@ -42,26 +42,26 @@ public class Employee implements Comparable<Employee> {
   }
 }
 ```
-- **In Java a method can access private features of ANY object of its class.**
+- **In Java a method can access private features of ANY object of it's class.**
 
 **The Comparator Interface**
 - A comparator object is capable of comparing two different objects. The class is not comparing its instances, but some other class’s instances. This comparator class must implement the java.util.Comparator interface.
 - In some cases you cannot define your own `comapreTo` method. (e.g.: the string class has it already defined and you can't override it.) In such cases you create your own `Comparator` object, that implements the `compare` method.
 
-```java
-public interface Comparator<T> {
-  int compare(T first, T second);
-}
-
-class LengthComparator implements Comparator<String> {
-  public int compare(String first, String second) {
-    return first.length() - second.length();
+  ```java
+  public interface Comparator<T> {
+    int compare(T first, T second);
   }
-}
 
-Comparator<String> comp = new LengthComparator();
-if (comp.compare(words[i], words[j]) > 0) ...
-```
+  class LengthComparator implements Comparator<String> {
+    public int compare(String first, String second) {
+      return first.length() - second.length();
+    }
+  }
+
+  Comparator<String> comp = new LengthComparator();
+  if (comp.compare(words[i], words[j]) > 0) ...
+  ```
 
 **The Runnable Interface**
 - To define a task you need to implement the `Runnable` interface.
