@@ -14,5 +14,10 @@
     - Good for providing utility methods, for example null check, collection sorting etc.
     - Security (implementations cannot override stuff)
 - Functional interfaces and Lambda Expressions
+  - Problem: We often had to create anonymous classes only to pass the object to a method.
+  - Solution: Functional interface
+    - An interface with exactly one abstract method is called Functional Interface. ``@FunctionalInterface`` -->  we can use lambda expressions to instantiate them.
+    - `Runnable r1 = () -> System.out.println("My Runnable");`
+      - Runnable is a functional interface, that’s why we can use lambda expression to create it’s instance.
 - Java Stream API for collection classes
 - Java Date Time API
