@@ -1,8 +1,5 @@
 ## Mockito
 
-## Q
-- Mock vs stub vs fake obj
-
 #### Using test-doubles
 A unit test should test functionality in isolation. Side effects from other classes or the system should be eliminated for a unit test, if possible. This can be done via using test replacements (test doubles) for the real dependencies. Test doubles can be classified like the following:
 - A **dummy** object is passed around but never used, i.e., its *methods are never called*. Such an object can for example be used to fill the parameter list of a method.
