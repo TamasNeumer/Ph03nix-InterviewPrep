@@ -112,4 +112,15 @@
   }
   ```
 
-  
+#### Dependencies
+**DI**
+- Dependency injection (DI) is a process whereby objects define their dependencies, that is, the other objects they work with, only through constructor arguments, arguments to a factory method, or properties that are set on the object instance after it is constructed or returned from a factory method. The container then injects those dependencies when it creates the bean.
+
+**DI Versions**
+- DI Versions:
+  - Constructor / static factory function based
+  - Setter based
+- Rule of thumb:
+  - Since you can mix constructor-based and setter-based DI, it is a good rule of thumb to use constructors for mandatory dependencies and setter methods or configuration methods for optional dependencies. Note that use of the @Required annotation on a setter method can be used to make the property a required dependency.
+  - The Spring team generally advocates constructor injection as it enables one to implement application components as immutable objects and to ensure that required dependencies are not null.
+- Spring detects circular dependencies.
