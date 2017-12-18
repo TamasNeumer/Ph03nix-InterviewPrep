@@ -124,3 +124,7 @@
   - Since you can mix constructor-based and setter-based DI, it is a good rule of thumb to use constructors for mandatory dependencies and setter methods or configuration methods for optional dependencies. Note that use of the @Required annotation on a setter method can be used to make the property a required dependency.
   - The Spring team generally advocates constructor injection as it enables one to implement application components as immutable objects and to ensure that required dependencies are not null.
 - Spring detects circular dependencies.
+
+**Injecting primitive types**
+- @Value("${some.property:defaultvalue}")'
+- In XML: `<property name="driverClassName" value="com.mysql.jdbc.Driver"/>` or `p:driverClassName="com.mysql.jdbc.Driver"`
