@@ -11,6 +11,7 @@
 **Configuration**
 - There are three ways to **define configuration**, available in Spring 4 by default:
   - XML
+
   ```XML
   <?xml version="1.0" encoding="UTF-8"?>
   <beans xmlns="http://www.springframework.org/schema/beans" ...>
@@ -22,9 +23,13 @@
     </bean>
   </beans>
   ```
+
   - Java
     - when configuration is Java class, marked with specific annotations.
     - When Spring encounters a class with the `@Configuration` annotation, it looks for bean instance definitions in the class, which are Java methods decorated with the `@Bean` annotation.
+    - **Note that there are (again) 2 options!!!**
+      - You use an external configuration class (code snipped above)
+      - Or you mark your original POJO with `@Component` or any of its subtypes (Service, Controller etc.) Such classes are considered as candidates for auto-detection when using annotation-based configuration and classpath scanning! (Then in this you can mark factories with `@Bean`)
 
   ```java
   @Configuration
@@ -44,18 +49,10 @@
       }
   }
   ```
-    - **Note that there are (again) 2 options!!!**
-      - You use an external configuration class (code snipped above)
-      - Or you mark your original POJO with `@Component` or any of its subtypes (Service, Controller etc.) Such classes are considered as candidates for auto-detection when using annotation-based configuration and classpath scanning! (Then in this you can mark factories with `@Bean`)
 
   - Groovy-based
     - Configuration is file with Groovy code.
 
--There are two ways for **bean definition**:
-  - configuration inside bean definition, when you add beans manually by declaration right in configuration.
-    - For xml-config it will be <bean/> tag, for java-based config - method with @Bean annotation and beans {...} construction for Groovy.
-  - annotation based bean definition,
-    - when you mark bean classes with specific annotations (like @Component, @Service, @Controller etc). This type of config uses classpath scanning.
 
 **Instantiating the container**  
 - The location path or paths supplied to an ApplicationContext constructor are actually resource strings that allow the container to load configuration metadata from a variety of external resources such as the local file system, from the Java CLASSPATH, and so on.
@@ -243,6 +240,34 @@
   - WebSocket - life-cycle of a web socket.
 - To use scopes simply mark your components with `@Scope("scopeType")`
 
+#### Bean lifecycle
+- The JSR-250 ``@PostConstruct`` and ``@PreDestroy`` annotations are generally considered best practice for receiving lifecycle callbacks in a modern Spring application. Using these annotations means that your beans are not coupled to Spring specific interfaces.
+- By default, Spring will not aware of the @PostConstruct and @PreDestroy annotation.
+- Or you can create a class that implements the `BeanPostProcessor` and will call the callback functions manually.
+
+  ```java
+  @Component
+  public class CustomBeanPostProcessor implements BeanPostProcessor {
+      @Override
+      public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+
+          if(bean instanceof LifeCycleDemoBean){
+              ((LifeCycleDemoBean) bean).beforeInit();
+          }
+
+          return bean;
+      }
+
+      @Override
+      public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+          if(bean instanceof LifeCycleDemoBean){
+              ((LifeCycleDemoBean) bean).afterInit();
+          }
+
+          return bean;
+      }
+  }
+  ```
 
 #### Java-based container configuring
 **Conditional configuration**
