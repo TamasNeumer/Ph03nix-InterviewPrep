@@ -154,6 +154,15 @@
 - To resolve ambiguity use the `@Primary` to annotate one of the implementations or use qualifier to express what do you want to inject. (`@Qualifier("datePrefixGenerator")`)
 - If you don't have ComponentScan on, but you want to include other Config's benas you can use `@Import(PrefixConfiguration.class)` and use the registered bean names (`@Value("#{datePrefixGenerator}")`)
 
+- A neat tric can be to inject all similar types to an array. If you want the array to be sorted, the underlying beans should implement the org.springframework.core.Ordered interface or use the ``@Order`` or standard ``@Priority`` annotation if you want items in the array or list to be sorted into a specific order.
+
+```java
+public class MovieRecommender {
+    @Autowired
+    private MovieCatalog[] movieCatalogs;
+}
+```
+
 **Injecting primitive types**
 - @Value("${some.property:defaultvalue}")'
 - In XML: `<property name="driverClassName" value="com.mysql.jdbc.Driver"/>` or `p:driverClassName="com.mysql.jdbc.Driver"`
@@ -241,9 +250,11 @@
 - To use scopes simply mark your components with `@Scope("scopeType")`
 
 #### Bean lifecycle
-- The JSR-250 ``@PostConstruct`` and ``@PreDestroy`` annotations are generally considered best practice for receiving lifecycle callbacks in a modern Spring application. Using these annotations means that your beans are not coupled to Spring specific interfaces.
-- By default, Spring will not aware of the @PostConstruct and @PreDestroy annotation.
-- Or you can create a class that implements the `BeanPostProcessor` and will call the callback functions manually.
+- As of Spring 2.5, you have three options for controlling bean lifecycle behavior:
+  - implementing the ``InitializingBean`` and ``DisposableBean`` callback interfaces, however these "litter" your code with Spring specific interfaces.
+  - custom ``init()`` and ``destroy()`` methods, that are called via a CustomBeanPostProcessor
+  - ``@PostConstruct`` and ``@PreDestroy`` annotations. (Advised)
+    - By default, Spring will not aware of the @PostConstruct and @PreDestroy annotation.
 
   ```java
   @Component
@@ -268,6 +279,45 @@
       }
   }
   ```
+
+#### Additional notes to annotation based configuration
+- Use `@Required` to make some fields mandatory
+- To make a field (visibly) optional you may express the non-required nature of a particular dependency through Java 8’s java.util.Optional. OR As of Spring Framework 5.0, you may also use an ``@Nullable`` annotation.
+
+  ```java
+  public class SimpleMovieLister {
+      @Autowired
+      public void setMovieFinder(Optional<MovieFinder> movieFinder) {
+          ...
+      }
+  }
+
+  public class SimpleMovieLister {
+      @Autowired
+      public void setMovieFinder(@Nullable MovieFinder movieFinder) {
+          ...
+      }
+  }
+  ```
+
+- You can create your own custom qualifier annotations. Simply define an annotation and provide the ``@Qualifier`` annotation within your definition:
+
+  ```java
+  @Target({ElementType.FIELD, ElementType.PARAMETER})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Qualifier
+  public @interface Genre {
+
+      String value();
+  }
+
+  /*LATER*/
+  @Autowired
+  @Genre("Action")
+  private MovieCatalog actionCatalog;
+  ```
+
+- `@Resource` Spring also supports injection using the JSR-250 ``@Resource`` annotation on fields or bean property setter methods. ``@Resource`` takes a name attribute, and by default Spring interprets that value as the bean name to be injected.
 
 #### Java-based container configuring
 **Conditional configuration**
