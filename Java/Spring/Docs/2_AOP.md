@@ -72,3 +72,38 @@
 - **@AfterReturning** --> After successful return
 - **@AfterThrowing** --> After function has thrown
 - **@Around** --> It has the opportunity to do work both before and after the method executes, and to determine when, how, and even if, the method actually gets to execute at all.
+
+**Accessing Joint Point information**
+- The function that was marked as advice should have the arguments `(JoinPoint joinPoint)`.
+- Then later you can use the jointPoint object to access information on the joint point:
+
+  ```java
+  log.info("Signature name : {}", joinPoint.getSignature().getName());
+  log.info("Arguments : {}", Arrays.toString(joinPoint.getArgs()));
+
+  /*Signature name : add
+  Arguments : [1.0, 2.0]*/
+  ```
+
+**Prioritizing aspects**
+- Assume that you have multiple `@Before` aspects and you want to set the execution order.
+- Use the `@Order(0)` annotation. The smaller the number the higher the priority.
+
+**Sharing pointcuts**
+- Assume you want to reuse the already defined pointcuts. In this case create an empty advice as a public function. Then Simply refer to the function via the class name. the class is not located in the same package as the aspect, you have to include the package name also.
+
+  ```java
+  @Aspect
+  public class CalculatorPointcuts {
+    @Pointcut("execution(* *.*(..))")
+    public void loggingOperation() {}
+  }
+
+  @Aspect
+  public class CalculatorLoggingAspect {
+    @Before("CalculatorPointcuts.loggingOperation()")
+    public void logBefore(JoinPoint joinPoint) {
+      //..
+      }
+  }
+  ```
