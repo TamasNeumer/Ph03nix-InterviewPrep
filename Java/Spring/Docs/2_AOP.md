@@ -62,7 +62,8 @@
     - `execution(* set*(..))` --> the execution of any method with a name beginning with "set"
     - `execution(* com.xyz.service.AccountService.*(..))` --> the execution of any method defined by the AccountService interface:
   - **within**
-    - `within(com.xyz.service.*)` --> any join point (method execution only in Spring AOP) within the service package
+    - We can use ``within`` in pointcut expression to apply advice to all the methods in the class.
+    - `within(com.xyz.service.*)` --> any join point (method execution only in Spring AOP) within the service package.
   - **this**
     - `this(com.xyz.service.AccountService)` --> any join point (method execution only in Spring AOP) where the proxy implements the AccountService interface
 
@@ -90,7 +91,7 @@
 - Use the `@Order(0)` annotation. The smaller the number the higher the priority.
 
 **Sharing pointcuts**
-- Assume you want to reuse the already defined pointcuts. In this case create an empty advice as a public function. Then Simply refer to the function via the class name. the class is not located in the same package as the aspect, you have to include the package name also.
+- Assume you want to reuse the already defined pointcuts. In this case create an empty advice as a public function. Also annotate this function with `@Pointcut`. Then Simply refer to the function via the class name. The class is not located in the same package as the aspect, you have to include the package name also. If the method is in the same class you can simply write the method name.
 
   ```java
   @Aspect
@@ -107,3 +108,51 @@
       }
   }
   ```
+
+**Combining pointcut operations**
+- You can combine pointcut operations with the arithmetic operatos (||, &&, !)
+  - `@Pointcut("arithmeticOperation() || unitOperation()")`
+
+**Around aspect**
+- Around aspect to cut the method execution before and after. We can use it to control whether the advised method will execute or not. We can also inspect the returned value and change it. This is the most powerful advice and needs to be applied properly.
+- Around advice are always required to have ``ProceedingJoinPoint`` as argument and we should use it’s ``proceed()`` method to invoke the target object advised method.
+- If advised method is returning something, it’s advice responsibility to return it to the caller program. For void methods, advice method can return null.
+
+  ```Java
+  @Aspect
+  public class EmployeeAroundAspect {
+
+  	@Around("execution(* com.journaldev.spring.model.Employee.getName())")
+  	public Object employeeAroundAdvice(ProceedingJoinPoint proceedingJoinPoint){
+  		System.out.println("Before invoking getName() method");
+  		Object value = null;
+  		try {
+  			value = proceedingJoinPoint.proceed();
+  		} catch (Throwable e) {
+  			e.printStackTrace();
+  		}
+  		System.out.println("After invoking getName() method. Return value="+value);
+  		return value;
+  	}
+  }
+  ```
+
+**Spring Advice with Custom Annotation Pointcut**
+- If you look at all the above advices pointcut expressions, there are chances that they get applied to some other beans where it’s not intended. For example, someone can define a new spring bean with getName() method and the advices will start getting applied to that even though it was not intended.
+- An alternative approach is to create a custom annotation and annotate the methods where we want the advice to be applied.
+
+```Java
+// Enables to log methods as "loggable"
+public @interface Loggable {
+
+}
+
+// Aspect definition
+@Aspect
+public class EmployeeAnnotationAspect {
+	@Before("@annotation(com.journaldev.spring.aspect.Loggable)")
+	public void myAdvice(){
+		System.out.println("Executing myAdvice!!");
+	}
+}
+```
