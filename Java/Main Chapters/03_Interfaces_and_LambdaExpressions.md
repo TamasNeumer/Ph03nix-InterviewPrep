@@ -8,7 +8,7 @@
   - A class might implement only some of the interface methods, then it is an **abstract class**
 - Interfaces are a stepping stone to polymorphism. In java you can test, whether an object is of type S the following way:
   - `object instanceof Type` --> `System.out.println(myObj instanceof Integer)`
-- Interfaces can extend another interface.
+- Interfaces can extend another interface. (Or even multiple interfaces.)
 - Any variable defined in an interface is **public static final**
 - Also multiple *extension* is prohibited, however multiple *inheritance of interfaces* is allowed. Multiple inheritance is allowed with interfaces, but again that works because only the method signatures are inherited.
 
