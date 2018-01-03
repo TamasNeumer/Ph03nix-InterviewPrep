@@ -243,7 +243,14 @@
   - WebSocket - life-cycle of a web socket.
 - To use scopes simply mark your components with `@Scope("scopeType")`
 
-
+#### Customizing the nature of beans
+**Life-cycle callbacks**
+- To interact with the container’s management of the bean lifecycle, you can implement the Spring `InitializingBean` and `DisposableBean` interfaces. The container calls `afterPropertiesSet()` for the former and `destroy()` for the latter to allow the bean to perform certain actions upon initialization and destruction of your beans.
+- The `InitializingBean` interface specifies a single method:
+  - `void afterPropertiesSet() throws Exception;`
+  - It is recommended that you **do not use the InitializingBean interface** because it unnecessarily couples the code to Spring. Instead use the **@PostConstruct annotation**.
+- Usage: Annotate the functions you want to call.
+  - `@PostConstruct`, `@Predestroy.`
 #### Java-based container configuring
 **Conditional configuration**
 - It is often useful to conditionally enable or disable a complete @Configuration class, or even individual @Bean methods, based on some arbitrary system state.
