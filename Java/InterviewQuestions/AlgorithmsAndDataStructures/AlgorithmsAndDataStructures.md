@@ -14,5 +14,5 @@ F,3,2
 G,2,1
 H,0,2
 ```
-#### Implement the bubble sort algorithm! (Hint: Use do-while and stop if no numbers were switched!)
-#### Implement insertion sort algorithm. (Hint: use loop labeling)
+#### 4. Implement the bubble sort algorithm! (Hint: Use do-while and stop if no numbers were switched!)
+#### 5. Implement insertion sort algorithm. (Hint: use loop labeling)
