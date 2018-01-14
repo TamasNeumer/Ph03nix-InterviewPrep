@@ -17,3 +17,5 @@
   - `int[] myArray = new int[5];`
   - `int[] myArray = {1,2,3};`
   - `int[] myArray = new int[]{1,2,3};`
+
+- Avoid mixing `nextInt()` and `nextLine()`. (`nextInt()` doesn't consume EOL `\n`)

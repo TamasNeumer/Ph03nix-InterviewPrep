@@ -16,3 +16,8 @@ H,0,2
 ```
 #### 4. Implement the bubble sort algorithm! (Hint: Use do-while and stop if no numbers were switched!)
 #### 5. Implement insertion sort algorithm. (Hint: use loop labeling)
+#### 6. Implement the quick sort algorithm. (Hint: pivot)
+#### 7. Implement the merge sort algorithm. (Hint pivot is the middle. Two sublists on which "merge" is called recursively. Two lists are merged by a separate "merge" function, that uses "pointers"/"indexes" to access the current element to be inserted from both lists.)
+
+## Search
+#### 8. Given a sorted array use binary search to find an element.
