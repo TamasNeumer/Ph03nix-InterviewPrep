@@ -18,11 +18,11 @@
 
 
 | Fail Fast  |  Fail Safe |
---|---|--
-Throw ConcurrentModification Exception  | Yes  |  No
-Clone object  | No  | Yes  
-Memory Overhead  | No  | Yes
-Examples  | HashMap, Vector, ArrayList, HashSet  | ConcurrentHashMap, CopyOnWriteArrayList
+|--|---|--|
+|Throw ConcurrentModification Exception  | Yes  |  No |
+|Clone object  | No  | Yes |
+|Memory Overhead  | No  | Yes |
+|Examples  | HashMap, Vector, ArrayList, HashSet  | ConcurrentHashMap, CopyOnWriteArrayList |
 
 **Iterator vs Enumerator**
 - **Iterator** has 3 methods:
