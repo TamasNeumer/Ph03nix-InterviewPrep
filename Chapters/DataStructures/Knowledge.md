@@ -17,7 +17,7 @@
   - Fail safe iterator does not guarantee that the data being read is the data currently in the original data structure.
 
 
-| Fail Fast  |  Fail Safe
+| Fail Fast  |  Fail Safe |
 --|---|--
 Throw ConcurrentModification Exception  | Yes  |  No
 Clone object  | No  | Yes  
