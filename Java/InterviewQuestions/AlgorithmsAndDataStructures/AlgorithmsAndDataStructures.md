@@ -21,3 +21,16 @@ H,0,2
 
 ## Search
 #### 8. Given a sorted array use binary search to find an element.
+
+## Algorithms and Data Structures
+#### 9. Describe the iterable interface.
+#### 10. Describe the difference between fail-fast vs fail-safe iterators.
+#### 11. What is the difference between the iterator and enumerator.
+#### 12. Arrays vs Lists.
+#### 13. ArrayList vs LinkedList / DoubleLinkedList
+#### 14. Tree, Binary tree, Heap, AVL tree
+#### 15. Hashmap + Internal implementation, LinkedHashMap
+#### 16. Treemap - big O?
+#### 17. Sets
+#### 18. Discuss the differences between HashTable and HashMap.
+#### 19. What are the "Views"?
