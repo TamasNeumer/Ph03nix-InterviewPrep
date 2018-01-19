@@ -39,5 +39,5 @@ H,0,2
 #### 20. Given an array of integers return the most frequent element.
 #### 21. Given two arrays, return an array that contains the common elements.
 #### 22. Given two arrays find out, whether they are rotations of each other. (offsetted by x index)
-#### 23. Given a String, return the uniqe characters in it. If none found return null.
-#### 24. Given two strings find out if they are "one away". (One character change, or one extra/ one too few chars comapred to the other.)
+#### 23. Given a String, return the unique characters in it. If none found return null.
+#### 24. Given two strings find out if they are "one away". (One character change, or one extra/ one too few chars compared to the other.)
