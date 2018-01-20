@@ -41,3 +41,4 @@ H,0,2
 #### 22. Given two arrays find out, whether they are rotations of each other. (offsetted by x index)
 #### 23. Given a String, return the unique characters in it. If none found return null.
 #### 24. Given two strings find out if they are "one away". (One character change, or one extra/ one too few chars compared to the other.)
+#### 25. You are given the coordinates of "bombs" in mine sweeper, and the size of the table. (``mineSweeper(int[][] bombs, int numRows, int numCols)``) Return the minesweeper setup, where bobms are marked with -1, and the other nodes injicatcate the number of neighbouring bombs.
