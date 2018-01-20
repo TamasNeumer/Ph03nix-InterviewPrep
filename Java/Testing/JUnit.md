@@ -1,25 +1,30 @@
 # JUnit
 
 #### Intro
-- **Text Fixture:** A test fixture is a fixed state in code which is tested used as input for a test.
-- **Unit tests:** A unit test is a piece of code written by a developer that executes a specific functionality in the code to be tested and asserts a certain behavior or state.
+- **Text Fixture:** A test fixture is a fixed state of a set of objects used as a baseline for running tests. The purpose of a test fixture is to ensure that there is a well known and fixed environment in which tests are run so that results are repeatable.
+- **Unit tests:** A unit test is a piece of code written by a developer that executes a specific functionality in the code to be tested and asserts a certain behaviour or state.
 - **Integration test:** An integration test aims to test the behavior of a component or the integration between a set of components. The term functional test is sometimes used as synonym for integration test. Integration tests check that the whole system works as intended, therefore they are reducing the need for intensive manual tests.
 - **Performance test:** Performance tests are used to benchmark software components repeatedly. Their purpose is to ensure that the code under test runs fast enough even if it’s under high load.
+
 - **Behavior vs state testing:**
   - A test is a behavior test (also called interaction test) if it checks if certain methods were called with the correct input parameters. A behavior test does not validate the result of a method call.
   - State testing is about validating the result.
 
+
 - **Test location:** The standard convention from the Maven and Gradle build tools is to use:
   - src/main/java - for Java classes
   - src/test/java - for test classes
+
 
 - **Naming conventions:**
   - A widely-used solution for classes is to use the "Test" suffix at the end of test classes names.
   - As a general rule, a test name should explain what the test does. If that is done correctly, reading the actual implementation can be avoided. One possible convention is to use the "should" in the test method name. For example, "ordersShouldBeCreated" or "menuShouldGetActive". Another approach is to use **"Given[ExplainYourInput]When[WhatIsDone]Then[ExpectedResult]"** for the display name of the test method.
 
 #### Creating the first tests
+- JUnit tests have their separate classes. (Usually in src/test/...). As a naming convention use the "Test" suffix.
+- Import ``org.junit.Test`` to use the library.
 - To define that a certain method is a test method, annotate it with the ``@Test`` annotation.
-- You use an ``assert`` method, provided by JUnit or another assert framework, to check an expected result versus the actual result.
+- You use an ``assert`` method (``import static org.junit.Assert.*``), provided by JUnit or another assert framework, to check an expected result versus the actual result.
 
 ```java
 public class MyTests {
@@ -34,6 +39,22 @@ public class MyTests {
     }
 }
 ```
+
+#### Executing multiple tests in CI
+- The ``org.junit.runner.JUnitCore`` class provides the ``runClasses()``method. This method allows you to run one or several tests classes. As a return parameter you receive an object of the type ``org.junit.runner.Result.`` This object can be used to retrieve information about the tests.
+
+  ```java
+  public class MyTestRunner {
+    public static void main(String[] args) {
+      Result result = JUnitCore.runClasses(MyClassTest.class);
+      for (Failure failure : result.getFailures()) {
+        System.out.println(failure.toString());
+      }
+    }
+  }
+  ```
+- Note that for this to work the Test class has to be next to the main, or it has to be added to the class path.
+
 
 #### Junit4 Annotations
 **JUnit 4**  |  **Description**
@@ -57,44 +78,109 @@ public class MyTests {
 - `assertNull()`, `assertNotNull()`
 - `assertSame()`, `assertNotSame()` --> Checks that both variables refer to the same/different object.
 
+#### Test suites
+- You can combine multiple test classes into test suits. Running a test suite executes all test classes in that suite in the specified order.
+
+  ```java
+  @RunWith(Suite.class)
+  @Suite.SuiteClasses({
+    TestFeatureLogin.class,
+    TestFeatureLogout.class,
+    TestFeatureNavigate.class,
+    TestFeatureUpdate.class
+  })
+
+  public class FeatureTestSuite {
+    // the class remains empty,
+    // used only as a holder for the above annotations
+  }
+  ```
+
 #### Parameterized test
 - This class can contain **one** test method and this method is executed with the different parameters provided.
 - You mark a test class as a parameterized test with the ``@RunWith(Parameterized.class)`` annotation.
-- Such a test class must contain a static method annotated with the ``@Parameters`` annotation.
+- Such a test class must contain a static method annotated with the ``@Parameters`` annotation. This method generates and returns a collection of arrays. Each item in this collection is used as parameter for the test method.
+- Steps:
+  - You define the variables that you use (``public int m1;``).
+  - You order a parameter number to each varable (``@Parameter(0)``). This means that the 0-th indexed element of the parameter array is injected to the variable.
+  - You create the function, that returns the test-cases. (Arrays of arrays)
+  - Write the test functions using the variables defined in #1 point.
+
+  ```java
+  @RunWith(Parameterized.class)
+  public class ParameterizedTestFields {
+
+      // fields used together with @Parameter must be public
+      @Parameter(0)
+      public int m1;
+      @Parameter(1)
+      public int m2;
+      @Parameter(2)
+      public int result;
 
 
-```java
-@RunWith(Parameterized.class)
-public class ParameterizedTestFields {
-
-    // fields used together with @Parameter must be public
-    @Parameter(0)
-    public int m1;
-    @Parameter(1)
-    public int m2;
-    @Parameter(2)
-    public int result;
+      // creates the test data
+      @Parameters
+      public static Collection<Object[]> data() {
+          Object[][] data = new Object[][] { { 1 , 2, 2 }, { 5, 3, 15 }, { 121, 4, 484 } };
+          return Arrays.asList(data);
+      }
 
 
-    // creates the test data
-    @Parameters
-    public static Collection<Object[]> data() {
-        Object[][] data = new Object[][] { { 1 , 2, 2 }, { 5, 3, 15 }, { 121, 4, 484 } };
-        return Arrays.asList(data);
-    }
+      @Test
+      public void testMultiplyException() {
+          MyClass tester = new MyClass();
+          assertEquals(result, tester.multiply(m1, m2));
+      }
 
+      // class to be tested
+      class MyClass {
+          public int multiply(int i, int j) {
+              return i *j;
+          }
+      }
+  }
+  ```
+#### JUnit Rules
+- A JUnit rule is a component that intercepts test method calls and allows us to do something before a test method is invoked and after a test method has been invoked.
+- For example, the TemporaryFolder class allows to setup files and folders which are automatically removed after each test run.
+
+  ```java
+  public class RuleTester {
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testMultiplyException() {
-        MyClass tester = new MyClass();
-        assertEquals("Result", result, tester.multiply(m1, m2));
+    public void testUsingTempFolder() throws IOException {
+      File createdFolder = folder.newFolder("newfolder");
+      File createdFile = folder.newFile("myfilefile.txt");
+      assertTrue(createdFile.exists());
     }
+  }
+  ```
 
-    // class to be tested
-    class MyClass {
-        public int multiply(int i, int j) {
-            return i *j;
-        }
+- With rules you can "expect" an exception and their error messages.
+
+  ```java
+  public class RuleExceptionTesterExample {
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void throwsIllegalArgumentExceptionIfIconIsNull() {
+      exception.expect(IllegalArgumentException.class);
+      exception.expectMessage("Negative value not allowed");
+      ClassToBeTested t = new ClassToBeTested();
+      t.methodToBeTest(-1);
     }
-}
-```
+  }
+  ```
+
+#### Categories
+- You can add "categories" to individual tests or to complete classes. Then you can exclude / include them based on these categories.
+- ``@Category({ SlowTests.class, FastTests.class })`` --> category definition
+- Execution
+  - ``@IncludeCategory(SlowTests.class)`` --> Execute all "slow" tests
+  - ``@SuiteClasses({ A.class, B.class })`` --> From these two classes
+
+Source: http://www.vogella.com/tutorials/JUnit/article.html
