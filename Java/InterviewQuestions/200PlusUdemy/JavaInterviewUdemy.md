@@ -161,92 +161,207 @@
 - You can create extension chain.
 
 #### 28. What is an interface?
+- An interface defines a **contract** for responsibilities (methods) of a class.
+- Examples: List, Map, Collection interface.
 
-38 . How would you characterize an interface?
+#### 29. How would you define/create an interface?
+- `public interface MyInterface{}`
+- All methods are pubblic in the interface.
 
-39 . How would you execute an interface?
+#### 30. How would you implement an interface?
+- `public class MyClass implements MyInterface{ @Override ... }`
 
-40 . Can you clarify a couple of dubious things about interfaces?
+#### 31. Can you explain a few of tricky things about interfaces?
+- **Variables** in an interface are **always** ``public static final``
+- Since Java7 you can create `default` method implementations.
 
-41 . Can you augment an interface?
+#### 32. Can you extend an interface?
+- An **Interface can extend ANOTHER Interface** (but NOT a class!)
 
-42 . Could a class develop different interfaces?
+#### 33. Can a class extend multiple interfaces?
+- Multiple interfaces IMPLEMENTATION yes, EXTENSION no.
+- e.g.: HashMap implements Map, Clonebale, Serializeable
+- (Clonable, Serializeable are **marker interfaces**)
+  - Marker interface in Java is interfaces with no field or methods. In simple words, empty interface in java is called marker interface.
 
-43 . What is a theoretical class?
+#### 34. What is an abstract class?
+- A class that can't be instantiated. Usually at least a function is **not** implemented.
+- Marked with the `abstract` keyword.
+- Example: ``AbstractMap``. (get, put, isEmpty(), containsKey(Object o) are implemented however `entrySet()` is not implemented.
 
-44 . At the point when do you utilize a theoretical class?
+#### 35. When do you use an abstract class?
+- Provide a common implemented functionality among all implementations of your component.
 
-45 . How would you characterize a dynamic technique?
+#### 36. Abstract class vs Interface?
+- Visibility (abstract mehtods can be private)
+- You can only extend one abstract class, however implement multiple interfaces.
+- Child-class can define methods with the same or less restrictive visibility.
 
-46 . Think about unique class versus interface?
+#### 37. What is a constructor?
+- A constructor is invoked to create an instance of a class.
 
-47 . What is a constructor?
+#### 38. What is a default constructor?
+- Compiler generated constructor. It has **no arguments**. (Making sure that you can create an instance even if you haven't specified a constructor)
 
-48 . What is a default constructor?
+#### 39. How do you call a Super Class Constructor from a Constructor?
+- Using the `super()` keyword. It must be the **FIRST** statement in the constructor! (Otherwise compile error.)
+- Reason: The parent class' constructor needs to be called before the subclass' constructor. This will ensure that if you call any methods on the parent class in your constructor, the parent class has already been set up correctly.
 
-49 . Will this code incorporate?
+  ```java
+  public Animal(){
+    super();
+    this.name = "Default name";
+  }
+  ```
 
-50 . How would you call a super class constructor from a constructor?
+#### 40. What is the use of this()?
+- Another constructor of the same class can be invoked in the constructor using `this(argument)`
 
-51 . Will this code incorporate?
+#### 41. Can a constructor be called directly from (another) method?
+- No.
 
-52 . What is the utilization of this()?
+#### 42. Is a super class constructor called even when there is no explicit call from a sub class constructor?
+- Yes. (You call the super class' default constructor.)
 
-53 . Will a constructor be called specifically from a strategy?
+## Advanced Object Oriented Ideas:
+#### 43 . What is polymorphism?
+- **Dynamic method lookup** (Same code giving different behavior.)
 
-54 . Is a super class constructor called notwithstanding when there is no express call from a sub class constructor?
+#### 44. What is the utilization of ``instanceof`` function in Java?
+- Determines if a given class is an instance of another class.
+- `subclass instanceof SubClass`
 
-Advanced Object Oriented Ideas:
+#### 45. What is coupling?
+- Measure of how much a class depends on other classes.
+- Assume that you have a ShoppingCart with items in it. If you have the following function:
+  - `... cart.items.length` ... --> You are highly coupled as you know the implementation details! If `Cart` changes its own implementation, then the client code must also change!
+  - Solution use private properties, and methods to access them. (**This** is the true essence of getters/setters, to achieve low coupling.)
+- Same with using classes directly instead of interfaces!
 
-55 . What is polymorphism?
+#### 46. What is cohesion?
+- How related the responsibilities of a class are. A class' method should be highly related.
+- **Problem**: Class is opened and changes too many times.
+- Better approach would be `Downloader`, `Parser`, `Storage` classes.
 
-56 . What is the utilization of instanceof administrator in Java?
+  ```java
+  class DataStorage{
+    /*...*/
+    void doEverything{
+      downloadFromInternet();
+      parseData();
+      storeIntoDatabase();
+    }
+    /*...*/
+  }
+  ```
 
-57 . What is coupling?
+#### 47. What is encapsulation?
+- Hiding the implementation of a Class behind a well defined interface.
+- Helps us to change implementation of a class without braking other code (that depends on our class).
 
-58 . What is attachment?
+#### 48. What is an inner class? What is a static inner class?
+- Inner class is a class created inside another class.
+- Also called nested classes
 
-59 . What is exemplification?
+```java
+public class OuterClass{
+  public class InnerClass{}
+  public static class StaticNestedClass {}
+}
+```
 
-60 . What is an inward class?
+- Static nested classes can be created without their parent.
+  - `OuterClass.StaticNestedClass o = new OuterClass.StaticNestedClass()`
+  - You cannot access OuterClass variables. (since they are not static)
+- For a normal inner class you need an instance of the OuterClass.
+- In **method local inner classes** you can access **final** variables.
 
-61 . What is a static inward class?
+```java
+class OuterClass {
+	private int outerClassInstanceVariable;
 
-62 . Can you make an internal class inside a strategy?
+	public void exampleMethod() {
+		int localVariable;
+		final int finalVariable = 5;
 
-63 . What is a mysterious class?
+		class MethodLocalInnerClass {
+			public void method() {
+				// Can access class instance variables
+				System.out.println(outerClassInstanceVariable);
 
-Modifiers
+				// Cannot access method's non-final local variables
+				// localVariable = 5;//Compiler Error
+				System.out.println(finalVariable);// Final variable is fine..
+			}
+		}
 
-64 . What is default class modifier?
+		// MethodLocalInnerClass can be instantiated only in this method
+		MethodLocalInnerClass m1 = new MethodLocalInnerClass();
+		m1.method();
+	}
+}
+```
 
-65 . What is private access modifier?
+#### 49. What is an anonymous class?
+- It is an inner class without a name and for which only a single object is created. An anonymous inner class can be useful when making an instance of an object with certain “extras” such as overloading methods of a class or interface, without having to actually subclass a class.
+- Useful when you create a single instance in the entire application.
 
-66 . What is default or bundle access modifier?
+```java
+/* Second Anonymous Class - SubClass of Animal */
+		Animal animal = new Animal() {
+			void bark() {
+				System.out.println("Subclass bark");
+			}
+		};
 
-67 . What is ensured access modifier?
+		animal.bark();// Subclass bark
+```
 
-68 . What is community modifier?
+## Modifiers
+#### 50. What is default class modifier?
+- A class is called **Default Class** if there is no access modifier on a class.
+- Visible **inside the same package only**. ("Package private")
 
-69 . What access sorts of variables can be gotten to from a class in same bundle?
+#### 51. What is private access modifier?
+- Private members and methods can be only accessed within the class.
+- **NOT** available in child class.
 
-70 . What access sorts of variables can be gotten to from a class in various bundle?
+#### 52. What is default or "package" access modifier?
+- Default variables and methods can be accessed in the **same package Classes**
+- Default variables and methods from SuperClass are available only to SubClasses in same package.
 
-71 . What access sorts of variables can be gotten to from a sub class in same bundle?
+#### 53. What is protected access modifier?
+- Vars and methods can be accessed in the **same** package Classes
+- Protected vars and methods from SuperClass are available to SubClass in **ANY** package.
 
-72 . What access sorts of variables can be gotten to from a sub class in various bundle?
+#### 54. What is public modifier?
+- Available for all classes, as well as SubClasses.
 
-73 . What is the utilization of a last modifier on a class?
+#### 55. What access types of variables can be accessed to from a class in same package?
+- Default, Public, Protected
 
-74 . What is the utilization of a last modifier on a strategy?
+#### 55. What access types of variables can be accessed to from a class in a different package?
+- Public.
+- Protected if Class is a child-class.
 
-75 . What is a last variable?
+#### 56. What is the use of the `final` modifier on a class?
+- Class cannot be inherited/extended. E.g.: String, Integer
+- Making sure that they are not broken by sub-classes and pose security leaks.
 
-76 . What is a last contention?
+#### 57. What is the utilization of a ``final`` modifier on a method?
+- Cannot be overriden.
 
-77 . What happens when a variable is set apart as unpredictable?
+#### 58. What is a ``final`` variable?
+- Once initialized cannot be changed.
+- Note it's tricky with references. The reference's underlying value can change, however the reference (pointer) not. Hence if you have a reference to an List you can still change the content of the list.
 
-78 . What is a static variable?
+#### 59. What is a final argument?
+- Final arguments cannot be modified.
+
+#### 60. What is a static variable?
+- They become class level variables. --> One variable exists for the entire set of classes, and the variable is shared between these classes.
+- You don't need an instance to access these.
+- Static method is almost the same, however in a static method you can access only static variables and other static methods.
 
 Conditions and Loops
 
