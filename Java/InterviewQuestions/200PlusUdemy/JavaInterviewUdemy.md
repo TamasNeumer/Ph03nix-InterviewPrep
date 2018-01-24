@@ -263,12 +263,12 @@
 - Inner class is a class created inside another class.
 - Also called nested classes
 
-```java
-public class OuterClass{
-  public class InnerClass{}
-  public static class StaticNestedClass {}
-}
-```
+  ```java
+  public class OuterClass{
+    public class InnerClass{}
+    public static class StaticNestedClass {}
+  }
+  ```
 
 - Static nested classes can be created without their parent.
   - `OuterClass.StaticNestedClass o = new OuterClass.StaticNestedClass()`
@@ -276,46 +276,46 @@ public class OuterClass{
 - For a normal inner class you need an instance of the OuterClass.
 - In **method local inner classes** you can access **final** variables.
 
-```java
-class OuterClass {
-	private int outerClassInstanceVariable;
+  ```java
+  class OuterClass {
+  	private int outerClassInstanceVariable;
 
-	public void exampleMethod() {
-		int localVariable;
-		final int finalVariable = 5;
+  	public void exampleMethod() {
+  		int localVariable;
+  		final int finalVariable = 5;
 
-		class MethodLocalInnerClass {
-			public void method() {
-				// Can access class instance variables
-				System.out.println(outerClassInstanceVariable);
+  		class MethodLocalInnerClass {
+  			public void method() {
+  				// Can access class instance variables
+  				System.out.println(outerClassInstanceVariable);
 
-				// Cannot access method's non-final local variables
-				// localVariable = 5;//Compiler Error
-				System.out.println(finalVariable);// Final variable is fine..
-			}
-		}
+  				// Cannot access method's non-final local variables
+  				// localVariable = 5;//Compiler Error
+  				System.out.println(finalVariable);// Final variable is fine..
+  			}
+  		}
 
-		// MethodLocalInnerClass can be instantiated only in this method
-		MethodLocalInnerClass m1 = new MethodLocalInnerClass();
-		m1.method();
-	}
-}
-```
+  		// MethodLocalInnerClass can be instantiated only in this method
+  		MethodLocalInnerClass m1 = new MethodLocalInnerClass();
+  		m1.method();
+  	}
+  }
+  ```
 
 #### 49. What is an anonymous class?
 - It is an inner class without a name and for which only a single object is created. An anonymous inner class can be useful when making an instance of an object with certain “extras” such as overloading methods of a class or interface, without having to actually subclass a class.
 - Useful when you create a single instance in the entire application.
 
-```java
-/* Second Anonymous Class - SubClass of Animal */
-		Animal animal = new Animal() {
-			void bark() {
-				System.out.println("Subclass bark");
-			}
-		};
+  ```java
+  /* Second Anonymous Class - SubClass of Animal */
+  		Animal animal = new Animal() {
+  			void bark() {
+  				System.out.println("Subclass bark");
+  			}
+  		};
 
-		animal.bark();// Subclass bark
-```
+  		animal.bark();// Subclass bark
+  ```
 
 ## Modifiers
 #### 50. What is default class modifier?
@@ -363,89 +363,262 @@ class OuterClass {
 - You don't need an instance to access these.
 - Static method is almost the same, however in a static method you can access only static variables and other static methods.
 
-Conditions and Loops
+## Conditions and Loops
+#### 61. Why should you use blocks around if statement?
+- Then only the first line is part of the loop/ if statement.
 
-79 . Why would it be advisable for you to dependably utilize obstructs around if proclamation?
+#### 62. Guess the output
+```java
+int m = 15;
+if(m>20)
+if(m<20)
+  System.out.println("m>20");
+else
+  System.out.println("Who am I?");
+```
 
-80 . Surmise the yield
+- Nothing. First condition is false and hence the "block" after it is not executed.
 
-81 . Surmise the yield
+#### 63. Guess the output
+```java
+boolean isTrue = false;
+if(isTrue==true) Sout("TRUE TRUE");
+if(isTrue = true) Sout("TRUE");
+```
 
-82 . Surmise the yield of this switch square .
+#### 64. Guess the output
+```java
+int number = 2;
+switch (number){
+  case 1:
+    System.out.println(1);
+  case 2:
+    System.out.println(2);
+  case 3:
+    System.out.println(3);
+  default:
+    System.out.println("Default");
+}
+```
 
-83 . Surmise the yield of this switch square?
+- Output: 2 3 Default. (No breaks!)
+- BTW: default can be anywhere (beginning, end, middle)
 
-84 . Should default be the last case in a switch proclamation?
+#### 65. Can you switch case a String?
+- Yes. (String, Enums are allowed.)
 
-85 . Can a switch proclamation be utilized around a String
+#### 66. What is an enhanced for loop?
+- `for(int i : myList)`
 
-86 . Surmise the yield of this for circle
+#### 67. Explain breaks and break with label.
+- `break` breaks the "inner loop"
+- You can use labels to break the outerloop
 
-87 . What is an upgraded for circle?
+  ```java
+  outerLoop:
+  for(;;){
+    for(int i = 1; i < 10; i++)
+      if(i == 5) break outerLoop;
+  }
+  ```
 
-88 . What is the yield of the for circle beneath?
+## Exceptions
+#### 68. Why is exception handling important?
+- Sometimes unexpected thing happen (e.g. Network Address unreachable, File is in use and can't be read, file is damaged etc.) --> Instead of breaking down, the program should "fail properly".
 
-89 . What is the yield of the project beneath?
+#### 69. What design pattern is used to implement Exception handling features in most languages?
+- Chain of responsibility --> If I don't know how to handle, I throw it a "layer" upwards. There should be somewhere someone in the call-stack that will catch it. (If it is their responsibility.)
 
-90 . What is the yield of the system beneath?
+#### 70. What does a finally block do?
+- It executes anyway (regardless if try/catch was successful). Optimal for closing files/streams/connections.
+- Finally executes even if there is a return in try/catch (?!)
 
-Exemption taking care of
+#### 71. Are there scenarios when finally is not executed?
+- If exception is thrown in finally
+- If JVM crashes. (Error - out of memory etc.)
 
-91 . Why is exemption taking care of critical?
+#### 72. Is try without a catch allowed?
+- Yes. `try{/*...*/} finally {/*...*/}`
+- Useful if you want to close a connection but you don't want to handle the exception.
 
-92 . What design example is utilized to execute special case taking care of elements in many dialects?
+#### 73. Is a try without catch and finally allowed?
+- No. At least one of them is required.
 
-93 . What is the requirement for at long last piece?
 
-94 . In what situations is code in at last not executed?
+#### 74. Can you explain the hierarchy of Exception Handling classes?
+- Throwable
+  - Error
+    - You can do nothing about it. (JVM errors etc.)
+  - Exception
+    - Checked (Any class that **does NOT** extend RuntimeException but extends exception)
+      - The calling method knows that the given method might throw an exception. Hence it has to either catch it, or re-throw it.
+    - Unchecked (RuntimeException)
+      - I'm throwing an exception, but I'm not sure if the calling method can do anything about it / handle it.
 
-95 . Will at last be executed in the system beneath?
+#### 75. How do you thrown an exception?
+- Throwing unchecked exception
 
-96 . Is attempt without a catch is permitted?
+  ```java
+  if(condition){
+    throw new RuntimeException("Message");
+  }
+  ```
 
-97 . Is attempt without catch lastly permitted?
+- Throwing checked exception
 
-98 . Will you clarify the chain of command of special case taking care of classes?
+  ```java
+  if(condition){
+    throw new Exception("Message");
+  }
+  ```
 
-99 . What is the distinction amongst mistake and special case?
+  - In such cases the method has to mark itself with `throws Exception`
+  - The caller method MUST catch this OR mark itself with `throws Exception`
 
-100 . What is the distinction between checked special cases and unchecked exemptions?
+#### 76. How do you throw custom exception?
+- Create a class in which you extend an exception.
 
-101 . How would you toss a special case from a strategy?
+  ```java
+  class CurrenciesDoNotMatchException extends Exception {}
+  class CurrenciesDoNotMatchException2 extends RuntimeException {}  
+  ```
 
-102 . What happens when you toss a checked special case from a technique?
+#### 77. What is the output of the program below?
+```java
+try{
+  MyClass.funct(5);
+} catch (Exception e) {e.printStackTrace();}
+catch (CurrenciesDoNotMatchException e) {/*...*/}
+```
 
-103 . What are the alternatives you need to wipe out gathering blunders when taking care of checked special cases?
+- Compilation error. Specific exception MUST come first.
 
-104 . How would you make a custom special case?
+#### 78. How do you handle multiple exception types with the same block?
+- `catch(IOException | SQLException ex)`
 
-105 . How would you handle various special case sorts with same exemption taking care of square?
+#### 79. Can you explain the try with resources?
+- Helps to reduce boilerplate. The resource implements the `AutoClosable` interface, hence it will be automatically closed.
+- It is available to any class that implements the `AutoClosable.`
 
-106 . Could you clarify about attempt with assets?
+## Various Topics
+#### 80. What are the default values in an array?
+- Depends on the underlying type.
+- byte,short,int,long: 0
+- float, double: 0.0
+- boolean: false
+- object: null
 
-107 . How does attempt with assets work?
+#### 81. How would you print the content of an array?
+- ``System.out.println(myArray);`` prints [I@6db3f682
+- Use **Arrays.toString()** / **Arrays.deepToString()**
+  - ``System.out.println(Arrays.toString(myArray));``
+  - ``System.out.println(Arrays.deepToString(my2DArray));``
 
-108 . Could you clarify a couple special case taking care of best practices?
 
-Various topics
+#### 82. How do you compare two arrays?
+- `Arrays.equals()` method.
 
-109 . What are the default values in an exhibit?
+#### 83. What are the advanced enums?
 
-110 . How would you circle around an exhibit utilizing upgraded for circle?
+```java
+// Enum with a variable,method and constructor
+	enum SeasonCustomized {
+		WINTER(1), SPRING(2), SUMMER(3), FALL(4);
 
-111 . How would you print the substance of an exhibit?
+		// variable
+		private int code;
 
-112 . How would you think about two exhibits?
+		// method
+		public int getCode() {
+			return code;
+		}
 
-113 . What is an enum?
+		// Constructor-only private or (default)
+		// modifiers are allowed
+		SeasonCustomized(int code) {
+			this.code = code;
+		}
 
-114 . Can you utilize a switch articulation around an enum?
+		// Getting value of enum from code
+		public static SeasonCustomized valueOf(int code) {
+			for (SeasonCustomized season : SeasonCustomized.values()) {
+				if (season.getCode() == code)
+					return season;
+			}
+			throw new RuntimeException("value not found");// Just for kicks
+		}
 
-115 . What are variable contentions or varargs?
+		// Using switch statement on an enum
+		public int getExpectedMaxTemperature() {
+			switch (this) {
+			case WINTER:
+				return 5;
+			case SPRING:
+			case FALL:
+				return 10;
+			case SUMMER:
+				return 20;
+			}
+			return -1;// Dummy since Java does not recognize this is possible :)
+		}
 
-116 . What are attests utilized for?
+	};
+```
 
-117 . At the point when ought to affirms be utilized?
+#### 84. What are variable arguments?
+- Something that can accept multiple parameters
+- The variable argument kind of acts like an array.
+- Variable argument shuld be the last parameter of the array.
+
+  ```java
+  public int sum(int... numbers){
+    int sum = 0;
+    for(int number: numbers)
+      sum+=number;
+    return sum;
+  }
+  ```
+
+#### 85. What are assertions used for?
+- Assertions are used to validate assumptions in the code.
+  - `assert(principal>0)`
+- To use them you have to enable assertions with the -ea argument (short for -enableassertions).
+- Don't use assertions to validate parameters. Use IllegalArgumentException.
+
+#### 86. What is GC?
+- Automatic memory management in Java.
+  - When available memory is low.
+  - When CPU is free.
+
+#### 87. When does GC run?
+  - Whenever the JVM thinks it is time.
+
+#### 88. Can you request GC? How?
+- `System.gc()`
+- It is just a request, not an order. Not recommended.
+
+#### 89. What are initialization blocs?
+- **Static initializer**: runs when a class is loaded
+
+  ```java
+  class MyClass{
+    static{
+      Sout("Staticly initializing");
+    }
+    /*...*/
+  }
+  ```
+
+- **Instance initializer**: when constructor runs
+
+  ```java
+  class MyClass{
+    {
+      Sout("Instance initializer runs every time an instance is created.");
+    }
+    /*...*/
+  }
+  ```
 
 118 . What is trash accumulation?
 
