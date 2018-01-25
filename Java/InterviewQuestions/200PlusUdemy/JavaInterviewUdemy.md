@@ -698,30 +698,56 @@ Rectangle rectangle = (Rectangle) objectInputStream.readObject();
   - TreeSet provides guaranteed O(log(n)) time for common operations like add, remove and contains
   - Internally TreeSet implements NavigableSet.
 
-#### 101. Describe the Map interface
+#### 105. Describe the Map interface
 - Key-value pairs.
 - Methods: isEmpty, get, put, remove, putAll, clear, size, keySet(), valueSet(), entrySet()
 
-#### 102. What is a navigable map?
+#### 106. What is a navigable map?
 - Similar to Set -> NaviagableSet
 - A sorted map extended with navigation methods.
 
-#### 103. What is the difference between HashTable and Hashmap
+#### 107. What is the difference between HashTable and Hashmap
 - HashTable is synchronized.
 - HashTable does NOT allow a key with null value. HashMap does.
 
+#### 108. What do you know about queues / dequeues / blocking queue?
+- Extends collection.
+- FIFO
+- Dequeueu: you can add/remove at both sides
+- Blocking queue: Used in multi threaded environment, where one thread blocks until there is something in the queue to grab / get.
 
-Advanced accumulations
+## Advanced Collections
+#### 109. What is the difference between synchronized and concurrent collections in Java?
+- Pre Java 5 collections use the ``synchronized`` keyword for synchronizing method calls.
+- Post Java 4 collections use new approaches.
 
-167 . What is the contrast amongst synchronized and simultaneous accumulations in Java?
+#### 110. Explain the new approaches for synchronization.
+- These are the "cuncurrnet collections"
+- Copy on write
+- Compare and Swap
+- Locks
 
-168 . Clarify about the new simultaneous accumulations in Java?
+#### 111. Clarify about CopyOnWrite concurrent collections approach?
+- e.g.: `CopyOnArrayList`
+- All values in the collection are stored in an internal immutable array. When there is modification done to the array the original array is **copied.**
+- Read operations are not synchronized. Only write operations.
+  - Used when readers outnumber the writers.
 
-169 . Clarify about copyonwrite simultaneous accumulations approach?
 
-170 . What is compareandswap approach?
+#### 112. What is the CompareAndSwap approach?
+- Java 5 approach to handle synchronization.
+- The value of the member variable is cached before the calculation. After the calculation the cached value is compared to the member variable.
+  - If another thread has modified the original value, then:
+    - You do the calculation again with the latest value
+    - Skip the calculation, assuming that another thread is also working on the variables.
 
-171 . What is a lock? How is it not quite the same as utilizing synchronized methodology?
+#### 113. What is a lock?
+- Problem with synchronize: If I have 100 synchronized methods, only **ONE** thread can execute **ANY** of the synchronized methods.
+- Solution: `final ReentrantLock lock = new ReentrantLock();`
+- You can create multiple locks, and now not the entre class' methods are "blocked".
+  - These 3 methods use lockA, the other 4 use lockB etc.
+
+
 
 172 . What is starting limit of a Java gathering?
 
