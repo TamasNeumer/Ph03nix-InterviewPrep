@@ -619,106 +619,97 @@ catch (CurrenciesDoNotMatchException e) {/*...*/}
     /*...*/
   }
   ```
+#### 90. What is serialization?
+- Serialization: converting object state to some internal object representation
+- De-serialization -> reverse
+- `ObjectOutputStream.writeObject()`, `ObjectInputStream.readObject()`
 
-118 . What is trash accumulation?
+#### 91. How do you serialize an object?
+- The object must implement the `Serializable` interface. (The interface doesn't declare any methods to be implemented.)
 
-119 . Could you clarify junk accumulation with a case?
+  ```java
+  FileOutputStream fileStream = new FileOutputStream("Rectangle.ser");
+  ObjectOutputStream objectStream = new ObjectOutputStream(fileStream);
+  objectStream.writeObject(new Rectangle(5, 6));
+  objectStream.close();
+  ```
 
-120 . At the point when is waste accumulation run?
+#### 92. How would you de-serialize in Java?
+```java
+FileInputStream fileInputStream = new FileInputStream("Rectangle.ser");
+ObjectInputStream objectInputStream = new ObjectInputStream(
+				fileInputStream);
+Rectangle rectangle = (Rectangle) objectInputStream.readObject();
+```
 
-121 . What are best practices on junk gathering?
+#### 93. What do you do if just parts of the item must be serialized?
+- Mark properties with the `transient` keyword.
+  - `transient int area;`
+  - Especially useful with calculated class properties.
 
-122 . What are introduction squares?
+#### 94. How would you serialize a hierarchy of objects? (Objects composed of other objects.)
+- You mark the delegate with `transient`
+- The delegate should implement the `Serializable` and then it will be serialized as well.
 
-123 . What is a static initializer?
+#### 95. Are the constructors in an object invoke, when it is de-serialized?
+- No. The **state** of the object is restored, but it has nothing to do with the constructor.
 
-124 . What is an occasion initializer piece?
+#### 96. Are static variables serialized?
+- No, since they are not part of the object.
 
-125 . What is tokenizing?
+## Collections
+#### 97. Why do we need collections in Java?
+- Array size is static. We need collections for situations where data is **dynamic**.
 
-126 . Will you give a case of tokenizing?
+#### 98. What are the most important interfaces in the gathering progressive system?
+- Iterable, Collection
+- Set, List, Queue
+- Map
 
-127 . What is serialization?
+#### 99. What are the most important methods in the Collection interface?
+- add, remove, clear, isEmpty, size, contains, containsAll, addAll, removeAll, iterator
 
-128 . How would you serialize an article utilizing serializable interface?
+#### 100. What are the most important methods if the List interface?
+- Keyword is "**position**"
+- indexOf(), lastIndexOf() get(), set()
 
-129 . How would you de-serialize in Java?
+#### 101. What is the difference between ArrayList and Vector?
+- Vector is synchronized. (`public synchronized void ...`)
 
-130 . What do you do if just parts of the item must be serialized?
+#### 102. Describe the Set interface.
+- No duplications allowed. (No additional methods defined.)
 
-131 . How would you serialize a chain of importance of articles?
+#### 103. What are: SortedSet, NavigableSet?
+- They are **set INTERFACES**
+- SortedSet: Maintains elements in a sorted order.
+  - subSet(fromElement, toElement)
+  - headSet(toElement)
+  - tailSet(tailSet)
+  - first(), last()
+- NavigableSet (extends Sorted set)
+  - A sorted set extended with navigation mehtods.
+  - ``E lower(E e)`` --> find the nearest value close to this value.
 
-132 . Are the constructors in an item summoned when it is de-serialized?
+#### 104. HashSet, LinkedHashSet, TreeSet?
+- Set **implementations**
+- HashSet: key value pairs
+- LinekdHashSet: elements are ordered according to their insertion order
+- TreeSet - sorted (natural order)
+  - TreeSet provides guaranteed O(log(n)) time for common operations like add, remove and contains
+  - Internally TreeSet implements NavigableSet.
 
-133 . Are the estimations of static variables put away when an article is serialized?
+#### 101. Describe the Map interface
+- Key-value pairs.
+- Methods: isEmpty, get, put, remove, putAll, clear, size, keySet(), valueSet(), entrySet()
 
-Collections
+#### 102. What is a navigable map?
+- Similar to Set -> NaviagableSet
+- A sorted map extended with navigation methods.
 
-134 . Why do we require accumulations in Java?
+#### 103. What is the difference between HashTable and Hashmap
+- HashTable is synchronized.
+- HashTable does NOT allow a key with null value. HashMap does.
 
-135 . What are the critical interfaces in the gathering progressive system?
-
-136 . What are the essential techniques that are pronounced in the accumulation interface?
-
-137 . Will you clarify quickly about the List interface?
-
-138 . Clarify about ArrayList with an illustration?
-
-139 . Will an ArrayList have copy components?
-
-140 . How would you repeat around an ArrayList utilizing iterator?
-
-141 . How would you sort an ArrayList?
-
-142 . How would you sort components in an ArrayList utilizing practically identical interface?
-
-143 . How would you sort components in an ArrayList utilizing comparator interface?
-
-144 . What is vector class? How is it unique in relation to an ArrayList?
-
-145 . What is linkedList? What interfaces does it actualize? How is it not the same as an ArrayList?
-
-146 . Will you quickly clarify about the Set interface?
-
-147 . What are the vital interfaces identified with the Set interface?
-
-148 . What is the contrast amongst Set and sortedSet interfaces?
-
-149 . Can you give case of classes that execute the Set interface?
-
-150 . What is a HashSet?
-
-151 . What is a linkedHashSet? How is not quite the same as a HashSet?
-
-152 . What is a TreeSet? How is not the same as a HashSet?
-
-153 . Will you give case of usage of navigableSet?
-
-154 . Clarify quickly about Queue interface?
-
-155 . What are the vital interfaces identified with the Queue interface?
-
-156 . Clarify about the Deque interface?
-
-157 . Clarify the BlockingQueue interface?
-
-158 . What is a priorityQueue?
-
-159 . Could you give illustration executions of the BlockingQueue interface?
-
-160 . Could you quickly clarify about the Map interface?
-
-161 . What is contrast amongst Map and sortedMap?
-
-162 . What is a HashMap?
-
-163 . What are the distinctive techniques in a Hash Map?
-
-164 . What is a TreeMap? How is not the same as a HashMap?
-
-165 . Can you give a case of execution of navigableMap interface?
-
-166 . What are the static techniques present in the accumulations class?
 
 Advanced accumulations
 
