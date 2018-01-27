@@ -747,13 +747,25 @@ Rectangle rectangle = (Rectangle) objectInputStream.readObject();
 - You can create multiple locks, and now not the entre class' methods are "blocked".
   - These 3 methods use lockA, the other 4 use lockB etc.
 
+#### 114. What is the initial capacity and the load factor of a HashMap?
+- Initial capacity: number of buckets in the hash table
+- Load factor: how full a hash table is allowed to get before extenind and rehashing it.
 
+#### 115. What is the UnsupportedOperationException?
+- All java Collections extend the Collection interface.
 
-172 . What is starting limit of a Java gathering?
+  ```java
+  List<Integer> myList = Arrays.asList(new Integer[]{1,2,3});
+  myList.remove(); // throws exception, as list is unmodifyable
+  ```
 
-173 . What is burden component?
+#### 116. Fail-safe vs fail-fast iterator?
+- Fail-fast: When using the iterator another thread modifies the underlying collection, and exception is thrown.
+- Fail-safe: A copy is made of the collection, and you loop the original collection.
 
-174 . At the point when does a Java gathering toss UnsupportedOperationException?
+#### 117. What are atomic operations in Java?
+- Operation effectively happens at once. (Preferred in multi-threaded environment, where you want to make sure, that the data you are working with is not changed.)
+- ``AtomicInteger`` is a great example.
 
 175 . What is distinction between safeguard and come up short quick iterators?
 
