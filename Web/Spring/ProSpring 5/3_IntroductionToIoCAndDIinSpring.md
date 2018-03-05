@@ -37,3 +37,24 @@ using CDL requires your classes to implement a specific interface and look up al
 -  The "Injection" style is the most cleared and hance it is used by Spring.
 
 ## IoC in Spring
+#### Intro
+- Spring uses Dependency Injection (DI)
+- Spring’s IoC containe can act as an adapter between its own dependency injection container and external dependency lookup containers.
+
+#### Bean And Bean Factory
+- The core of Spring’s dependency injection container is the ``BeanFactory`` interface. BeanFactory is responsible for managing components, including their dependencies as well as their life cycles. In Spring, the term bean is used to refer to any component managed by the container.
+- If your application needs DI support your application must create an instance of a class that implements the ``BeanFactory`` interface and configures it with bean and dependency information. Internally, bean configuration is represented by instances of classes that implement the BeanDefinition interface.
+- **BeanFactory Implementations**
+
+```java
+public class XmlConfigWithBeanFactory {
+  public static void main(String... args) {
+    DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+    XmlBeanDefinitionReader rdr = new XmlBeanDefinitionReader(factory);
+    rdr.loadBeanDefinitions(new
+      ClassPathResource("spring/xml-bean-factory-config.xml"));
+    Oracle oracle = (Oracle) factory.getBean("oracle");
+    System.out.println(oracle.defineMeaningOfLife());
+  }
+}
+```
