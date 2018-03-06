@@ -38,15 +38,79 @@
 
 #### Operators
 - Assignment: `= += -= *= /=`
+  - Note that unlike in Cpp there is no implicit type conversion. (`boolean myValue = 1;` is an invalid expression!)
+  - Also assigning a long variable to an integer will result in compile error. (`int val = myLongVar;`) In order to squeeze it in you **must** cast it manually.
+  - You can assign multiple values on the same line using the assignment operator. (`a = b = c;`)
 - Arithmetic: `+ - * / % ++ --`
+  - When you apply the addition operator to char values, their corresponding ASCII values are added and subtracted.
+  - All byte, short, and char values are **automatically widened** to int when used as operands for arithmetic operations. If a long value is involved somewhere, then every- thing, including int values, is widened to long.
+    - `short a = byteVar1 + byteVar2;` - "possible lossy conversion from int to short" --> when added the result is stored in an integer, and hence int -> short is not allowed!
+    - Having `final` variables, the compiler it works.
+  - When a unary operator is used in an expression, its placement with respect to its variable decides whether its value will increment or decrement before the evaluation of the expression or after the evaluation of the expression.
+    ```java
+    int a = 10;
+    a = a++ + a + a-- - a-- + ++a;
+    // a = 10 + 11 + 11 - 10 + 10;
+    ```
+    - The evaluation of an expression starts from left to right. For a prefix unary operator, the value of its operand increments or decrements just before its value is used in an expression. For a postfix unary operator, the value of its operand increments or decrements just after its value is used in an expression.
 - Relational: `< <= > >= == !=`
+  - You can't compare incomparable values. It won't compile. (int < boolean etc.)
+  - People often miss and use assignemnt operator instead of boolean equality.
+    ```java
+    System.out.println(b1 = true);  // prints true
+    System.out.println(b1 = false); // prints false
+    ```
 - Logical `!, &&, ||`
+  - Another interesting point to note with respect to the logical operators && and || is that they’re also called short-circuit operators because of the way they evaluate their operands to determine the result.
+    - The && operator returns true only if both the operands are true. If the first operand and to this operator evaluates to false, the result can never be true. Therefore, && does not evaluate the second operand. Similarly, the || operator.
+    - This is especially important if you have statements like `total < marks && ++marks > 5` because you must know that in this case the value of marks won't change.
+- **Operator precedence** (highest at the top)
+  - Postfix `Expression++, expression--`
+  - Unary `++expression, --expression, +expression, -expression, !`
+  - Multiplication `* (multiply), / (divide), % (remainder)`
+  - Addition `+ (add), - (subtract)`
+  - Relational `<,>,<=,>=`
+  - Equality `==, !=`
+  - Logical AND `&&`
+  - Logical OR `||`
+  - Assignment `=, +=, -=, *=, /=, %=`
+  - Use parentheses to overwrite the precedence.
 
-####
-
-
-
-
+#### Wrapper classes
+- Java defines a wrapper class for each of its primitive data types. The wrapper classes are used to wrap primitives in an object, so they can be added to a collection object.
+- You can create objects of all the wrapper classes in multiple ways:
+  - Assignment—By assigning a primitive to a wrapper class variable (autoboxing)
+  - Constructor—By using wrapper class constructors
+  - Static methods—By calling static method of wrapper classes, like, valueOf()
+- Wrapper classes are immutable. Adding a primitive value to a wrapper class variable doesn’t modify the value of the object it refers to. The wrapper class variable is assigned a new object.
+- **Character does NOT** have a constructor accepting strings!
+- Wrapper classes **DON'T** have no arg constructors!!!
+- To  retrieve primitive values from wrapper classes use the `**Value()` function. (byteValue(), shortValue() ...)
+- To get a primitive data type value corresponding to a string value, you can use the static utility method parseDataType, where DataType refers to the type of the return value. (`parseByte()`, `parseInt()` etc. --> **parseChar doesn't exist!**)
+  - All parse methods throw `NumberFormatException` except `Boolean.parseBoolean()`. This method returns false whenever the string it parses is not equal to “true” (**case-insensitive** comparison).
+- Wrapper classes Byte, Short, Integer, and Long **cache objects** with values in the **range of -128 to 127**. (The Character class caches objects with values 0 to 127.). If you request an object of any of these classes, from this range, the valueOf() method returns a reference to a predefined object; otherwise, it creates a new object and returns its reference.
+  - Wrapper classes Float and Double **don’t cache** objects for any range of values.
+  - In the case of the Boolean class, the cached instances are accessible directly because only two exist: static constants `Boolean.TRUE` and `Boolean.FALSE`.
+- **Method `equals()` always compares the primitive value stored by a wrapper instance, and `==` compares object references.**
+- **Autoboxing and `valueOf()`** use caching (in the above mentioned range)!
+- You can’t compare wrapper instances for equality using equals() or ==, if they aren’t of the same class.
+  - `System.out.println(shortObj1.equals(IntegerObj2));` --> prints false
+  - `System.out.println(shortObj1 == IntegerObj2);` --> doesn't compile
 
 #### Key takeaways
 - Watch out for the variable naming. (`bool` instead of `boolean`). These f@#*&#s love to play around with letter casing and C-type variable names.
+- In arithmetic operations the components are caseted (to at least) int, hence ``System.out.printline('a' + 'b')`` will result in an integer.
+  ```java
+  public class Prim {
+      public static void main(String[] args) {
+          char a = 'a';
+          char b = -10;
+          char c = '1';
+          integer d = 1000;
+          System.out.println(++a + b++ * c - d);
+      }
+  }
+  ```
+  - So the last line also fails to compile because it uses variables that were introduced in lines that also failed!
+- The constructor type reference creation always creates a new instance without caching. (Even in the case of Booleans)
+- Whenever you see "Compilation error" as a possible answer check for minor issues (unclosed parentheses, wrong primitive type names etc.)
