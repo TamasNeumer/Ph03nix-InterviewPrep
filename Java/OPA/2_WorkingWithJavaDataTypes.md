@@ -53,6 +53,7 @@
     // a = 10 + 11 + 11 - 10 + 10;
     ```
     - The evaluation of an expression starts from left to right. For a prefix unary operator, the value of its operand increments or decrements just before its value is used in an expression. For a postfix unary operator, the value of its operand increments or decrements just after its value is used in an expression.
+  - The modulo operator (%) works with floats as well!
 - Relational: `< <= > >= == !=`
   - You can't compare incomparable values. It won't compile. (int < boolean etc.)
   - People often miss and use assignemnt operator instead of boolean equality.
@@ -61,9 +62,11 @@
     System.out.println(b1 = false); // prints false
     ```
 - Logical `!, &&, ||`
-  - Another interesting point to note with respect to the logical operators && and || is that they’re also called short-circuit operators because of the way they evaluate their operands to determine the result.
+  - Another interesting point to note with respect to the logical operators `&&` and `||` is that they’re also called short-circuit operators because of the way they evaluate their operands to determine the result. **However `|` and `&` operators evaluate the full expression no matter what.**
     - The && operator returns true only if both the operands are true. If the first operand and to this operator evaluates to false, the result can never be true. Therefore, && does not evaluate the second operand. Similarly, the || operator.
     - This is especially important if you have statements like `total < marks && ++marks > 5` because you must know that in this case the value of marks won't change.
+- Bitwise `| & ~ ^ << >> >>>`
+  - `>>>` is the unsigned right shift. There is no such thing as `<<<`!
 - **Operator precedence** (highest at the top)
   - Postfix `Expression++, expression--`
   - Unary `++expression, --expression, +expression, -expression, !`
@@ -114,3 +117,4 @@
   - So the last line also fails to compile because it uses variables that were introduced in lines that also failed!
 - The constructor type reference creation always creates a new instance without caching. (Even in the case of Booleans)
 - Whenever you see "Compilation error" as a possible answer check for minor issues (unclosed parentheses, wrong primitive type names etc.)
+- a short VARIABLE can NEVER be assigned to a char without explicit casting. A short CONSTANT can be assigned to a char only if the value fits into a char.

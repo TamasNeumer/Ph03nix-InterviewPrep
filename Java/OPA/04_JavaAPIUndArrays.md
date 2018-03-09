@@ -58,7 +58,7 @@
   - Because no elements of an array are created when it’s declared, it’s invalid to define the size of an array with its declaration. (`int intArray[2];` --> WRONG!) You have to inizialize it (using the `new` keyword.)
 - **Allocation**
   - Done with the `new` keyword. You **MUST** provide the array size, that has to be an integer.
-  - `multiArr = new int[][3];` won't compile because you must specify the size of the first dimension too! However `multiArr = new int[2][]` is okay.
+  - `multiArr = new int[][3];` won't compile because you **must specify the size of the first dimension** too! However `multiArr = new int[2][]` is okay. `int [][][] iaaa = new int [3][][];` is also okay.
   - Default value is 0/0.0 for primitives (false for boolean) and null for references.
 - **Initialization**
   - Filling the array with values.
@@ -124,6 +124,12 @@
   - For any non-null reference value x, **x.equals(null)** should **return false**.
 
 ### DateTime API
+- They are in package `java.time` and they have no relation at all to the old `java.util.Date` and `java.sql.Date`.
+- `java.time.temporal.TemporalAccessor` is the base interface that is implemented by LocalDate, LocalTime, and LocalDateTime concrete classes.
+- `LocalDate`, `LocalTime`, and `LocalDateTime` implement `TemporalAccessor` and extend `java.util.Date`.
+-  LocalDate, LocalTime, and LocalDateTime classes do not have any parent/child relationship among themselves.
+
+
 - **LocalDate**
   - Used to store dates (without time or timezone).
   - Immutable, hence thread-safe.
