@@ -160,3 +160,7 @@
     - Maintenance or ``“hotfix”`` branches are used to quickly patch production releases. ``Hotfix`` branches are a lot like ``release`` branches and ``feature`` branches except they're based on ``master`` instead of ``develop``. This is the only branch that should fork directly off of ``master``. As soon as the fix is complete, it should be merged into both ``master`` and ``develop`` (or the current release branch), and ``master`` should be tagged with an updated version number.
 
       ![Test](https://www.atlassian.com/dam/jcr:61ccc620-5249-4338-be66-94d563f2843c/05%20(2).svg)
+
+
+#### Forking Workflow
+- tbd.
