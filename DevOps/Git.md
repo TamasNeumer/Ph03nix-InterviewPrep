@@ -161,6 +161,22 @@
 
       ![Test](https://www.atlassian.com/dam/jcr:61ccc620-5249-4338-be66-94d563f2843c/05%20(2).svg)
 
+#### Git tagging
+- Git supports two types of tags: *lightweight* and *annotated*.
+  - A lightweight tag is just a pointer to a specific commit.
+  - Annotated tags, however, are stored as full objects in the Git database. They’re checksummed; contain the tagger name, email, and date; have a tagging message; and can be signed and verified with GNU Privacy Guard (GPG).
+- **Annotated Tags**
+  - `git tag -a v1.4 -m "my version 1.4"`
+    - the `-a` flag tells git that this is an annotated tag
+    - then (opeinally) a message is specified
+- **Lightweight Tags**
+  - `git tag v1.4`
+- **Creating releases by tags**
+  - `git push origin <tagname>`
+    - This command will create a release tag in your repo.
+- **Deleting a tag**
+  - `git tag -d <tagname>` (locally)
+  - `git push origin -d <tagname>` (remote)
 
 #### Forking Workflow
 - tbd.
