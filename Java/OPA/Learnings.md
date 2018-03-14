@@ -151,6 +151,25 @@ variables since they are part of the same statement.
 - **Which variable (or static method) will be used depends on the class that the variable is declared of. Which instance method will be used depends on the actual class of the object that is referenced by the variable.**
 - Trying to override a static method with a non-static method (and vice-versa) in a class will result in a compilation error. Even in case of interfaces, a subinterface cannot override a default method with a static method.
 - **CLASS VARIABLES GET INITALIZED!!! LOCAL VARIABLES DON'T**
+- An instance of class X an access private members of another instance of class X.
+- A `final` class variable **must be** initialized! (Otherwise won't compile!) Either at definition, or static initializer block or in the constructor!
+- In a `void` method you can still call `return` but without passing an argument!
+- "What improves encapsulation" --> **Setting harder access modifiers!**. (Adding getters and setters to private members is nice, but does not directly improve encapsulation.)
+- If class A is using class B's static method without referencing class B (i.e. bMethod() instead of B.bMethod()) then a **static import is required** Also static imports are used with members of the class, not a class name!
+  - Either fully import the method `import static clothes.Store.getClothes;` or import all static methods of a class `import static java.lang.Math.*;`
+- Sometimes an extra void (constructor), sometimes a missing return type from the method declaration.
+- **Only constructors can call super()!**
+- Java doesn't care about the order of access and non-access modifiers!
+- Static initializer blocks can only access static members. Just like static methods...
+- If a parent class doesn't have no-arg constructor then the child class must explicitly call the parent class constructor!
+- **Java ALLOWS** multiple inheritance in form of implementing multiple interfaces.
+- Instance variables can shadow each other while inheriting/extending, however LOCALS can't shadow instance variables...
+- Watch out for the `extend` and `implement` keywords... Check if the type is an interface.
+- A static method cannot override a non-static method. And vice versa.
+- Check if the class containing an abstract method is marked as abstract.
+
+
+
 
 #### Exceptions
 - Even if you are not catching an exception in the `try` block, the `finally` block is still executed.
