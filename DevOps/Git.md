@@ -111,3 +111,56 @@
     - ``git rebase -- p`` leaves the commit as is. It will not modify the commit's message or content and will still be an individual commit in the branches history.
     - ``git rebase -- x`` during playback executes a command line shell script on each marked commit. A useful example would be to run your codebase's test suite on specific commits, which may help identify regressions during a rebase.
   - **Summary:** Most developers like to use an interactive rebase to polish a feature branch before merging it into the main code base. This gives them the opportunity to squash insignificant commits, delete obsolete ones, and make sure everything else is in order before committing to the “official” project history. To everybody else, it will look like the entire feature was developed in a single series of well-planned commits The real power of interactive rebasing can be seen in the history of the resulting master branch. To everybody else, it looks like you're a brilliant developer who implemented the new feature with the perfect amount of commits the first time around.
+
+#### Syncing
+- When you clone a repository with ``git clone``, it automatically creates a remote connection called ``origin`` pointing back to the cloned repository.
+- `git fetch`
+  - Fetch all of the branches from the repository. This also downloads all of the required commits and files from the other repository.
+- `git checkout <branchname>`
+  - Move to another branch.
+- `git pull`
+  - `git fetch` + `git merge` in a single command.
+- `git push <remote> <branch>`
+  - Push the specified branch to <remote>, along with all of the necessary commits and internal objects.
+  - Git prevents you from overwriting the central repository’s history by refusing push requests when they result in a non-fast-forward merge. So, if the remote history has diverged from your history, you need to pull the remote branch and merge it into your local one, then try pushing again. The ``--force`` flag overrides this behavior and makes the remote repository’s branch match your local one, deleting any upstream changes that may have occurred since you last pulled. The only time you should ever need to force push is when you realize that the commits you just shared were not quite right and you fixed them with a ``git commit --amend`` or an interactive rebase. **However, you must be absolutely certain that none of your teammates have pulled those commits before using the ``--force`` option.**
+
+#### Making a pull request
+- Once their feature branch is ready, the developer files a pull request via their Bitbucket account. This lets everybody involved know that they need to review the code and merge it into the ``master`` branch.
+- After receiving the pull request, the project maintainer has to decide what to do. If the feature is ready to go, they can simply merge it into master and close the pull request. But, if there are problems with the proposed changes, they can post feedback in the pull request. Follow-up commits will show up right next to the relevant comments.
+
+#### Using branches
+- `git branch` - list all the branches
+- `git branch <branch>` - create a new branch
+- `git branch -d <branch>` - delete a branch. This is a “safe” operation in that Git prevents you from deleting the branch if it has unmerged changes.
+- ``git branch -D <branch>`` Force delete the specified branch, even if it has unmerged changes. This is the command to use if you want to permanently throw away all of the commits associated with a particular line of development.
+
+#### Comparing Workflows
+- **Centralized Workflow**
+  -  the default development branch is called ``master`` and all changes are committed into this branch. This workflow doesn’t require any other branches besides ``master``.
+  - Developers work on their local repository and finally publish changes to the official project, developers "push" their local ``master`` branch to the central repository.
+  - If other people pushed, while you were working on your local copy, you are forced to pull, merge the changes, and commit the merged repo.
+- **Feature branching**
+  - The core idea behind the Feature Branch Workflow is that all feature development should take place in a dedicated branch instead of the ``master`` branch. This encapsulation makes it easy for multiple developers to work on a particular feature without disturbing the main codebase. It also means the ``master`` branch should never contain broken code, which is a huge advantage for continuous integration environments.
+  - Feature branches should have descriptive names, like animated-menu-items or issue-#1061. The idea is to give a clear, highly-focused purpose to each branch.
+  - Once done and pushed you create a pull-request, that is reviewed by the product managemnet, and if everything is fine it is merged into the ``master``.
+- **Gitflow Workflow**
+  - Gitflow is ideally suited for projects that have a scheduled release cycle.
+  - In addition to feature branches, it uses individual branches for preparing, maintaining, and recording releases.
+  - The **git-flow toolset is an actual command line tool that has an installation process**. --> A wrapper around the git, that you can download and install!
+  - **Master and Develop**
+    - Instead of a single ``master`` branch, this workflow uses two branches to record the history of the project. The ``master`` branch stores the official release history, and the ``develop`` branch serves as an integration branch for features. It's also convenient to **tag all commits in the master branch with a version number**.
+    - `git flow init` will create the master and develop branch for you.
+  - You follow the **Featre branching** here as well, but instead of the ``master``, you make the pull requests to the ``develop``.
+  - **Release branches**
+    - Once develop has acquired enough features for a release (or a predetermined release date is approaching), you fork a release branch off of develop.
+    - Creating this branch starts the next release cycle, so no new features can be added after this point—only bug fixes, documentation generation, and other release-oriented tasks should go in this branch.
+    - Once it's ready to ship, the ``release`` branch gets merged into ``master`` and tagged with a version number.
+    - Using a dedicated branch to prepare releases makes it possible for one team to polish the current release while another team continues working on features for the next release.
+  - **Hotfix branches**
+    - Maintenance or ``“hotfix”`` branches are used to quickly patch production releases. ``Hotfix`` branches are a lot like ``release`` branches and ``feature`` branches except they're based on ``master`` instead of ``develop``. This is the only branch that should fork directly off of ``master``. As soon as the fix is complete, it should be merged into both ``master`` and ``develop`` (or the current release branch), and ``master`` should be tagged with an updated version number.
+
+      ![Test](https://www.atlassian.com/dam/jcr:61ccc620-5249-4338-be66-94d563f2843c/05%20(2).svg)
+
+
+#### Forking Workflow
+- tbd.
