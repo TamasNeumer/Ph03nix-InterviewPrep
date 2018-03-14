@@ -105,6 +105,8 @@ void method10() {
   - It’s thrown to indicate that the application tried to convert a string (with an inappropriate format) to one of the numeric types.
   - Starting in Java 7, you can use underscores (_) in numeric literal values. **But you can’t use them in String values passed to the method parseInt**.
   - **Watch out!** `Integer.parseInt("123ABCD", 16)` **WORKS** because you have specified the base (hexadecimal)
+- **`SecurityException`**
+  - SecurityException extends RuntimeException: It is thrown by the security manager upon security violation. For example, when a java program runs in a sandbox (such as an applet) and it tries to use prohibited APIs such as File I/O, the security manager throws this exception.
 
 #### Specific Errors
 - **`ExceptionInInitializerError`**
