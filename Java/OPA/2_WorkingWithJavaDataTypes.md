@@ -90,7 +90,7 @@
 - Wrapper classes **DON'T** have no arg constructors!!!
 - To  retrieve primitive values from wrapper classes use the `**Value()` function. (byteValue(), shortValue() ...)
 - To get a primitive data type value corresponding to a string value, you can use the static utility method parseDataType, where DataType refers to the type of the return value. (`parseByte()`, `parseInt()` etc. --> **parseChar doesn't exist!**)
-  - All parse methods throw `NumberFormatException` except `Boolean.parseBoolean()`. This method returns false whenever the string it parses is not equal to “true” (**case-insensitive** comparison).
+  - All parse methods throw `NumberFormatExceptionÂ` except `Boolean.parseBoolean()`. This method returns false whenever the string it parses is not equal to “true” (**case-insensitive** comparison).
 - Wrapper classes Byte, Short, Integer, and Long **cache objects** with values in the **range of -128 to 127**. (The Character class caches objects with values 0 to 127.). If you request an object of any of these classes, from this range, the valueOf() method returns a reference to a predefined object; otherwise, it creates a new object and returns its reference.
   - Wrapper classes Float and Double **don’t cache** objects for any range of values.
   - In the case of the Boolean class, the cached instances are accessible directly because only two exist: static constants `Boolean.TRUE` and `Boolean.FALSE`.
