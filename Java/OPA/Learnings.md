@@ -59,6 +59,7 @@
   - `Integer` is the name of a class in Java. While it is bad practice to use the name of a class as your local variable name, this is legal. --> You can do `int Integer = 5;` However `Integer int = 0;` is not okay as `int` since it is a reserves word. (All primitive types are reserved.)
   - The `parseInt()` methods return a primitive. The `valueOf()` methods return a wrapper class object.
   - The wrapper classes doesn't have a no args constructor!
+  - `f F d D` are only used when working with decimals. (`0b001f` is invalid)
 - **Order of initialization, static initializer blocks**:
   - Static blocks and static statements are initialized in the order of declaration. Note the following 2 lines of code!
     ```java
@@ -96,6 +97,7 @@
   - Check if there is **really** a boolean expression int he if clause.
   - `fctCall(tst > 5 ? true : false)` is allowed. It evaluates to the boolean value assigned to the parameter
 - **Switch**
+  - `switch(8);` does not compile. It needs (at least an empty) body!
   - If passed a variable to a switch case it **must be final**, as well as in the different case parts!
   - You can declare a variable in a case and use it in another...
     ```java
@@ -156,7 +158,7 @@
 - You need to put the body within curly braces if you want to use the return keyword.
   - `checkList(new ArrayList(), al -> { return al.size() == 0; });`
 - Functional interface = only one abstract method (optionally more default/static)
-
+- Remember that the parameter list part of a lambda expression declares new variables that are used in the body part of that lambda expression. --> Don't shadow local variables with this, or compile error comes.
 #### Classes and Inheritance
 - **Watch out**
   - **Access modifier**
@@ -180,6 +182,7 @@
   - An abstract method is defined only so that it can be overridden in a subclass. However, **static methods can not be overridden**. Therefore, it is a compile-time error to have an abstract, static method.
   - A **private** method **cannot** be **abstract**. (There is no one to extend and implement the method...)
   - If a class doesn't have a direct parent class, then `java.lang.Object` is added implicitly
+  - Sub interface can override other interfaces default method.
 - **Shadowing**
   - A sub-class can define the same members as the super-class (e.g. twice `int x = 5;`) Note that when referencing the variables via the sub-class the sub-class members are reached, while referencing the members via the parent class the parent class members are reached.
   - Local variables **can't** shadow class members tho! (Compile error!)
@@ -188,7 +191,8 @@
   - Which **variable (or static method)** will be used **depends on the class that the variable is declared of**.
   - Which **instance method** will be used **depends on the actual class** of the object that is referenced by the variable.
   - Trying to override a static method with a non-static method (and vice-versa) in a class will result in a compilation error. Even in case of interfaces, a subinterface cannot override a default method with a static method (Note: You can override an interface's static method!)
-- **Covariant return types**
+  - `super.super.XYZ()` is **not** valid.
+ - **Covariant return types**
   - The subclass method's return type R2 may be different from superclass method's return type R1, but R2 should be a subtype of R1. i.e., subclass can return type may be a subtype of superclass return type.
 - **Casting**
   - It **will compile** if you cast unrelated classes. Only at runtime it throws exception. Casting = "i know what im doing"
@@ -202,3 +206,4 @@
 - `ClassNotFoundException` is an exception that occurs when you try to load a class at **run time** using `Class.forName()` or `loadClass()` methods and mentioned classes are not found in the classpath.
 - `NoClassDefFoundError` is an error that occurs when a particular class is present at **compile time**, but was missing at run time.
 - The overriding method **can't** throw a wider range of exceptions. (The caller who is using polymorphism might not expect the wider range!!!)
+- `public static int doIt() throws Exception{throw new Exception("aa"); }` is valid!
