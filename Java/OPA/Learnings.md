@@ -190,7 +190,7 @@
 - **Overriding, Polymorphism**
   - Which **variable (or static method)** will be used **depends on the class that the variable is declared of**.
   - Which **instance method** will be used **depends on the actual class** of the object that is referenced by the variable.
-  - Trying to override a static method with a non-static method (and vice-versa) in a class will result in a compilation error. Even in case of interfaces, a subinterface cannot override a default method with a static method (Note: You can override an interface's static method!)
+  - Trying to override a static method with a non-static method (and vice-versa) in a class will result in a compilation error. Even in case of interfaces, a subinterface cannot override a default method with a static method.
   - `super.super.XYZ()` is **not** valid.
  - **Covariant return types**
   - The subclass method's return type R2 may be different from superclass method's return type R1, but R2 should be a subtype of R1. i.e., subclass can return type may be a subtype of superclass return type.
