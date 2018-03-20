@@ -85,7 +85,48 @@ public static void main(String[] args) {
 - **Immutable objects pattern**
   - **Solution**
     - 1. Use a constructor to set all properties of the object.
-    - 2. Mark all of the instance variables private and final.
+    - 2. Mark all of the instance variables `private` and `final`.
     - 3. Don’t define any setter methods.
     - 4. Don’t allow referenced mutable objects to be modified or accessed directly.
     - 5. Prevent methods from being overridden.
+- **Builder Pattern**
+  - **Motivation**: As classes grow, so do the constructors change. Adding new constructors and extending these results in a messy code.
+  - **Solution**:
+    - The builder pattern is a creational pattern in which parameters are passed to a builder object, often through method chaining, and an object is generated with a final build call.
+    - `public AnimalBuilder setSpecies(String species)` a lot of methods like that you can chain on the initial constructor. Initialize the mandatory members in the constructor and allow the optional values to be chained.
+    - Finally, we create our target object build method, usually named `build()`, allowing it to interact with the Animal’s constructor directly. (`public Animal build() {return new Animal(species,age,favoriteFoods);}`)
+- **Factory Pattern**
+  - **Problem**
+    - How do we write code that creates objects in which the precise type of the object may not be known until runtime?
+  - **Solution**
+    - Use a factory class to produce instances of objects based on a set of input parameters.
+    - Basic approach: `static` factory method with a switch case.
+      ```java
+      public static Food getFood(String animalName) {
+        switch(animalName) {
+          case "zebra": return new Hay(100);
+          case "rabbit": return new Pellets(5);
+          case "goat": return new Pellets(30);
+          case "polar bear": return new Fish(10);
+        }     
+        // Good practice to throw an exception if no matching subclass could be found
+        throw new UnsupportedOperationException("Unsupported animal: "+animalName);
+      }
+      /*CALLER*/
+      final Food food = FoodFactory.getFood("polar bear");
+      ```
+    - Note: All the constructors of the classes are either `public` or `package default`, but in this case the classes must be located in the same package as the factory class. Using `public` constructors is not favourable, as the callers can bypass the factory and instantiate the classes directly.
+
+#### Learnings
+- Design principles are often applied throughout an application, whereas design patterns are applied to solve specific problems.
+- Abstract classes are not functional interfaces (despite having a single `abstract` method)
+- If you want to encapsulate a class and have a constructor like `public Seal(String name, List<Seal> friends)` you should make a deep copy of the list, so that the caller can't modify your inner list via his reference!
+- **Lambdas**
+  - Lambdas with 0 ore more than 1 parameter requires `()`
+  - `(Camel c) -> {return;}` is a correct (`void`) lambda.
+  - Specifying the data type for one parameter in a lambda expression requires you to specify the data type for all parameters in the expression
+  - In order to use the curly braces `{}` you **must** use the `return` statement. hence `(e) -> {"Poof"}` is incorrect!
+  - `caller((e) -> { String e = "", return "Poof";}` is **incorrect** as the variable `e` is defined twice!
+- **Singleton**
+  -  The name of the object itself, as well as the method to retrieve the singleton, is not defined in the pattern.
+  - Making the singleton reference `final` would prevent lazy initialisation.
