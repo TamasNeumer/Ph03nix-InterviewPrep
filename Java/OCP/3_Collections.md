@@ -1,6 +1,7 @@
 # Generics and Collections
 
 #### Reviewing OCA Collections
+
 - Array to List `Arrays.toList(array)` --> **not resizable**, hence functions as `remove` will throw exception at runtime!
 - List to Array `list.toArray()`
 - Searching: `Arrays.binarySearch(numbers, 6)`
@@ -11,6 +12,7 @@
 - The diamond operator `List<String> names = new ArrayList<>();` This is not limited to one liner operations!
 
 #### Generics
+
 - **Generic classes**
   - The syntax for introducing a generic is to declare a formal type parameter in angle brackets.
       ```java
@@ -50,15 +52,17 @@
     ```
 - **Before generics**
   - Before generics you could write unchecked code that threw run time exceptions.
-  ```java
-  public static void main(String[] args) {
-     List unicorns = new ArrayList();
-     unicorns.add(new Unicorn()); printDragons(unicorns);
-  }
-  private static void printDragons(List<Dragon> dragons) {
-    for (Dragon dragon: dragons) { // ClassCastException System.out.println(dragon);
-  }}
-  ```
+
+    ```java
+    public static void main(String[] args) {
+      List unicorns = new ArrayList();
+      unicorns.add(new Unicorn()); printDragons(unicorns);
+    }
+    private static void printDragons(List<Dragon> dragons) {
+      for (Dragon dragon: dragons) { // ClassCastException System.out.println(dragon);
+    }}
+    ```
+
 - **Bounds**
   - A *bounded parameter type* is a generic type that speci es a bound for the generic.
   - A *wildcard generic type* is an unknown generic type represented with a question mark (?).
@@ -71,7 +75,8 @@
          for (Object x: list) System.out.println(x);
       }
       public static void main(String[] args) {
-        List<String> keywords = new ArrayList<>(); keywords.add("java");
+        List<String> keywords = new ArrayList<>();
+        keywords.add("java");
         printList(keywords);
       }
       ```
@@ -103,6 +108,7 @@
     - A wildcard must have a `?` in it.
 
 #### Collections
+
 - Note that `List`, `Set`, `Queue` are part of the `Collection` interface, however `Map` is totally separate.
 - **Common Collection methods**
   - `boolean add(E element)` - In Lists the return is usually true, while at Sets it is false, if the set already contained the entry.
@@ -160,17 +166,15 @@
   - Methods
     - **Only queue**
       - **Throwing**
-        - `boolean add(E e)` - Adds an element to the back of the queue and returns true or throws an exception
-        - `E element()` - Returns next element or throws an exception if empty queue
-        - `E remove()` - Removes and returns next element or throws an exception if empty queue
+        - `boolean add(E e)` - Adds an element to the back of the queue and returns true or throws an  `NullPointerException` if the specified element is `null`
+        - `boolean offer(E e)` - Adds an element to the back of the queue and returns whether successful. Throws `NullPointerException` if the specified element is `null`
+        - `void push(E e)` - Adds an element to the front ("end") of the queue. `NullPointerException` if the specified element is null
+        - `E element()` - Returns next element or throws `NoSuchElementException` if this deque is empty
+        - `E remove()` - Removes and returns next element or throws `NoSuchElementException` if this deque is empty
+        - `E pop()` - Removes and returns next element or throws `NoSuchElementException` if this deque is empty
       - **Non-throwing**
-        - `boolean offer(E e)` - Adds an element to the back of the queue and returns whether successful
-        - `E poll()` - Removes and returns next element or returns null if empty queue
-    - **For both**
-      - `E peek()` - Returns next element or returns null if empty queue
-      - `void push(E e)` - Adds an element to the front ("end") of the queue
-    - **Only stack (throwing)**
-      - `E pop()` - Removes and returns next element or throws an exception if empty queue.
+        - `E poll()` - Retrieves and removes the head of the queue represented by this deque (in other words, the first element of this deque), or returns `null` if this deque is empty.
+        - `E peek()` - Retrieves, but does not remove, the head of the queue represented by this deque, or returns `null` if this deque is empty.
 - **Map**
   - **HashMap**
   - **LinkedHashMap**
@@ -189,8 +193,8 @@
   - You can’t put `null` in an `ArrayDeque` because methods like `poll()` use `null` as a special return value to indicate that the collection is empty.
   - Finally, `Hashtable` doesn’t allow `null` keys or values.
 
-
 #### Comparator vs Comparable
+
 - **Strings**
   - Remember that numbers sort before letters and uppercase letters sort before lowercase letters. Other than that according to the unicode character mapping.
 - **Comparable**
@@ -225,8 +229,10 @@
     ```
 
 #### Searching and sorting
+
 - The sort method uses the `compareTo()` method to sort. It expects the objects to be sorted to be `Comparable`.
 - `Collections.sort(rabbits);` Doesn't compile unless the class is not comparable. Also you can't add such objects to Collections that rely on sorting data. (`TreeSet`)
+
   ```java
     Set<Rabbit> rabbit = new TreeSet<>(new Comparator<Rabbit>() {
     public int compare(Rabbit r1, Rabbit r2) {
@@ -234,9 +240,11 @@
     });
     rabbit.add(new Rabbit());
   ```
+
 - As seen above you can provide a comparator externally and then add the objects to the collection.
 
 #### Java 8 additions
+
 - **Method references**
   - Method references are a way to make the code shorter by reducing some of the code that can be inferred and simply mentioning the name of the method.
   - Assume that the `Duck` class has a `static` method `compareByWeight`. Then instead of `Comparator<Duck> byWeight = (d1, d2) -> DuckHelper.compareByWeight(d1, d2);` you could write `Comparator<Duck> byWeight = DuckHelper::compareByWeight;`.
@@ -264,3 +272,22 @@
     String tom = favorites.merge("Tom", "Skyride", mapper); // Sky ride
     ```
   - The mapping function is used only when there are two actual values to decide between. (and not `null`)
+
+#### Learnings
+- **Generics**
+  - You can't assign a subclass container to a superclass container (`ArrayList<Number> a = new ArrayList<Integer>();`) --> not good! Use `<? extends Nuber>` for this purpose!
+  - When you are **not** using generics, then you can add any object tot he list. However **when looping through** this collection you **must** use Object as in `for (Object o: list)`! (Compile time error!)
+  - You can call a generic function `new Hello<String>("hi")` or `new Hello("there")`
+  - If you are not using generics, assume that your collections are type of `Object`.
+  - The following function signature can be called two ways. `public static <U extends Exception> void printException(U u)` Don't get confused just because of the unnecessary syntax.
+    - `Main.<NullPointerException>printException(new NullPointerException ("D"));`
+    - `Main.printException(new NullPointerException ("D"));`
+  - Watch out for generics shadowing. (When the generic type in a method or class shadows another class.)
+  - When using generic types in a `static` method, the generic specification goes before the return type.
+- **Collections**
+  - The `Map` interface doesn't have an `add` method! (It has `put`!)
+  - The `Map`interface doesn't have a `contains()`method.
+- **Rest**
+  - Watch out for the `Comparator`implementations! In order to have ascending order the first argument has to come first. (`return int1 - int2;`)
+  - `forEach` takes a `Consumer` parameter, which requires one parameter in the lambda body!
+  - Make sure that the lambda body doesn't redefine variables of the outer scope!
