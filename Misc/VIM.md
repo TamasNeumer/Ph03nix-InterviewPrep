@@ -1,0 +1,52 @@
+# VIM
+
+- **Modes**
+  - *normal mode* for navigating in the file, *insert mode* for editing the file.
+  - Press `esc` to go into *normal mode*, or press `i` to get into *insert mode*.
+  - *visual mode* for selecting text. Press `v` to enter visual mode.
+- **Navigating**
+  - `h` - Move cursor to the left by one character.
+  - `j` - Jump forward (downwards) one line.
+  - `k` - Jump backward (upwards) one line.
+  - `l` - Move cursor to the right by one character.
+  - `m` - Jump to the bottom of the screen.
+  - `w` - Jump to the beginning of the next word.
+  - `b` - Jump to the beginning of the last word.
+  - `e` - Jump to the end of the word.
+  - `0` - Jump to the beginning of the line.
+  - `$` - Jump to the end of line.
+  - `gg` - Jump to the beginning of the file.
+  - `G` - Jump to the end of the file.
+- **Combinations**
+  - You can combine numbers with words. `3w` jumps to the beginning of the 3rd word.
+- **Bulk insert**
+  - You can automatically insert a sequence multiple times. In `normal mode` specify the number of times (e.g.: 30), then go to insert mode by pressing `i`, then type the text and finally press `esc`. --> `3igo` + `esc` inserts "go" 3 times.
+- **Finding a character occurrence**
+  - `f` + the character you want to find. --> `fo` finds the next 'o' character.
+  - Finding the n-th occurrence of a character can be done as follows: `3fq` --> finds the third 'q'
+- **Finding a word occurrence**
+  - `*` to find the next occurrence of a given word.
+  - `#` to find the previous occurrence of a given word.
+  - `/` is similar to `Ctrl + F`. Type whatever you are looking for and press enter. Note that not the entire file is searched, but only the part of the text, that comes after the current position of the cursor.
+    - You can repeat the search for the next and previous occurrences via `n` and `N`.
+- **Enclosing parentheses**
+  - When hovering over a parenthesis or bracket - `(`, `[`, `{` - press `%` to jump to the matching parenthesis or bracket.
+- **Inserting a new line**
+  - `o` - to insert a new line. The editor is set to *insert mode*.
+- **Deleting**
+  - `x` - to delete the character to the right, and `X` to delete the character to the left.
+  - `dw` - to delete the next word.
+  - `d3e` - to delete the next three words.
+  - Go into visual mode by pressing `v`, select the text by navigating the cursor and press `d`
+- **Replace character**
+  - `r` - and insert the new character.
+- **Repeating command**
+  - `.` - to repeat the previous command.
+- **Exiting**
+  - `:w` to save
+  - `:q` to quit
+  - `:q!` quit without saving
+  - `:help` to get help
+- **Undo / redo**
+  - `u` - undo
+  - `Ctrl + R` - redo
