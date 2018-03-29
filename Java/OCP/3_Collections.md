@@ -32,7 +32,7 @@
     - S, U, V and so forth for multiple generic types
   - You can have multiple parameters in a `class public class SizeLimitedCrate<T, U>`
 - **Generic Interfaces**
-  - Just like you an have classes, you can have interfaces.
+  - Just like you can have classes, you can have interfaces.
   - `public interface Shippable<T> { void ship(T t);}`
   - Implementing this interface can happen via:
     - Specify generic type in class: `class ShippableRobotCrate implements Shippable<Robot> {`
@@ -64,7 +64,7 @@
     ```
 
 - **Bounds**
-  - A *bounded parameter type* is a generic type that speci es a bound for the generic.
+  - A *bounded parameter type* is a generic type that specifies a bound for the generic.
   - A *wildcard generic type* is an unknown generic type represented with a question mark (?).
   - **Unbounded Wildcards**
     - An unbounded wildcard represents any data type. You use `?` when you want to specify that any type is OK with you.
@@ -150,7 +150,7 @@
     - **HashSet**
       - Looping through and printing the elements happens in **arbitrary** order!
     - **TreeSet**
-      - Implements the **NavigableSet** method
+      - Implements the **NavigableSet** interface
         - `E lower(E e)` (greatest element that is smaller than e) `<`
         - `E floor(E e)` smallest element that is `<=` e
         - `E ceiling(E e)` Returns smallest element that is `>=` e
@@ -167,7 +167,6 @@
     - **Only queue**
       - **Throwing**
         - `boolean add(E e)` - Adds an element to the back of the queue and returns true or throws an  `NullPointerException` if the specified element is `null`
-        - `boolean offer(E e)` - Adds an element to the back of the queue and returns whether successful. Throws `NullPointerException` if the specified element is `null`
         - `void push(E e)` - Adds an element to the front ("end") of the queue. `NullPointerException` if the specified element is null
         - `E element()` - Returns next element or throws `NoSuchElementException` if this deque is empty
         - `E remove()` - Removes and returns next element or throws `NoSuchElementException` if this deque is empty
@@ -175,6 +174,7 @@
       - **Non-throwing**
         - `E poll()` - Retrieves and removes the head of the queue represented by this deque (in other words, the first element of this deque), or returns `null` if this deque is empty.
         - `E peek()` - Retrieves, but does not remove, the head of the queue represented by this deque, or returns `null` if this deque is empty.
+        - `boolean offer(E e)` - Adds an element to the back of the queue and returns whether successful.
 - **Map**
   - **HashMap**
   - **LinkedHashMap**

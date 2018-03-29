@@ -4,17 +4,17 @@
 
 - Lambda expressions can access static variables, instance variables, effectively final method parameters, and effectively final local variables
 - **Supplier**
-  - It supplies aka. it returns a value.
+  - It supplies aka. it returns a value of type `T`.
   - `@FunctionalInterface public class Supplier<T> { public T get();}`
   - Usage:
     - `Supplier<LocalDate> s1 = LocalDate::now;` or `Supplier<LocalDate> s2 = () -> LocalDate.now();` Then `LocalDate d1 = s1.get();` returns the value.
 - **Consumer and BiConsumer**
-  - You use a Consumer when you want to do something with a parameter but not return anything.
+  - Represents an operation that accepts a single input argument and returns no result. Unlike most other functional interfaces, Consumer is expected to operate via side-effects.
   - `@FunctionalInterface public class Consumer<T> { void accept(T t);}`
   - `@FunctionalInterface public class BiConsumer<T, U> {void accept(T t, U u); }`
   - Usage:
     - `Consumer<String> c1 = System.out::println;` then `c1.accept("Annie");`
-    - `Map<String, Integer> map = new HashMap<>(); BiConsumer<String, Integer> b1 = map::put;` then `b1.accept("chicken", 7);`
+    - `Map<String, Integer> map = new HashMap<>(); BiConsumer<String, Integer> b1 = Map::put;` then `b1.accept("chicken", 7);`
 - **Predicate and BiPredicate**
   - Takes One (or two) arguments and returns a `boolean` value.
   - `@FunctionalInterface public class Predicate<T> { boolean test(T t);}`
@@ -22,7 +22,7 @@
   - Usage:
     - `Predicate<String> p1 = String::isEmpty;` then `System.out.println(p1.test(""));`
     - `BiPredicate<String, String> b1 = String::startsWith;` then `System.out.println(b1.test("chicken", "chick"));`
-  - Functional interfaces often hve other default methods. The `Predicate`for example has the logical `and` or `negate` functions.
+  - Functional interfaces often have other **default** methods. The `Predicate`for example has the logical `and(Predicate<? super T> other)`, `or(Predicate<? super T> other)` and `negate()` functions. These all return predicates that allow chaining!
     - `Predicate<String> brownEggs = egg.and(brown);` - where `egg` and `brown` are two other predicates.
 - **Function and BiFunction**
   - Turning one (or two) parameters into a new one.
@@ -32,10 +32,16 @@
     - `Function<String, Integer> f1 = String::length;` then `System.out.println(f1.apply("cluck"));`
     - `BiFunction<String, String, String> b1 = String::concat;` then `System.out.println(b1.apply("baby ", "chick"));`
   - If you need more parameters you can create your own functional interfaces. `interface TriFunction<T,U,V,R> { R apply(T t, U u, V v);}`
+  - Default methods include:
+    - `andThen(Function<? super R,? extends V> after)` - Returns a composed function that *first applies this function* to its input, and then applies the after function to the result.
+    - `compose(Function<? super V,? extends T> before)` - Returns a composed function that *first applies the before function* to its input, and then applies this function to the result.
+    - `identity()`
+      - Returns a function that always returns its input argument.
 - **UnaryOperator and BinaryOperator**
-  - A `UnaryOperator` transforms its value into one of the same type. (i.e. incrementing)
-  - A `BinaryOperator` merges two values into one of the same type.
+  - A `UnaryOperator` transforms its value into one of the **same type**. (i.e. incrementing)
+  - A `BinaryOperator` merges two values into one of the **same type**.
   - They both require the parameters to be the same!
+  - This is a functional interface whose functional method is `Function.apply(Object)`.
   - `@FunctionalInterface public class UnaryOperator<T> extends Function<T, T> { }`
   - `@FunctionalInterface public class BinaryOperator<T> extends BiFunction<T, T, T> { }`
   - Usage:
@@ -44,7 +50,8 @@
 
 #### Optional
 
-- An `Optional` is created using a factory.
+- A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return `true` and `get()` will return the value.
+- An `Optional` is created using a factory. Note that the `of(T t)` throws an exception if `t` is `null`. The `ofNullable()` doesn't. 
 
     ```java
     public static Optional<Double> average(int... scoes){
@@ -57,9 +64,9 @@
     System.out.println(average(90, 100)); // Optional[95.0]
     System.out.println(average()); // Optional.empty
     ```
-- You **should** check if the `Optional` has a value with `isPresent()` and if so then get its value via `get()`. Otherwise you might get `java.util.NoSuchElementException`!
-- A common factory pattern is: `Optional o = Optional.ofNullable(value);`. Here if the value was 0 the optional will be `null`
-- Other methods are: `orElse(T other)`, `orElseGet(Supplier s)`, `orElseThrow(Supplier s`
+- You **should** check if the `Optional` has a value with `isPresent()` and if so then get its value via `get()`. Otherwise you might get `java.util.NoSuchElementException`! However this is not considered a nice coding practice. Instead use the `ifPresent()`, `orElse()` etc. methods.
+- A common factory pattern is: `Optional o = Optional.ofNullable(value);`. Returns an `Optional` describing the specified value, if non-null, otherwise returns an empty `Optional`.
+- Other methods are: `orElse(T other)`, `	orElseGet(Supplier<? extends T> other)`, `orElseThrow(Supplier<? extends X> exceptionSupplier)`. These return the contained value, and if it is `null` execute the "else" function part.
 - Usage:
 
   ```java
@@ -71,7 +78,9 @@
   System.out.println(opt.orElseGet(() -> Math.random()));
   System.out.println(opt.orElseThrow(() -> new IllegalStateException()));
 
-  System.out.println(opt.orElseGet(() -> new IllegalStateException())); // DOES NOT COMPILE. Expects Supplier type Double!
+  // DOES NOT COMPILE. Expects Supplier type Double!
+  System.out.println(opt.orElseGet(() -> new IllegalStateException()));
+
   ```
 
 #### Using Streams
@@ -79,15 +88,18 @@
 - **Intro**
   - A stream in Java is a sequence of data. A stream pipeline is the operations that run on a stream to produce a result.
   - In Java, the Stream interface is in the `java.util.stream` package.
-  - Remember that unless an intermediary operations tells otherwise, the streams are processed vertically, meaning that a given element goes through the entire pipeline. Intermediary operations that prevent this are `sort` for example, as this waits for all the elements before sorting them and passing over.
+  - Remember that unless an intermediary operations tells otherwise, the streams are **processed vertically**, meaning that a given element goes through the entire pipeline. Intermediary operations that prevent this are `sort` for example, as this waits for all the elements before sorting them and passing over.
 - **Creating Streams**
   - `Stream<String> empty = Stream.empty();`
   - `Stream<Integer> fromArray = Stream.of(1, 2, 3);`
-  - `List<String> list = Arrays.asList("a", "b", "c");` and then `Stream<String> fromList = list.stream();`
+  - `Collections.stream()`
+    - `List<String> list = Arrays.asList("a", "b", "c");` and then `Stream<String> fromList = list.stream();`
+  - `generate`, `iterate`
+    - Both generate an infinite stream, but iterate re-uses the last computation value.
+    - `Stream<Double> randoms = Stream.generate(Math::random);`
+    - `Stream<Integer> oddNumbers = Stream.iterate(1, n -> n + 2);`
+  - `Stream.generate(() -> "Elsa")`
   - Just keep in mind that it isn’t worth working in parallel for small streams.
-  - `Stream<Double> randoms = Stream.generate(Math::random);`
-  - `Stream<Integer> oddNumbers = Stream.iterate(1, n -> n + 2);`
-  - `Stream.generate(() -> "Elsa")` --> Generates infinite stream!
 - **Common terminal operations**
   - *Reductions* are a special type of terminal operation where all of the contents of the stream are combined into a single primitive or `Object`.
     - `long count()` - Returns the number of elements in the stream. For infinite stream it hangs.
@@ -99,8 +111,9 @@
       - Since Java generates only the amount of stream you need, the infinite stream needs to generate only one element.
       - Not reduction, as they return a value based on the stream but do not reduce the entire stream into one value.
       - `s.findAny().ifPresent(System.out::println)`
+      - `findFirst()` explicitly finds the first element of the stream, while `findAny()` can pick any random element. (Most likely the first element, but not guaranteed!)
     - `boolean anyMatch(Predicate <? super T> predicate), boolean allMatch(Predicate <? super T> predicate), boolean noneMatch(Predicate <? super T> predicate)`
-      - `noneMatch` and `anyMatch` would run forever on infinite streams.
+      - `noneMatch` and `allMatch` would run forever on infinite streams. `anyMatch` may also run, if the predicate returns false for all elements.
       - `System.out.println(list.stream().anyMatch(pred));` (Usage same with the other two, as you need to pass a predicate.)
     - `void forEach(Consumer<? super T> action)`
       - This is the only terminal operation with a return type of `void`
@@ -114,7 +127,7 @@
         - `String word = stream.reduce("", (s, c) -> s + c);` or `String word = stream.reduce("", String::concat);`
         - `BinaryOperator<Integer> op = stream.reduce(1, (a, b) -> a*b)` --> `threeElements.reduce(op).ifPresent(System.out::print)`
         - `empty.reduce(op).ifPresent(System.out::print);` no output!
-      - When you don’t specify an identity, an Optional is returned because there might not be any data.
+      - When you don’t specify an identity, an `Optional` is returned because there might not be any data.
     - `collect()`
       - The `collect()` method is a special type of reduction called a *mutable reduction*.
       - It is more efficient than a regular reduction because we use the same mutable object while accumulating. Common mutable objects include `StringBuilder` and `ArrayList`.
@@ -183,10 +196,10 @@
 - **Booleans**
   - `BooleanSupplier` is a separate type. It has one method to implement: `boolean getAsBoolean()`
 
-#### Working with Advanced Stream Pipeline Concepts#
+#### Working with Advanced Stream Pipeline Concepts
 
 - **Linking Streams with Underlying DataTypes**
-  - Remember that streams are lazily evaluated. Hence if you create a Stream from a List that contains two elements. Then add an element to the list, and **only then** start using the stream, then the list will contain 3 elements!
+  - Remember that streams are lazily evaluated. Hence if you create a Stream from a List that contains two elements. Then add an element to the list, and **only then** start using the stream, then the list will contain 3 elements! Meaning that Streams are kind of like a "view" on the given collection.
 - **Working with checked exceptions**
   - The Supplier interface does not allow checked exceptions. There are two approaches to get around this problem. 
   - a) Turn it into unchecked exceptions.
@@ -216,18 +229,18 @@
     - `Map<String, Integer> map = ohMy.collect(Collectors.toMap(s -> s, String::length));`
     - Let's analyze the following snippet
 
-    ```java
-    Stream<String> ohMy = Stream.of("lions", "tigers", "bears");
-    Map<Integer, String> map = ohMy.collect(
-      Collectors.toMap(String::length, k -> k, (s1, s2) -> s1 + "," + s2));
-    System.out.println(map); // {5=lions,bears, 6=tigers}
-    System.out.println(map.getClass()); // class. java.util.HashMap
-    ```
+      ```java
+      Stream<String> ohMy = Stream.of("lions", "tigers", "bears");
+      Map<Integer, String> map = ohMy.collect(
+        Collectors.toMap(String::length, k -> k, (s1, s2) -> s1 + "," + s2));
+      System.out.println(map); // {5=lions,bears, 6=tigers}
+      System.out.println(map.getClass()); // class. java.util.HashMap
+      ```
 
-    - The key will be the length of the string. The value will be the length of the string itself. However we need to tell the compiler what to do when two strings are equal! (Otherwise runtime exception is thrown!)
+    - The key will be the length of the string. The value will be the string itself. However we need to tell the compiler what to do when two strings are equal! (Otherwise runtime exception is thrown!)
     - It so happens that the Map returned is a `HashMap`. This behavior is not guaranteed. Suppose that we want to mandate that the code return a `TreeMap` instead. Then we must pass `TreeMap::new` as the fourth argument!
   - **Collecting Using Grouping, Partitioning, and Mapping**
-    - The `groupingBy()` collector tells collect() that it should group all of the elements of the stream into lists, organizing them by the function provided.
+    - The `groupingBy()` collector tells `collect()` that it should group all of the elements of the stream into lists, organizing them by the function provided.
       - `Map<Integer, List<String>> map = ohMy.collect(Collectors.groupingBy(String::length));` -- {5=[lions, bears], 6=[tigers]}
       - `Map<Integer, Set<String>> map = ohMy.collect(Collectors.groupingBy(String::length, Collectors.toSet()));` -- {5=[lions, bears], 6=[tigers]}
       - `TreeMap<Integer, List<String>> map = ohMy.collect(Collectors.groupingBy(String::length, TreeMap::new, Collectors.toList()));`
@@ -245,9 +258,9 @@
 - The `Collectors.joining()` function joins the stream elements to a string, or (if specified explicitly) does so using the default delimiter.
 - If no terminal operation is specified the stream never executes. Hence `System.out.println(stream.limit(2).map(x -> x + "2"));` prints something like `java.util.stream.ReferencePipeline$3@4517d9a3`
 - `noneMatch(predicate)` terminates if the predicate evaluates to `false`. In this case the function returns `false`. Given an infinite stream and a predicate that always evaluates to true it hangs.
-- Watch out! Trying to reuse a stream will result in a RuntimeException!!!
+- Watch out! Trying to reuse a stream will result in a `RuntimeException`!!!
 - `sum()` is a terminal reduction operation, however it is **only available** in the primitive streams, but not in the default `Stream` class.
-- The `sum()` method returns an int rather than an OptionalInt because the sum of an empty list is zero.
+- The `sum()` method returns an `int` rather than an `OptionalInt` because the sum of an empty list is zero.
 - The `average()` method returns an `OptionalDouble`, (even in an `IntStream`) because the average can be a fractal.
 - `ds.mapToInt(x -> x);` - converting a double to int this way would require an explicit cast in the lambda!
 - Partitions only give `Boolean` as key.
