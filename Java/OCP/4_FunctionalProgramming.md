@@ -167,10 +167,11 @@
         - This one removes elements from the passed lists. Not good!
 - **Working with Primitives**
   - The primitive streams know how to perform certain common operations automatically. Hence the `IntStream` has a function such as `sum` that allows you to calculate the sum of the elements in the stream directly.
-    - `OptionalDouble avg = intStream.average();` is also a nice exmaple.
+    - `OptionalDouble avg = intStream.average();` is also a nice example.
   - `IntStream`: Used for the primitive types int, short, byte, and char.
   - `LongStream`: Used for the primitive type long
   - `DoubleStream`: Used for the primitive types double and float.
+  - These are the **only** primitive streams. "BooleanStream" and other crap does not exist.
   - **Creating Primitive Streams**
     - `DoubleStream empty = DoubleStream.empty();`
     - `DoubleStream oneValue = DoubleStream.of(3.14);`
@@ -179,6 +180,7 @@
       - `IntStream range = IntStream.range(1, 6);` --> not including 6!
       - `IntStream rangeClosed = IntStream.rangeClosed(1, 5);` --> including 5!
     - Mapping a Stream of Strings to IntStream: `IntStream intStream = objStream.mapToInt(s -> s.length())`
+      - All "Primitive Streams" contain functions that produce other primitive streams. The `DoubleStream` has the function `mapToInt(DoubleToIntFunction mapper)`, however the mapper must explicitly typecast `d -> (Integer) d`, since its a narrowing operation!
     - The `sum()` method does not return an optional.
   - **Optional with Primitive Streams**
     - `OptionalDouble optional = stream.average();`
@@ -193,7 +195,7 @@
           return stats.getMax()—stats.getMin();
       }
       ```
-- **Booleans**
+- **Suppliers**
   - `BooleanSupplier` is a separate type. It has one method to implement: `boolean getAsBoolean()`
 
 #### Working with Advanced Stream Pipeline Concepts

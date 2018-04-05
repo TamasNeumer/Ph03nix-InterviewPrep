@@ -69,7 +69,7 @@
 
 #### Adding Internationalization and Localization
 
-- *Internationalization* is the process of designing your program so it can be adapted. This involves placing strings in a property  le and using classes like DateFormat so that the right format is used based on user preferences.
+- *Internationalization* is the process of designing your program so it can be adapted. This involves placing strings in a property file and using classes like DateFormat so that the right format is used based on user preferences.
 - *Localization* means actually supporting multiple locales.
 - **Picking a Locale**
   - Package: `java.util`
@@ -88,7 +88,7 @@
   - For testing purposes it is often worth to change the locale: `Locale.setDefault(locale);`
 - **Resource bundle**
   - A *resource bundle* contains the local specific objects to be used by a program.
-  - A *property file* is a  le in a specific format with key/value pairs.
+  - A *property file* is a file in a specific format with key/value pairs.
   - If we don’t have a country-specific resource bundle, Java will use a language-specific one.
 
     ```java

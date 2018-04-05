@@ -60,18 +60,18 @@
       - `getName(int)` method returns the component of the Path as a new Path object rather than a String.
       - `getNameCount()` returns the number of "parts" in the path.
 
-      ```java
-      Path path = Paths.get("/land/hippo/harry.happy");
-      System.out.println("The Path Name is: "+path);
-      for(int i=0; i<path.getNameCount(); i++) {
-        System.out.println(" Element "+i+" is: "+path.getName(i));
-      }
+        ```java
+        Path path = Paths.get("/land/hippo/harry.happy");
+        System.out.println("The Path Name is: "+path);
+        for(int i=0; i<path.getNameCount(); i++) {
+          System.out.println(" Element "+i+" is: "+path.getName(i));
+        }
 
-      // The Path Name is: /land/hippo/harry.happy
-      // Element 0 is: land
-      // Element 1 is: hippo
-      // Element 2 is: harry.happy
-      ```
+        // The Path Name is: /land/hippo/harry.happy
+        // Element 0 is: land
+        // Element 1 is: hippo
+        // Element 2 is: harry.happy
+        ```
 
       - Notice that the root element `/` is not included in the list of names. If the Path object represents the root element itself, then the number of names in the Path object returned by `getNameCount()` will be `0` Also note that it is zero indexed!.
     - `getFileName()`
@@ -116,13 +116,13 @@
     - `normalize()`
       - Like `relativize()`, the `normalize()` method does not check that the file actually exists.
 
-      ```java
-      Path path3 = Paths.get("E:\\data");
-      Path path4 = Paths.get("E:\\user\\home");
-      Path relativePath = path3.relativize(path4);
-      System.out.println(path3.resolve(relativePath)); // E:\data\..\user\home
-      System.out.println(path3.resolve(relativePath).normalize()); // E:\user\home
-      ```
+        ```java
+        Path path3 = Paths.get("E:\\data");
+        Path path4 = Paths.get("E:\\user\\home");
+        Path relativePath = path3.relativize(path4);
+        System.out.println(path3.resolve(relativePath)); // E:\data\..\user\home
+        System.out.println(path3.resolve(relativePath).normalize()); // E:\user\home
+        ```
 
     - `toRealPath(Path)`
       - Takes a `Path` object that may or may not point to an existing file within the file system, and it returns a reference to a real path within the file system.
@@ -157,24 +157,24 @@
     - `Files.newBufferedWriter(Path,Charset)`
       - Writes to a  le specified at the Path location using a BufferedWriter.
 
-      ```java
-      Path path = Paths.get("/animals/gopher.txt");
-      try (BufferedReader reader = Files.newBufferedReader(path, Charset.forName("US-ASCII"))) {
-      // Read from the stream
-        String currentLine = null;
-        while((currentLine = reader.readLine()) != null)
-          System.out.println(currentLine); 
-      } catch (IOException e) {
-      // Handle file I/O exception...
-      }
+        ```java
+        Path path = Paths.get("/animals/gopher.txt");
+        try (BufferedReader reader = Files.newBufferedReader(path, Charset.forName("US-ASCII"))) {
+        // Read from the stream
+          String currentLine = null;
+          while((currentLine = reader.readLine()) != null)
+            System.out.println(currentLine); 
+        } catch (IOException e) {
+        // Handle file I/O exception...
+        }
 
-      Path path = Paths.get("/animals/gorilla.txt"); List<String> data = new ArrayList();
-      try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-16"))) {
-        writer.write("Hello World");
-      } catch (IOException e) {
-          // Handle file I/O exception...
-      }
-      ```
+        Path path = Paths.get("/animals/gorilla.txt"); List<String> data = new ArrayList();
+        try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-16"))) {
+          writer.write("Hello World");
+        } catch (IOException e) {
+            // Handle file I/O exception...
+        }
+        ```
 
     - `Files.readAllLines()`
       - Reads all of the lines of a text file and returns the results as an ordered `List` of `String` value.
