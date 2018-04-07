@@ -101,3 +101,49 @@
   - The SUID and SGID bits will appear as the letter "s" if the permission is available. The SUID "s" bit will be located in the permission bits where the owners’ execute permission normally resides.
     - `-r-sr-xr-x  1   root   bin  19031 Feb 7 13:47  /usr/bin/passwd*`
     - A capital letter S in the execute position instead of a lowercase s indicates that the execute bit is not set.
+
+#### Environment
+- When you log in to the system, the shell undergoes a phase called initialization to set up the environment. This is usually a two-step process that involves the shell reading the following files:
+  - ``/etc/profile`` - maintained by admin, valid for all users
+  - `profile` - under the user's control i.e. console customization
+-The ``PATH`` variable specifies the locations in which the shell should look for commands.
+  - Here, each of the individual entries separated by the colon character (``:``) are directories.
+
+#### Pipes and Filters
+- `grep`
+  - ``-v`` Prints all lines that do not match pattern.
+  - `-n` Prints the matched line and its line number.
+  - `-l` Prints only the names of files with matching lines (letter "l")
+    - `ls -l | grep "Aug"`
+  - `-c` Prints only the count of matching lines.
+  - `-i` Matches either upper or lowercase.
+- `sort`
+  - The sort command arranges lines of text alphabetically or numerically.
+    - `sort filename`
+  - `-n` sort numerically
+  - `-r` reverse order
+  - etc.
+
+#### Processes
+- **Background**
+  - A background process runs without being connected to your keyboard. If the background process requires any keyboard input, it waits. The simplest way to start a background process is to add an ampersand (&) at the end of the command.
+    - `$ls ch*.doc &`
+- **Foreground**
+  - By default, every process that you start runs in the foreground. It gets its input from the keyboard and sends its output to the screen.
+- `ps` / `ps -f` -> List processes ("process status")
+  - UID (User ID), PID (Process ID), PPID (parent process id), C (CPU utilization), STIME (start time), TTY (Terminal type associated with the process), TIME (CPU time taken by the process), CMD (The command that started this process)
+- `top`
+  - It is an interactive diagnostic tool that updates frequently and shows information about physical and virtual memory, CPU usage, load averages, and your busy processes. (Kinna like Task Manager in Windows or Activity Montior in MAC)
+- **Stopping process**
+  - `Ctrl + C` (if foreground)
+  - `kill -9 PID`
+
+#### Advanced User Management
+- **Managing User Groups**
+  - ``/etc/passwd`` − Keeps the user account and password information. This file holds the majority of information about accounts on the Unix system.
+  - ``/etc/shadow`` − Holds the encrypted password of the corresponding account. Not all the systems support this file.
+  - ``/etc/group`` − This file contains the group information for each account.
+  - `/etc/gshadow` - This file contains secure group account information.
+- **Commands**
+  - `useradd`, `usermod`, `userdel`, `groupadd`, `groupmod`, `groupdel`
+- https://www.tutorialspoint.com/unix/unix-user-administration.htm
