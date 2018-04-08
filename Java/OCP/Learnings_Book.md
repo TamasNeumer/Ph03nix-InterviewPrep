@@ -238,3 +238,55 @@
     -Looking for Bundles:
       - `zn_CH` --> `zn` --> `en_US` (default) --> `en` --> Default bundle (Classname without locale specified e.g. `Car.java`)
 
+#### JDBC
+- **Driver, DriverManager**
+  - `DriverManager.getConnection(url)` is used to get a connection. DriverManager is already an implementation!
+  - The URL **must** contain the database name in the third part. `jdbc:magic:@127.0.0.1:1234` does NOT! If the DB name is "box" it must contain this word!
+  - `Class.forName(url)` -  This method is expecting a fully qualified class name of a database driver, not the JDBC URL.
+  - `DriverManager` doesn’t implement `Driver`
+- **Statement**
+  - The first parameter is the ResultSet type. The second parameter is the ResultSet concurrency mode.
+  - JDBC code throws a SQLException, which is a checked exception. The code does not handle or declare this exception, and therefore it doesn’t compile.
+    - If the exam has a full method descroption (class, main method etc.) then the signatures **must** handle these JDBC exceptions. If only snippets are shown, we can assume that these are handled outside.
+  - A `Statement` automatically closes the open `ResultSet` when another SQL statement is run. This means that firs is no longer open by the `println`, and a `SQLException` is thrown because the `ResultSet` is closed.
+    - `ResultSet rs = stmt.executeQuery("select count(*) from species");`
+    - `int num = stmt.executeUpdate("INSERT INTO species VALUES (3, 'Ant', .05)");`
+  - A `Statement` automatically starts in auto-commit mode.
+  - When creating the Statement, the code doesn’t specify a result set type. This means it defaults to `TYPE_FORWARD_ONLY`. The `absolute()` method can only be called on scrollable result sets. The code throws a `SQLException`,
+- **ResultSet**
+  - Executing a `COUNT *` will return an integer that can be accessed via `getInt(1)`
+  - You can’t move back before row zero, the cursor is at row zero instead. (`relative(-10)`) Also you can't move beyond #rows+1. It's not like an infinite counter.
+- **Misc**
+  - `sout(voidFunction())` doesn't compile. --> `beforeFirst()` is void, watch out!
+  - `Class.forName(url);` throws a checked exception, hence handling it is necessary!
+  - `createStatement(int resultSetType, int resultSetConcurrency)` is the signature, hence it can't check if using enums you are assigning the correct enum to the correct argument position.
+
+
+#### Concurrency
+
+- **Executor, Executors, ExecutorService, ScheduledExecutorService**
+  - `Executor` interface defines a single function `void execute(Runnable command)`.
+  - `ExecutorService` implements the interface and adds two `submit` functions. (One for `Runnable` and another for `Callable`). Both return a `Future`! Also `invokeAny` and `invokeAll` are introduced. Both invoke functions operate only on `Callable`s!
+  - Note that `Executors` (with an **s** at the end) is the factory class that creates.
+  - Executor must be shut down in order not to hang!
+  - The correct mehtod names are `scheduleAtFixedRate` and `scheduleWithFixedDelay`. Remember **-Rate** and **WITH-Delay**. Fix-delay always waits until the previous task is finished.
+  - `s.shutdown(); System.out.print(classVar.stroke);` --> you don't know if all threads have finished their work, and you might read the variable before!
+- **Future**
+  - `T get()` throws 2 checked exceptions!!!
+- **CyclicBarrier**
+  - `cyclicBarrier.await()` throws!
+  - A `SingleThreadExecutor` won't be able to trigger a barrier more than once, hence the program might hang!
+- **Concurrent Data Structures**
+  - `BlockingDeque` is an interface that is implemented by multiple classes: `LinkedBlockingQueue`, `LinkedBlockingDequeue` being one of these.
+  - `ConcurrentLinkedDeque` does not support waiting.
+  - The collection interface defines a `parallelStream` method but not a "parallel" method!
+  - . `ConcurrentSkipListMap` implements the SortedMap interface
+- **Fork/Join**
+  - `ForkJoinTask` is the abstract parent class of `RecursiveAction` and `RecursiveTask`.
+- **Misc**
+  - Note that when creating a reduction like `.reduce(0, (c1, c2) -> c1.length() + c2.length(),(s1, s2) -> s1 + s2))` the variable `c1` will be an `int` hence calling the `length()` method on it is illegal.
+  - Race-condition: Racing for the given "asset", (e.g.: incrementing it). The outcome of the program depends on who gets it first.
+  - Resource-starvation: single active thread is unable to access a shared resource. Live-lock is a special case of this, where two or more threads "starve" by actively trying to acquire the resource.
+  - `thread.sleep(1)` throws checked exception!
+  - `synchronized {}` is not good. you must lock in an object!
+  - 

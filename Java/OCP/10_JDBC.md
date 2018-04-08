@@ -148,13 +148,14 @@
 
 #### Learnings
 
-- The Driver, Connection, Statement, and ResultSet interfaces are part of the JDK, and their implementation is provided by the vendor!
+- The `Driver`, `Connection`, `Statement`, and `ResultSet` interfaces are part of the JDK. The JDK has a concrete implementation for `Driver` but the `Connection` and `Statement` must be implemented by the given vendor.
 - A JDBC URL has three parts.
-  - The first part is the string jdc.
-  - The third part is database specific, but it includes a database nameThe second part is the vendor/product name. The location, such as IP address and port, is **optional**.
-  - Starting with JDBC 4.0, driver implementations were required to provide the name of the class implementing Driver in a file named `java.sql.Driver` in the directory `METAINF/service` Hence the file `META-INF/service/java.sql.Driver` is mandatory.
-  - A Connection is created using a static method on DriverManager. It does not use a constructor!
-  - `DriverManager.getConnection()` throws a `SQLException` when the driver cannot be found, while `Class.forName()` throws a `ClassNotFoundException` if the driver was not found.
-  - When a `Statement` is requested with an unsupported mode, the JDBC driver will downgrade the request to one that is supported.
-  - In a `ResultSet`, columns are indexed starting with 1, not 0.
-  - By default, a `Statement` is not scrollable. The first call to `previous()` throws a `SQLException` because the `ResultSet` type is `TYPE_FORWARD_ONLY`.
+  - The first part is the string jdbc.
+  - The second part is the vendor/product name.
+  - The third part is database specific, but it includes a database name. The location, such as IP address and port, is **optional**.
+- Starting with JDBC 4.0, driver implementations were required to provide the name of the class implementing Driver in a file named `java.sql.Driver` in the directory `METAINF/service` Hence the file `META-INF/service/java.sql.Driver` is mandatory.
+- A Connection is created using a static method on DriverManager. It does not use a constructor!
+- `DriverManager.getConnection()` throws a `SQLException` when the driver cannot be found, while `Class.forName()` throws a `ClassNotFoundException` if the driver was not found.
+- When a `Statement` is requested with an unsupported mode, the JDBC driver will downgrade the request to one that is supported.
+- In a `ResultSet`, columns are indexed starting with 1, not 0.
+- By default, a `Statement` is not scrollable. The first call to `previous()` throws a `SQLException` because the `ResultSet` type is `TYPE_FORWARD_ONLY`.
