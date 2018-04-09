@@ -90,7 +90,7 @@
             t1.add(s1);
             t1.add(s2); // Sorts according to "compare"!
             // Constructor accepting Comparator!
-            TreeSet<Sorted> t2 = new TreeSet<>(s1); 
+            TreeSet<Sorted> t2 = new TreeSet<>(s1);
             t2.add(s1);
             t2.add(s2); // adduing using "compare" method!
             System.out.println(t1 + " " + t2);
@@ -268,9 +268,10 @@
   - `Executor` interface defines a single function `void execute(Runnable command)`.
   - `ExecutorService` implements the interface and adds two `submit` functions. (One for `Runnable` and another for `Callable`). Both return a `Future`! Also `invokeAny` and `invokeAll` are introduced. Both invoke functions operate only on `Callable`s!
   - Note that `Executors` (with an **s** at the end) is the factory class that creates.
-  - Executor must be shut down in order not to hang!
-  - The correct mehtod names are `scheduleAtFixedRate` and `scheduleWithFixedDelay`. Remember **-Rate** and **WITH-Delay**. Fix-delay always waits until the previous task is finished.
+  - `Executor` must be shut down in order not to hang!
+  - The correct mehtod names are `scheduleAtFixedRate` and `scheduleWithFixedDelay`. Remember **AZ-Rate** and **WITH-Delay**. Fix-delay always waits until the previous task is finished.
   - `s.shutdown(); System.out.print(classVar.stroke);` --> you don't know if all threads have finished their work, and you might read the variable before!
+  - ``Future<?> f1 = x.submit(() -> completePaperwork());`` is correct, it is the syntax for submitting a `Runnable`. Submitting a `Callable` returns an `Optional`
 - **Future**
   - `T get()` throws 2 checked exceptions!!!
 - **CyclicBarrier**
@@ -289,4 +290,4 @@
   - Resource-starvation: single active thread is unable to access a shared resource. Live-lock is a special case of this, where two or more threads "starve" by actively trying to acquire the resource.
   - `thread.sleep(1)` throws checked exception!
   - `synchronized {}` is not good. you must lock in an object!
-  - 
+  - The three-argument ``reduce()`` method returns a generic type, while the one-argument ``reduce()`` method returns an ``Optional``.
