@@ -290,4 +290,11 @@
   - Resource-starvation: single active thread is unable to access a shared resource. Live-lock is a special case of this, where two or more threads "starve" by actively trying to acquire the resource.
   - `thread.sleep(1)` throws checked exception!
   - `synchronized {}` is not good. you must lock in an object!
+<<<<<<< HEAD
   - The three-argument ``reduce()`` method returns a generic type, while the one-argument ``reduce()`` method returns an ``Optional``.
+=======
+
+#### IO
+
+- 
+>>>>>>> 7d734193f2354f0826c6eccdd63329aa2e4bf4c5
