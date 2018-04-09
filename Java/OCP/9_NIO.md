@@ -181,3 +181,57 @@
       - `final List<String> lines = Files.readAllLines(path);`
 
 #### Understanding File Attributes
+
+- **Discovering Basic File Attributes**
+  - `Files.isDirectory(Path), Files.isRegularFile(Path), Files.isSymbolicLink(Path)`
+    - The first two return true if they point to files/directories of if they are symbolic links pointing to valid files/directories.
+    - The last one returns true only if it is a symbolic link, regadless whether the underlying file/directory exists.
+  - `Files.isHidden(Paths.get("/walrus.txt"))`
+    - Throws checked `IOException`
+  - `isReadable(Path), isExecutable(Path)`
+  - `Files.size(Path)`
+    - Throws checked `IOException`
+  - `FileTime getLastModifiedTime, setLastModifiedTime`
+    - Throws checked `IOExceotion`
+    - `Files.getLastModifiedTime(path).toMillis()`
+    - `Files.getLastModifiedTime(path).toMillis()`
+  - `UserPrincipal getOwner, setOwner(Path, UserPrincipal)`
+    - Throws checked `IOExceotion`
+    - `UserPrincipal owner = FileSystems.getDefault().getUserPrincipalLookupService() .lookupPrincipalByName("jane");`
+    - `Files.getOwner(path).getName()`
+- **Views**
+  - If you need to read multiple attributes of a file or directory at a time, the performance advantage of using a view may be substantial.
+  - `Files.readAttributes()`, returns a read-only view of the file attributes.
+  - `Files.getFileAttributeView()`, returns the underlying attribute view, and it provides a direct resource for modifying file information.
+    - Both throw checked `IOException`
+  - `BasicFileAttributes data = Files.readAttributes(path, BasicFileAttributes.class);`
+    - `data.isOther()` - check for paths that are not files, directories, or symbolic links, such as paths that refer to resources or devices in some file systems
+
+      ```java
+        Path path = Paths.get("/turtles/sea.txt");
+        BasicFileAttributeView view = Files.getFileAttributeView(path,BasicFileAttributeView.class);
+        BasicFileAttributes data = view.readAttributes();
+        FileTime lastModifiedTime = FileTime.fromMillis( data.lastModifiedTime().toMillis()+10_000);
+        view.setTimes(lastModifiedTime,null,null);
+      ```
+  - As you see it allows us to pass null for any date/time value that we do not wish to modify.
+
+#### Presenting the New Stream Methods
+
+- The `Files.walk(path)` method returns a `Stream<Path>` object that traverses the directory in a depth-first, *lazy* manner.
+  - By *lazy*, we mean the set of elements is built and read while the directory is being traversed.
+  - Thorws checked `IOException`
+    - `Files.walk(path) .filter(p -> p.toString().endsWith(".java")).forEach(System.out::println)`
+  - `walk(Path,int)` that takes a maximum directory depth integer value as the second parameter.
+- `Files.find(Path,int,BiPredicate)`
+
+    ```java
+    Stream<Path> stream = Files.find(path, 10, (p,a) -> p.toString().endsWith(".java")
+      && a.lastModifiedTime().toMillis()>dateFilter);
+    stream.forEach(System.out::println);
+    ```
+- `Files.list(Path)` does the same as `Files. walk()` with the depth of 1 (=list direct children)
+- `Stream<String> Files.lines(Path)`
+  - `Files.readAllLines()` may result in `OutOfMemoryError` while opening big files.
+  - the `lines` method does not suffer from this.
+  - Note that `readAllLines` returns a list of `String`s while this function returns a stream.
