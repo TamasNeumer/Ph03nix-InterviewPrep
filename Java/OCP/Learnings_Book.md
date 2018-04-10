@@ -261,7 +261,6 @@
   - `Class.forName(url);` throws a checked exception, hence handling it is necessary!
   - `createStatement(int resultSetType, int resultSetConcurrency)` is the signature, hence it can't check if using enums you are assigning the correct enum to the correct argument position.
 
-
 #### Concurrency
 
 - **Executor, Executors, ExecutorService, ScheduledExecutorService**
@@ -292,4 +291,83 @@
 
 #### IO
 
-- 
+- **Serializing**
+  - The `Serializable` interface is not final and hance it might be extended!
+  - Any class (`static`, `final`, `abstract`) can implement the interface.
+  - `readObject` may throw `ClassNotFoundException` even if the result is not a cast.
+  - Every instance variable must either be `Serializable` or be marked `transient`, but all variables are not required to be either.
+  - Note that `serialUID` is not the same as serialVersionUID, although since serialVersionUID is recommended but not required, this does not pose any compilation issues.
+  - The key here is that Java will call the constructor for the first non-serializable no-argument parent class during deserialization, skipping any constructors and default initializations for serializable classes in between. If a classes' parent is also serializable then `Object` is the first class whose no-args constructor is called and as said **no** initializers are called in the class or its parent classes.
+  - The correct way of iterating over the file while deserializing is by waiting for a `EOFException`
+- **Console**
+  - The `System.console()` uses the singleton pattern to return the JVM's `Console` instance. If none defined it returns `null`.
+  - `readPassword` returns `char[]`!
+  - `printf`, `format`, `writer().println()` are the correct ways to print!
+  - `writerInstance.append(String)` throws checked exception!
+- **File**
+  - A `File` object may refer to a path that does not exist within the file system. -> use the `exists()` method to check.
+  - The `File` methods (90%) are **non** throwing. (However they might throw run-time exceptions...)
+  - To move a file using `java.io.File`, you should use the `renameTo()` method, since there are no `move()` or `mv()` methods.
+  - To create a directory or chain of directories using java.io.File, you should use `mkdir()` or `mkdirs()`, respectively, because there is no `createDirectory()` method.
+  - Java requires a backslash to be escaped with another backslash. (Even in filenames that are strings!)
+    - `new File("c:\\book\\java");` escaping slashes
+    - `new File("c:/book/java");` using normal slash since java will convert anyway.
+  - Calling `mkdir` on an existing directory is harmless. Doesn't do anything.+
+  - Attempting to `delete` a non-empty directory results in an exception!
+  - The file seperator can be retrieved by one of the following ways:
+    - `java.io.File.separator`, `new File(new String()).separatorChar`, `System.getProperty("file.separator")`
+  - The File `getParent()` method returns a `String`, not a `File` object!
+- **IOStreams**
+  - Most of the functions operating on files throw checked exceptions!
+  - Writer may only write characters and `String`s. If you want to write primitives you need to use the "Stream" classes (possibly) wrapped into Buffers. The `Writer`/`Reader` provide automatic character encoding + they have a more convenient syntax when working with strings.
+  - Not all java.io streams support the `mark()` operation; therefore, without calling `markSupported()` on the stream, the result is unknown until runtime.
+  - `BufferedWriter` is a wrapper class that requires an instance of `Writer` to operate on.
+  - The method reset for class `InputStream` (abstract class!) does nothing except throw an `IOException`. Watch out for stuff like `InputStream is = new FileInputStream("prime6.txt")`. Trying to call reset will throw an exception. Calling `mark()` does nothing, while `markSupported` returns `false`.
+  - If you are using try-with-resources note that the in the implicit `finally` method the file's `close` method might throw an exception, and hence it has to be marked in the method signature! `public void readMusic(File f) { try (BufferedReader r = new BufferedReader(FileReader(f))) { ...` won't compile, unless you have an "extra" `catch` block!
+  - A high level stream if used in a try-with-resources clause automatically closes the underlying low lever stream. --> Hence calling the `flush` method of the underlying low lever stream in an explicit `finally` block leads to a `IOException`. Calling `close` on an already closed stream is okay.
+  - The `Reader` class defines a `read()` method, but not a `readLine()` method.
+  - To correctly write data, `OutputStreamInstance.write(data);` should specify the length to be written. (fromIndex, toIndex), otherwise the "junk" at the end of the also buffer is also written.
+  - InputStream.read --> returns int != -1 check in while. `while ((lengthRead = in.read(buffer)) > 0)`
+  - The Reader class checks for `null`: `while((s = reader.readLine()) != null) {`
+  - Also note that `writer.write(s);` must be followed with `writer.newLine();` if you want to "copy line by line"
+  - While reading Objects we use a `while(true)` and except an `EOFException`!
+    - the `readObject()` throws the checked exception, ClassNotFoundException, since the class of the deserialized object may not be available to the JRE
+
+#### NIO
+
+- **Path, Paths**
+  - `Path path = Path.get("...")` Not correct as not using the `Paths` class!
+  - `path.subPath(from, to)` starts counting from 0!
+  - `relativize()` takes a `Path` object as argument and not a `String`
+  - A symbolic link can point to a real directory, and by default `isDirectory()` follows links.
+  - When `toAbsolutePath()` is called on a relative path it adds the absolute path of the current working directory. (-> /user/currentWorkDir/relPath)
+  - `symbolicLink/newlyCreatedDir` works as well. So if you had a symbolic link and you created a directory using the symbolic link, you can reach this directory using the symbolic link "/" the newly created dir!
+  - `Path` can denote anything. (Dir/File/Link) Also directories can have a name like "pets/dog.txt" can be a directory!!! hence `path1.resolve(path2)` might output oddly looking `/pets/../cat.txt/./dog.txt`
+  - calling `resolve()` with an absolute path as a parameter returns the absolute path
+  - `getFileName` returns a `Path` and not a `String`!
+  - `toRealPath()` interacts with the file system and therefore throws a checked `IOException`.
+  - `getRoot()` returns `null` when called on a relative path.
+- **Files**
+  - `copy` throws an exception if `REPLACE_EXISTING` was not specified AND the target already exists! moving always preserves the metadata even if the `COPY_ATTRIBUTES` flag is not set.
+  - `Files.isSameFile(nonExistingRelPath, absPathToNonExistingRelativePath)` -->  The method `Files.isSameFile()` first checks to see if the Path values are the same in terms of `equals()`. Since the first path is relative and the second path is absolute, this comparison will return false, forcing `isSameFile()` to check for the existence of both paths in the file system. Since we know /zoo/turkey does not exist, a `NoSuchFileException` is thrown.
+  - `setTimes()` method is available only on BasicFileAttributeView, not the readonly `BasicFileAttributes` class.
+  - NIO2 Views can be used to access file system–dependent attributes.
+  - `Files.copy(is, Paths.get("asd"))`, `Files.copy(Paths.get("asd"), os)` --> operate on **Steams IOs** and **NOT** writer/reader!
+    ```java
+    public static Stream<Path> find(Path start,
+                                    int maxDepth,
+                                    BiPredicate<Path,BasicFileAttributes> matcher,
+                                    FileVisitOption... options)
+                            throws IOException
+
+    Files.find(path, 0, (p,a) -> a.isSymbolicLink()).map(p -> p.toString()) // y1
+    .collect(Collectors.toList()) // y2
+    .stream() // y3
+    .filter(x -> x.toString().endsWith(".txt")) // y4 .forEach(System.out::println);
+    ```
+  - NIO2 can be used to traverse the directory tree directly. You couldn't do this with the old IO.
+  - `Files.walk()` does not follow symbolic links by default, hence a possible cycle will never get triggered. If it was enabled, then `FileSystemLoopException` would be thrown!
+  - `Files.readAllLines` returns a list of `String`s, while `Files.lines()` returns a `Stream<String>`!
+  - Neither API provides a single method to delete a directory tree. (new vs Old)
+  - `DosFileAttributes` and `PosixFileAttributes` extend `BasicFileAttributes`
+  - When you are deleting a directory the files should be deleted first. Even symbolic links!
