@@ -69,7 +69,7 @@
   - **Unbounded Wildcards**
     - An unbounded wildcard represents any data type. You use `?` when you want to specify that any type is OK with you.
     - Note that Java won't let you to assign a `List<String>` reference to a `List<Object>` (you would be later able to put `Integer`s into the list of `String`s.) This is **not** the case with arrays. At arrays you can play around with the references and get RunTimeException later.
-    - The following code would not compile if we had `List<Objects>`. (And even if `String` is an `Object`...)
+    - The following code would not compile if we had `List<Objects>` in `printList` argument. (And even if `String` is an `Object`...)
       ```java
       public static void printList(List<?> list) {
          for (Object x: list) System.out.println(x);
@@ -154,7 +154,7 @@
         - `E lower(E e)` (greatest element that is smaller than e) `<`
         - `E floor(E e)` smallest element that is `<=` e
         - `E ceiling(E e)` Returns smallest element that is `>=` e
-        - `E ceiling(E e)` Returns smallest element that is `>` e
+        - `E higher(E e)` Returns smallest element that is `>` e
         - All of these return **null** if entry was not found!
       - Stores elements in a tree structure - sorted order!
       - `O(log n)` is the adding and checking in return...
