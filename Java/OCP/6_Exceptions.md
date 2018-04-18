@@ -14,8 +14,8 @@
 - New (checked) exceptions to learn (compared to OCA)
   - `java.text.ParseException` - Converting a String to a number.
   - `java.io.IOException, java.io.FileNotFoundException, java.io.NotSerializableException` - Dealing with IO and NIO.2 issues. `IOException` is the parent class. There are a number of subclasses.
-- New unchecked exceptions:
   - `java.sql.SQLException` - Dealing with database issues. SQLException is the parent class.
+- New unchecked exceptions:
   - `java.lang.ArrayStoreException` - Trying to store the wrong data type in an array.
   - `java.time.DateTimeException` - Receiving an invalid format string for a date.
   - `java.util.MissingResourceException` - Trying to access a key or resource bundle that does not exist.

@@ -3,14 +3,14 @@
 #### Advanced Class Design
 
 - **Class Inheritance and Composition**
-  - B implements A, C implements A. You still **can NOT** cast an B instance to C, as it will result in a runtime `ClassCastException`. (Even if they have a single method with the same signature etc etc.) Simply doesn't work.
+  - B implements A, C implements A. You still **can NOT** cast an B instance to C, as it will result in a runtime `ClassCastException`. Hence you can only cast downwards, if the right hand side object is actually an object of the left hand side expression.
 
       ```java
               A aInstance = new A();
               B bInstance = new B();
               A aRefBackedByB = new B();
-              B bRefOfABackedByB = (B) aRefBackedByB;
-              B bRefBackedByA = (B) new A(); // Fails!
+              B bRefOfABackedByB = (B) aRefBackedByB; // Works, as aRefBackedByB is actually a B object!
+              B bRefBackedByA = (B) new A(); // Fails! - runtime exception!
       ```
 
   - In a chain of inheritance always check whether **all** abstract methods are implemented! Also check whether the class is `abstract`, as in this case it doesn't have to.
@@ -111,7 +111,7 @@
   - `ArrayList::new(n);` --> This is bullshit. Such thing doesn't exist!
 - **Misc**
   - Watch out for `char` vs `String` tricks. (`'` instead of `"`)
-  - **Uppercase** letters are sorted before **any** lowercase letters. Hence in a `TreeSet` the word "winchester" comes before the word "apple".
+  - **Uppercase** letters are sorted before **any** lowercase letters. Hence in a `TreeSet` the word "Winchester" comes before the word "apple".
 
 #### Functional Programming
 
