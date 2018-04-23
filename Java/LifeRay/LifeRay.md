@@ -45,7 +45,6 @@
 - **Security**
   - The layer that handles the security aspects by limiting bundle functionality to pre-defined capabilities.
 
-
 #### Portlet standard
 
 - The **Java Portlet Specification** defines a contract between the **portlet container** and **portlets** and provides a convenient programming model for Java portlet developers.
@@ -56,4 +55,5 @@
     - A Portlet container runs portlets and provides them with the required runtime environment. A portlet container contains portlets and manages their life cycles. It also provides persistent storage mechanisms for the portlet preferences.
 
 #### JSP
+
 - JavaServer Pages (JSP) is a technology that helps software developers create dynamically generated web pages based on HTML, XML, or other document types. Released in 1999 by Sun Microsystems,[1] JSP is similar to PHP and ASP, but it uses the Java programming language.
