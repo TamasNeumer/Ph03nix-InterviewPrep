@@ -87,6 +87,11 @@
   - Persistence context can be thought of as a container or a first-level cache for all the objects that you loaded or saved to a database during a session.
   - The session is a logical transaction, which boundaries are defined by your application’s business logic. When you work with the database through a persistence context, and all of your entity instances are attached to this context, you should always have a single instance of entity for every database record that you’ve interacted during the session with.
     - `SessionFactory.openSession()` always opens a new session that you have to close once you are done with the operations. `SessionFactory.getCurrentSession()` returns a session bound to a context - you don't need to close this.
+    - "Hibernate SessionFactory `getCurrentSession()` method returns the session *bound to the context.*" - But for this to work, we need to configure it in hibernate configuration file like below:
+      - `<property name="hibernate.current_session_context_class">thread</property>`
+    - Since this session object belongs to the hibernate context, we don’t need to close it. Once the session factory is closed, this session object gets closed.
+    - `Session` objects are **NOT** thread safe! -> Don't use in multi-threaded environment! If using a multi-threaded environment open a new session for each request.
+    - `StatelessSession` bypasses Hibernate’s event model and interceptors. It’s more like a normal JDBC connection and doesn’t provide any benefits that come from using hibernate framework. It can be beneficial if we are loading bulk data into database and we don’t want hibernate session to hold huge data in first-level cache memory.
   - Any entity instance in your application appears in one of the three main states in relation to the Session persistence context:
     - **Transient**s- this instance is not, and never was, attached to a `Session`; this instance has no corresponding rows in the database; it’s usually just a new object that you have created to save to the database
     - **Persistent** - this instance is associated with a unique `Session` object; upon flushing the `Session` to the database, this entity is guaranteed to have a corresponding consistent record in the database;
@@ -275,27 +280,31 @@
         }
     ```
 - **Loading Entities**
-  - Each of the following `load()` method requires the object’s primary key as an identifier.
-    ```java
-    public <T> T load(Class<T> theClass, Serializable id)
-    public Object load(String entityName, Serializable id)
-    public void load(Object object, Serializable id)
-    ```
-  - With the more advanced loading methods you can specify the locking mode.
-    ```java
-    public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode)
-    public Object load(String entityName, Serializable id, LockMode lockMode)
-    ```
-    - NONE: Uses no row-level locking, and uses a cached object if available; this is the Hibernate default.
-    - READ: Prevents other SELECT queries from reading data that is in the middle of a transaction (and thus possibly invalid) until it is committed.
-    - UPGRADE: Uses the SELECT FOR UPDATE SQL syntax to lock the data until the transaction is finished.
-    - UPGRADE_NOWAIT: Uses the NOWAIT keyword (for Oracle), which returns an error immediately if there is another thread using that row; otherwise this is similar to UPGRADE.
-    - UPGRADE_SKIPLOCKED: Skips locks for rows already locked by other updates, but otherwise this is similar to UPGRADE.
-    - OPTIMISTIC: This mode assumes that updates will not experience contention. The entity’s contents will be verified near the transaction’s end.
-    - OPTIMISTIC_FORCE_INCREMENT: This is like OPTIMISTIC, except it forces the version of the object to be incremented near the transaction’s end.
-    - PESSIMISTIC_READ and PESSIMISTIC_WRITE: Both of these obtain a lock immediately on row access.
-    - PESSIMISTIC_FORCE_INCREMENT: This obtains the lock immediately on row access, and also immediately updates the entity version.
-  - You should not use a `load()` method unless you are sure that the object exists. If you are not certain, then use one of the `get()` methods. The `load()` methods will throw an exception if the unique ID is not found in the database, whereas the `get()` methods will merely return a null reference.
+  - **LOAD**
+    - Each of the following `load()` method requires the object’s primary key as an identifier.
+      ```java
+      public <T> T load(Class<T> theClass, Serializable id)
+      public Object load(String entityName, Serializable id)
+      public void load(Object object, Serializable id)
+      ```
+    - With the more advanced loading methods you can specify the locking mode.
+      ```java
+      public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode)
+      public Object load(String entityName, Serializable id, LockMode lockMode)
+      ```
+      - `NONE`: Uses no row-level locking, and uses a cached object if available; this is the Hibernate **default**.
+      - `READ`: Prevents other `SELECT` queries from reading data that is in the middle of a transaction (and thus possibly invalid) until it is committed.
+      - `UPGRADE`: Uses the SELECT FOR UPDATE SQL syntax to lock the data until the transaction is finished.
+      - `UPGRADE_NOWAIT`: Uses the NOWAIT keyword (for Oracle), which returns an error immediately if there is another thread using that row; otherwise this is similar to UPGRADE.
+      - `UPGRADE_SKIPLOCKED`: Skips locks for rows already locked by other updates, but otherwise this is similar to UPGRADE.
+      - `OPTIMISTIC`: This mode assumes that updates will not experience contention. The entity’s contents will be verified near the transaction’s end.
+      - `OPTIMISTIC_FORCE_INCREMENT`: This is like OPTIMISTIC, except it forces the version of the object to be incremented near the transaction’s end.
+      - `PESSIMISTIC_READ` and PESSIMISTIC_WRITE: Both of these obtain a lock immediately on row access.
+      - `PESSIMISTIC_FORCE_INCREMENT`: This obtains the lock immediately on row access, and also immediately updates the entity version.
+    - It will always return a **“proxy”** (Hibernate term) without hitting the database. In Hibernate, proxy is an object with the given identifier value, its properties are not initialized yet, it just look like a temporary fake object. Properties are only fetched from the database when you actually refer to them / i.e. when you actually use them. If it turns out, that the object with the given ID doesn't exist in the database anymore, it throws an `ObjectNotFoundException`.
+    - You should not use a `load()` method unless you are sure that the object exists. If you are not certain, then use one of the `get()` methods. The `load()` methods will **throw an exception** if the unique ID is not found in the database, whereas the `get()` methods will merely return a `null` reference.
+- **GET**
+  - `get()` returns the object by fetching it from database or from hibernate cache.
     ```java
     public <T> T get(Class<T> clazz, Serializable id)
     public Object get(String entityName, Serializable id)
@@ -799,13 +808,308 @@
   - Cases: Case `when <logical expression> then <unary expression> else <unary expression> end`
   - Collection expressions: `some, exists, all, any`
   - In addition, you may also use the following expressions in the where clause:
-    • HQL named parameters:, such as `:date`, `:quantity`
-    • JDBC query parameter: `?`
-    • Date and time SQL-92 functional operators: `current_time(), current_date(), current_timestamp()`
-    • SQL functions (supported by the database): `length(), upper(), lower(), ltrim(), rtrim()`, etc.
+    - HQL named parameters:, such as `:date`, `:quantity`
+    - JDBC query parameter: `?`
+    - Date and time SQL-92 functional operators: `current_time(), current_date(), current_timestamp()`
+    - SQL functions (supported by the database): `length(), upper(), lower(), ltrim(), rtrim()`, etc.
+- **Named Parameters**
+    ```java
+    String hql = "from Product where price > :price";
+    Query query = session.createQuery(hql);
+    query.setDouble("price",25.0);
+    List results = query.list();
+    ```
+  - When the value to be provided will be known only at run time, you can use some of HQL’s object-oriented features to provide objects as values for named parameters. The Query interface has a setEntity() method that takes the name of a parameter and an object.
+    ```java
+    String supplierHQL = "from Supplier where name='MegaInc'";
+    Query supplierQuery = session.createQuery(supplierHQL);
+    Supplier supplier = (Supplier) supplierQuery.list().get(0);
+    String hql = "from Product as product where product.supplier=:supplier";
+    Query query = session.createQuery(hql);
+    query.setEntity("supplier",supplier);
+    List results = query.list();
+    ```
+- **Paging through the result set**
+  - There are two methods on the `Query` interface for paging: `setFirstResult(int)` (takes an integer that represents the first row in your result set, starting with row 0) and `setMaxResults(int)` (only retrieve a fixed number of objects), just as with the Criteria interface.
+  - E.g. Getting the second element of the query:
+    ```java
+    Query query = session.createQuery("from Product");
+    query.setFirstResult(1);
+    query.setMaxResults(2);
+    List results = query.list();
+    displayProductsList(results);
+    ```
+- **Obtaining unique result**
+  - The `uniqueResult()` method on the Query object returns a single object, or `null` if there are zero results.
+  - `Product product = (Product) query.uniqueResult();`
+- **Ordering results**
+  - via `order by`
+    - `from Product p order by p.supplier.name asc, p.price asc`
+- **Associations**
+  - Associations allow you to use more than one class in an HQL query, just as SQL allows you to use joins between tables in a relational database. You add an association to an HQL query with the `join` clause.
+  - Hibernate supports five different types of joins: `inner join,cross join,left outer join,right outer join` ,and `full outer join`. If you use `cross join`,just specify both classes in the `from` clause `(from Product p, Supplier s)`.
+    - `from Product p inner join p.supplier as s`
+- **Aggregate Methods**
+  - `avg(property name)`: The average of a property’s value
+  - `count(property name or *)`: The number of times a property occurs in the results
+  - `max(property name)`: The maximum value of the property values
+  - `min(property name)`: The minimum value of the property values
+  - `sum(property name)`: The sum total of the property values
+- **Bulk Updates and Deletes with HQL**
+  - The `Query` interface contains a method called `executeUpdate()` for executing HQL `UPDATE` or `DELETE` statements. The `executeUpdate()` method returns an `int` that contains the number of rows affected by the update or delete.
+    - `int rowCount = query.executeUpdate();`
+  - **Be careful** when you use bulk delete with objects that are in relationships. Hibernate will not know that you removed the underlying data in the database, and you can get foreign key integrity errors. To get around this, you could set the not-found attribute to ignore on your one-to-many and many-to-one mappings, which will make IDs that are not in the database resolve to null references. The default value for the not-found attribute is exception.
+- **Native SQL**
+  - One reason to use native SQL is that your database supports some special features through its dialect of SQL that are not supported in HQL.
+  - Another reason is that you may want to call stored procedures from your Hibernate application.
+  - `public SQLQuery createSQLQuery(String queryString) throws HibernateException`
+  - After you pass a string containing the SQL query to the `createSQLQuery()` method, you should associate the SQL result with an existing Hibernate entity, a join, or a scalar result. The SQLQuery interface has `addEntity()`, `addJoin()`, and `addScalar()` methods.
+    ```java
+    String sql = "select avg(product.price) as avgPrice from Product product";
+    SQLQuery query = session.createSQLQuery(sql);
+    query.addScalar("avgPrice",Hibernate.DOUBLE);
+    List results = query.list();
+    ```
+  - Or a bit more complex example:
+    ```java
+    String sql = "select {supplier.*} from Supplier supplier";
+    SQLQuery query = session.createSQLQuery(sql);
+    query.addEntity("supplier", Supplier.class);
+    List results = query.list();
+    ```
+    - Hibernate modifies the SQL and executes the following command against the database:
+      - `select Supplier.id as id0_, Supplier.name as name2_0_ from Supplier supplier`
 
+#### Advanced Queries Using Criteria
 
+- **Basics**
+  - We can’t use Criteria to run update or delete queries or any DDL statements. It’s only used to fetch the results from the database using more object oriented approach.
+  - The Criteria Query API lets you build nested, structured query expressions in Java, providing a **compile-time syntax checking** that is not possible with a query language like HQL or SQL.
+  - The Criteria API also includes **query by example** (QBE) functionality. This lets you supply example objects that contain the properties you would like to retrieve instead of having to step-by-step spell out the components of the query. It also includes projection and aggregation methods, including counts.
+- **Usage**
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    List<Product> results = crit.list();
+    ```
+  - Lists all `Products` and any objects of derived classes.
+- **Restrictions**
+  - To retrieve objects that have a property value that equals your restriction, use the `eq()` method on `Restrictions`:
+    - `public static SimpleExpression eq(String propertyName, Object value)`
+      ```java
+      Criteria crit = session.createCriteria(Product.class);
+      crit.add(Restrictions.eq("description","Mouse"));
+      List<Product> results = crit.list()
+      ```
+    - To search for products that are **not** equal use the `ne()` method.
+    - You **cannot** use the not-equal restriction to retrieve records with a `NULL` value in the database for that property (in sQL, and therefore in hibernate, `NULL` represents the absence of data, and so cannot be compared with data). -> you will have to use the `isNull()` restriction.
+      ```java
+      Criteria crit = session.createCriteria(Product.class);
+      crit.add(Restrictions.isNull("name"));
+      List<Product> results = crit.list();
+      ```
 
+  - Instead of searching for exact matches, we can retrieve all objects that have a property matching part of a given pattern. To do this, we need to create an SQL `LIKE` clause, with either the `like()` or the `ilike()` method. The `ilike()` method is case-insensitive.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.add(Restrictions.like("name","Mou%"));
+    //OR: crit.add(Restrictions.ilike("name","Mou", MatchMode.START));
+    List<Product> results = crit.list();
+    ```
+  - A complex Criteria query can be seen below:
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    Criterion priceLessThan = Restrictions.lt("price", 10.0);
+    Criterion mouse = Restrictions.ilike("description", "mouse", MatchMode.ANYWHERE);
+    LogicalExpression orExp = Restrictions.or(priceLessThan, mouse);
+    crit.add(orExp);
+    List<Product> results=crit.list();
+    ```
+  - If we wanted to create an OR expression with more than two different criteria (for example, “price > 25.0 OR name like Mou% OR description not like blocks%”), we would use an `org.hibernate.criterion.Disjunction` object to represent a disjunction.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    Criterion priceLessThan = Restrictions.lt("price", 10.0);
+    Criterion mouse = Restrictions.ilike("description", "mouse", MatchMode.ANYWHERE);
+    Criterion browser = Restrictions.ilike("description", "browser", MatchMode.ANYWHERE);
+    Disjunction disjunction = Restrictions.disjunction();
+    disjunction.add(priceLessThan);
+    disjunction.add(mouse);
+    disjunction.add(browser);
+    crit.add(disjunction);
+    List<Product> results = crit.list();
+    ```
+  - The last type of restriction is the SQL restriction `sqlRestriction()`. This restriction allows you to directly specify SI.QL in the Criteria API.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.add(Restrictions.sqlRestriction("{alias}.description like 'Mou%'"));
+    List<Product> results = crit.list();
+    ```
+  - Ordering can be added like: `crit.addOrder(Order.desc("name"));`
+- **Projection and aggregates**
+  - Instead of working with objects from the result set, you can treat the results from the result set as a set of rows and columns, also known as a projection of the data.
+  - To use projections, start by getting the o`rg.hibernate.criterion.Projection` object you need from t`he org.hibernate.criterion.Projections` factory class.
+  - After you get a `Projection` object, add it to your `Criteria` object with the `setProjection()` method.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.setProjection(Projections.rowCount());
+    List<Long> results = crit.list();
+    ```
+    - The results list will contain one object, a Long that contains the results of executing the COUNT SQL statement.
+  - Other aggregate functions available through the `Projections` factory class include the following::
+  - `avg(String propertyName)`: Gives the average of a property’s value
+  - `count(String propertyName)`: Counts the number of times a property occurs
+  - `countDistinct(String propertyName)`: Counts the number of unique values the property contains
+  - `max(String propertyName)`: Calculates the maximum value of the property values
+  - `min(String propertyName)`: Calculates the minimum value of the property values
+  - `sum(String propertyName)`: Calculates the sum total of the property values
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    ProjectionList projList = Projections.projectionList();
+    projList.add(Projections.max("price"));
+    projList.add(Projections.min("price"));
+    projList.add(Projections.avg("price"));
+    projList.add(Projections.countDistinct("description"));
+    crit.setProjection(projList);
+    List<Object[]> results = crit.list();
+    ```
+- **Query By Example (QBE)**
+  - The `org.hibernate.criterion.Example` class contains the QBE functionality.
+  - To use QBE, we first need to construct an `Example` object. Then we need to create an instance of the `Example` object, using the static `create()` method on the `Example` class. The `create()` method takes the `Example` object as its argument. You add the `Example` object to a `Criteria` object just like any other `Criterion` object.
+    ```java
+    Criteria crit = session.createCriteria(Supplier.class);
+    Supplier supplier = new Supplier();
+    supplier.setName("MegaInc");
+    crit.add(Example.create(supplier));
+    List<Supplier> results = crit.list();
+    ```
+  - When Hibernate translates our Example object into an SQL query, **all the properties on our Example objects get examined**. 
+  - Default is to ignore null-valued properties. --> Hence if you used primitives you **must** tell hibernate to ignore these while searching (since these have non-null values.)
+    - `excludeZeros`
+    - `excludeProperty()`
+    - `excludeNothing()` - compare for null values and zeroes exactly as they appear in the `Example` object.
+      ```java
+      Criteria prdCrit = session.createCriteria(Product.class);
+      Product product = new Product();
+      product.setName("M%");
+      Example prdExample = Example.create(product);
+      prdExample.excludeProperty("price");
+      prdExample.enableLike();
+      Criteria suppCrit = prdCrit.createCriteria("supplier");
+      Supplier supplier = new Supplier();
+      supplier.setName("SuperCorp");
+      suppCrit.add(Example.create(supplier));
+      prdCrit.add(prdExample);
+      List<Product> results = prdCrit.list();
+      ```
+
+#### Hibernate Caching
+
+- **First Level Cache**
+  - Hibernate First Level cache is **enabled by default**, there are no configurations needed for this.
+  - Hibernate first level cache is **session specific**. --> Within the same session two `load(className.class, 1)` queries will return the same object even if table was changed between the two calls! Hibernate only "hits" the database on the first query, but not on the second! However if you open a new session and issue the query, it will hit the database and reflect the changes!
+  - We can use session `session.evict(Object o)` method to remove a single object from the hibernate first level cache.
+  - We can use session `clear()` method to clear the cache i.e delete all the objects from the cache.
+  - We can use session `contains(Object o)` method to check if an object is present in the hibernate cache or not, if the object is found in cache, it returns true or else it returns false.
+  - Since hibernate cache all the objects into session first level cache, while running bulk queries or batch updates it’s necessary to clear the cache at certain intervals to avoid memory issues.
+- **Second Level Cache**
+  - Once the session is closed, first-level cache is terminated as well. This is actually desirable, as it allows for concurrent sessions to work with entity instances in isolation from each other. On the other hand, second-level cache is **SessionFactory-scoped**, meaning it is shared by all sessions created with the same session factory.
+  - Using the secondary cache the process is the following:
+    - If an instance is already present in the first-level cache, it is returned from there
+    - If an instance is not found in the first-level cache, and the corresponding instance state is cached in the second-level cache, then the data is fetched from there and an instance is assembled and returned
+    - Otherwise, the necessary data are loaded from the database and an instance is assembled and returned
+  - Hibernate only needs to be provided with an implementation of the org.hibernate.cache.spi.RegionFactory interface which encapsulates all details specific to actual cache providers.
+    - We will look into Hibernate `EHCache` that is the most popular Hibernate Second Level Cache provider.
+    - Make sure that the `EHCache` version matches your hibernate version!
+  - **Caching strategies**
+    - **Read Only**: This caching strategy should be used for persistent objects that will always read but never updated. It’s good for reading and caching application configuration and other static data that are never updated. This is the simplest strategy with best performance because there is no overload to check if the object is updated in database or not.
+    - **Read Write**: It’s good for persistent objects that can be updated by the hibernate application. However if the data is updated either through backend or other applications, then there is no way hibernate will know about it and data might be stale. So while using this strategy, make sure you are using Hibernate API for updating the data.
+    - **Nonrestricted Read Write**: If the application only occasionally needs to update data and strict transaction isolation is not required, a nonstrict-read-write cache might be appropriate.
+    - **Transactional**: The transactional cache strategy provides support for fully transactional cache providers such as JBoss TreeCache. Such a cache can only be used in a JTA environment and you must specify hibernate.transaction.manager_lookup_class.
+  - In order to enable second level caching we need to introduce the following dependencies:
+    ```xml
+    <!-- EHCache Core APIs -->
+        <dependency>
+          <groupId>net.sf.ehcache</groupId>
+          <artifactId>ehcache-core</artifactId>
+          <version>2.6.11</version>
+        </dependency>
+        <!-- Hibernate EHCache API -->
+        <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-ehcache</artifactId>
+          <!-- Make sure to match hib. versioN! -->
+          <version>4.3.5.Final</version>
+        </dependency>
+        <!-- EHCache uses slf4j for logging -->
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+          <version>1.7.5</version>
+        </dependency>
+    ```
+- We also need to enable caching in our `hibernate.xml`
+    ```xml
+    <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</property>
+        
+        <!-- For singleton factory -->
+        <!-- <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</property>
+        -->
+        
+        <!-- enable second level cache and query cache -->
+        <property name="hibernate.cache.use_second_level_cache">true</property>
+        <property name="hibernate.cache.use_query_cache">true</property>
+        <property name="net.sf.ehcache.configurationResourceName">/myehcache.xml</property>
+    ```
+  - `hibernate.cache.region.factory_class` is used to define the Factory class for Second level caching, I am using `org.hibernate.cache.ehcache.EhCacheRegionFactory` for this. If you want the factory class to be singleton, you should use org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory` class.
+  - `hibernate.cache.use_second_level_cache` is used to enable the second level cache.
+  - `hibernate.cache.use_query_cache` is used to enable the query cache, without it HQL queries results will not be cached.
+  - `net.sf.ehcache.configurationResourceName` is used to define the EHCache configuration file location, it’s an optional parameter and if it’s not present EHCache will try to locate `ehcache.xml` file in the application classpath.
+- Finally we need to define the `ecache.xml`
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd" updateCheck="true"
+            monitoring="autodetect" dynamicConfig="true">
+
+        <diskStore path="java.io.tmpdir/ehcache" />
+
+        <defaultCache maxEntriesLocalHeap="10000" eternal="false"
+                      timeToIdleSeconds="120" timeToLiveSeconds="120" diskSpoolBufferSizeMB="30"
+                      maxEntriesLocalDisk="10000000" diskExpiryThreadIntervalSeconds="120"
+                      memoryStoreEvictionPolicy="LRU" statistics="true">
+            <persistence strategy="localTempSwap" />
+        </defaultCache>
+
+        <cache name="employee" maxEntriesLocalHeap="10000" eternal="false"
+              timeToIdleSeconds="5" timeToLiveSeconds="10">
+            <persistence strategy="localTempSwap" />
+        </cache>
+
+        <cache name="org.hibernate.cache.internal.StandardQueryCache"
+              maxEntriesLocalHeap="5" eternal="false" timeToLiveSeconds="120">
+            <persistence strategy="localTempSwap" />
+        </cache>
+
+        <cache name="org.hibernate.cache.spi.UpdateTimestampsCache"
+              maxEntriesLocalHeap="5000" eternal="true">
+            <persistence strategy="localTempSwap" />
+        </cache>
+    </ehcache>
+    ```
+  - `diskStore`: EHCache stores data into memory but when it starts overflowing, it start writing data into file system. We use this property to define the location where EHCache will write the overflown data.
+  - `defaultCache`: It’s a mandatory configuration, it is used when an Object need to be cached and there are no caching regions defined for that.
+  - `cache name=”employee”`: We use cache element to define the region and it’s configurations. We can define multiple regions and their properties, while defining model beans cache properties, we can also define region with caching strategies. The cache properties are easy to understand and clear with the name.
+  - Cache regions `org.hibernate.cache.internal.StandardQueryCache` and `org.hibernate.cache.spi.UpdateTimestampsCache` are defined because EHCache was giving warning to that.
+- Lastly we need to annotate our classes:
+  - `@Cacheable`
+  - `@Cache(usage=CacheConcurrencyStrategy.READ_ONLY)`
+  - Hibernate will use a separate cache region to store state of instances for that class. The region name is the fully qualified class name. For example, Foo instances are stored in a cache name `org.baeldung.persistence.model.Foo` in Ehcache.
+- Collections are not cached by default, and we need to explicitly mark them as cacheable.
+    ```java
+        @Cacheable
+        @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+        @OneToMany
+        private Collection<Bar> bars;
+    ```
 
 ## Weaker stuff - review and deeper research needed!!!!
 
@@ -1037,13 +1341,3 @@
   - `UPGRADE_NOWAIT` - Behaves like `UPGRADE`, but when support is available from the database and dialect, the method will fail with a locking exception immediately. Without this option, or on databases for which it is not supported, the query must wait for a lock to be granted (or for a timeout to occur).
 - **Deadlocks**
   - Fortunately, a database management system (DBMS) can detect this situation automatically, at which point the transaction of one or more of the offending processes will be aborted by the database. The resulting deadlock error will be received and handled by Hibernate as a normal `HibernateException`. Now you must roll back your transaction, close the session, and then (optionally) try again.
-- **Caching**
-  - Most good databases will cache the results of a query if it is run multiple times, eliminating the disk I/O and query compilation time.
-  - Problem: If many people use the DB for different queries caching has no benefit. Solution -> Client side caching! Hibernate provides one cache (the first-level, or L1, cache) through which all requests must pass. A second-level cache (L2) is optional and configurable.
-  - Items in the L1 cache can be individually discarded by invoking the `evict()` method on the session for the object that you wish to discard. To discard all items in the L1 cache, invoke the `clear()` method.
-  - L2 Cache Implementations Supported by Hibernate Out of the Box:
-    - `EHCache` - An in-process cache
-    - `Infinispan` - Open source successor to JBossCache that provides distributed cache support
-    - `OSCache` - An alternative in-process cache
-    - `SwarmCache` - A multicast distributed cache
-
