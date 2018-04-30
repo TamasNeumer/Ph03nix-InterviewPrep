@@ -398,22 +398,435 @@
   - A link table without any constrains is applied between two tables.
   - As stated earlier in this chapter (in the section entitled “Primary Keys,” of all things), Hibernate demands that a primary key be used to identify entities. The choice of a surrogate key, a key chosen from the business data, and/or a compound primary key can be made via configuration. --> Either the Column1+Column2 has to be unique, or you have to add an additional primary key!
 
-#### Mapping with annotations
+## Mapping with annotations
 
-- **Creating Hibernate Mappings with Annotations**
+#### Configuration
+
+- Hibernate Configuration
+    ```xml
+    <?xml version="1.0"?>
+    <!DOCTYPE hibernate-configuration PUBLIC
+            "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+            "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+    <hibernate-configuration>
+        <session-factory>
+            <!--  Database connection settings  -->
+            <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+            <property name="connection.url">jdbc:mysql://localhost:3306/hibernate</property>
+            <property name="connection.username">root</property>
+            <property name="connection.password">master</property>
+            <property name="dialect">org.hibernate.dialect.MySQL57Dialect</property>
+            <!--  Echo all executed SQL to stdout  -->
+            <property name="show_sql">true</property>
+            <!--  Drop and re-create the database schema on startup  -->
+            <!--<property name="hbm2ddl.auto">create-drop</property> -->
+
+            <!--  c3po config -->
+            <!--hibernate.c3p0.min_size – Minimum number of JDBC connections in the pool. Hibernate default: 1-->
+            <property name="hibernate.c3p0.min_size">1</property>
+            <!--hibernate.c3p0.max_size – Maximum number of JDBC connections in the pool. Hibernate default: 100-->
+            <property name="hibernate.c3p0.max_size">5</property>
+            <!--hibernate.c3p0.timeout – When an idle connection is removed from the pool (in second). Hibernate default: 0, never expire.-->
+            <property name="hibernate.c3p0.timeout">300</property>
+            <!--hibernate.c3p0.max_statements – Number of prepared statements will be cached. Increase performance. Hibernate default: 0 , caching is disable.-->
+            <property name="hibernate.c3p0.max_statements">50</property>
+            <!--hibernate.c3p0.idle_test_period – idle time in seconds before a connection is automatically validated. Hibernate default: 0-->
+            <property name="hibernate.c3p0.idle_test_period">3000</property>
+            <mapping class="Entity.Customer"/>
+            <mapping class="Entity.Txn"/>
+            <mapping class="Entity.Items"/>
+            <mapping class="Entity.Cart"/>
+            <mapping class="Entity.CartManyToMany"/>
+            <mapping class="Entity.ItemManyToMany"/>
+        </session-factory>
+    </hibernate-configuration>
+    ```
+
+#### OneToOne
+
+- Executed SQL to set up tables:
+    ```sql
+    DROP TABLE IF EXISTS `Customer`;
+    DROP TABLE IF EXISTS `Transaction`;
+    DROP TABLE IF EXISTS `Cart`;
+    DROP TABLE IF EXISTS `Items`;
+    -- Create Transaction Table
+      CREATE TABLE `Transaction` (
+        `txn_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `txn_date` date NOT NULL,
+        `txn_total` decimal(10,0) NOT NULL,
+        PRIMARY KEY (`txn_id`)
+      ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+      -- Create Customer table
+      CREATE TABLE `Customer` (
+        `txn_id` int(11) unsigned NOT NULL,
+        `cust_name` varchar(20) NOT NULL DEFAULT '',
+        `cust_email` varchar(20) DEFAULT NULL,
+        `cust_address` varchar(50) NOT NULL DEFAULT '',
+        PRIMARY KEY (`txn_id`),
+        CONSTRAINT `customer_ibfk_1` FOREIGN KEY (`txn_id`) REFERENCES `Transaction` (`txn_id`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ```
+- Java Code:
+    ```java
+    @Entity
+    @Data
+    @Table(name="Customer")
+    public class Customer {
+
+        @Id
+        @Column(name="txn_id", unique=true, nullable=false)
+        @GeneratedValue(generator="gen")
+        @GenericGenerator(name="gen", strategy="foreign", parameters={@Parameter(name="property", value="txn")})
+        private long id;
+
+        @Column(name = "cust_name")
+        private String name;
+
+        @Column(name = "cust_email")
+        private String email;
+
+        @Column(name = "cust_address")
+        private String address;
+
+        @OneToOne
+        @PrimaryKeyJoinColumn
+        private Txn txn;
+    }
+
+    @Entity
+    @Data
+    @Table(name = "Transaction")
+    public class Txn {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "txn_id")
+        private long id;
+
+        @Column(name = "txn_date")
+        private Date date;
+
+        @Column(name = "txn_total")
+        private double total;
+
+        @OneToOne(mappedBy = "txn")
+        @Cascade(value = CascadeType.SAVE_UPDATE)
+        private Customer customer;
+    }
+    ```
+- Notes:
+  - The `Txn` class declares the relationship `@OneToOne(mappedBy = "txn")` meaning that the `Customer` class will be the owner of the relationship. Also the table used for `Customer` objects will be responsible to store the foreign key.
+  - ``@Cascade(value = CascadeType.SAVE_UPDATE)`` - cascading will be used on save or update, but not on delete!
+  - The One-to-One relationship requires some “extra” code because it has a special property of inheriting the foreign
+    key from the parent table (`Txn`) and using it as the primary key of the child table (Customer`)`. --> The ``Customer`` class holds the primary key id of `Txn` as its own primary key / id.
+  - To prevent Hibernate creating (or looking for in our case) a `txn_txn_id` column, (which would be confusing and a waste of space) we need to
+    help Hibernate by letting it know which column is our join column in our one-to-one relationship.
+  - To ensure the id generation we used: ``@GenericGenerator(name="gen", strategy="foreign", parameters={@Parameter(name="property", value="txn")})``
+    - use “foreign” strategy.
+    - Lastly, we need to tell the `@GenericGenerator` where the actual relationship exists.
+      In our case, our `@OneToOne` relationship exists via the `txn` object, so we point it to that object via the use of the `@Parameter` annotation.
+  - If you use `strategy="AUTO"`, Hibernate will generate a table called `hibernate_sequence` to provide the next number for the ID sequence. If you are using a pre-defined mysql database this is not the desired behavior.
+    - When using Hibernate v 4.0 and Generation Type as `AUTO`, specifically for MySql, Hibernate would choose the `IDENTITY` strategy (and thus use the `AUTO_INCREMENT` feature) for generating IDs for the table in question.
+    - Starting with version 5.0 when Generation Type is selected as `AUTO`, Hibernate uses `SequenceStyleGenerator` regardless of the database. In case of MySql Hibernate emulates a sequence using a table and is why you are seeing the `hibernate_sequence` table. MySql doesn't support the standard sequence type natively.
+
+#### OneToMany
+
+- Executed SQL:
+    ```sql
+      CREATE TABLE `Cart` (
+        `cart_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `total` decimal(10,0) NOT NULL,
+        `name` varchar(10) DEFAULT NULL,
+        PRIMARY KEY (`cart_id`)
+      ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+      CREATE TABLE `Items` (
+        `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `cart_id` int(11) unsigned NOT NULL,
+        `item_id` varchar(10) NOT NULL,
+        `item_total` decimal(10,0) NOT NULL,
+        `quantity` int(3) NOT NULL,
+        PRIMARY KEY (`id`),
+        KEY `cart_id` (`cart_id`),
+        CONSTRAINT `items_ibfk_1` FOREIGN KEY (`cart_id`) REFERENCES `Cart` (`cart_id`)
+      ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+    ```
+- Java Code:
+    ```java
+    @Entity
+    @Table(name="CART")
+    @Data
+    @EqualsAndHashCode(exclude="items")
+    @ToString(exclude = "items")
+    public class Cart {
+
+        @Id
+        @GeneratedValue(strategy=GenerationType.IDENTITY)
+        @Column(name="cart_id")
+        private long id;
+
+        @Column(name="total")
+        private double total;
+
+        @Column(name="name")
+        private String name;
+
+        @OneToMany(mappedBy="cart")
+        private Set<Items> items;
+    }
+
+    @Entity
+    Data
+    @NoArgsConstructor
+    @Table(name="Items")
+    public class Items {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private long id;
+
+        @Column(name = "item_id")
+        private String itemId;
+
+        @Column(name = "item_total")
+        private double itemTotal;
+
+        @Column(name = "quantity")
+        private int quantity;
+
+        @ManyToOne
+        @JoinColumn(name = "cart_id", nullable = false)
+        private Cart cart;
+
+        public Items(String itemId, double total, int qty, Cart c){
+            this.itemId=itemId;
+            this.itemTotal=total;
+            this.quantity=qty;
+            this.cart=c;
+        }
+    }
+    ```
+- Notes:
+  - When working with ORM and doing `OneToMany` or `ManyToMany` relationships you introduce **circular dependencies**. In our case the `Cart` class has a `Set<Items>` reference, while the `Item` class has a `Cart` reference. When you want to generate `toString` or `hashCode` using Project Lombok or IntelliJ's auto-generator the generated functions will contain circular dependencies as well!
+    - For example the generated `hashCode` method contains the following line: `result = result * PRIME + ($items == null ? 43 : $items.hashCode());`. While evaluating this line the `items.hashCode()` triggers a circular call and results in a `StackOverFlowError`.
+    - The generated `toString` method contains `items=" + this.getItems()` which also triggers a circular dependency.
+    - **Solution**
+      - Exclude the circular dependency.
+      - In lombok:
+        - `@EqualsAndHashCode(exclude="items")`
+        - `@ToString(exclude = "items")`
+
+#### ManyToMany
+
+- Executed SQL:
+    ```sql
+    DROP TABLE IF EXISTS `Cart_Items`;
+    DROP TABLE IF EXISTS `CartManyToMany`;
+    DROP TABLE IF EXISTS `ItemManyToMany`;
+
+    CREATE TABLE `CartManyToMany` (
+      `cart_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+      `cart_total` decimal(10,0) NOT NULL,
+      PRIMARY KEY (`cart_id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+    CREATE TABLE `ItemManyToMany` (
+      `item_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+      `item_desc` varchar(20) NOT NULL,
+      `item_price` decimal(10,0) NOT NULL,
+      PRIMARY KEY (`item_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+    CREATE TABLE `CartManyToMany_ItemsManyToMany` (
+      `cart_id` int(11) unsigned NOT NULL,
+      `item_id` int(11) unsigned NOT NULL,
+      PRIMARY KEY (`cart_id`,`item_id`),
+      CONSTRAINT `fk_cart` FOREIGN KEY (`cart_id`) REFERENCES `CartManyToMany` (`cart_id`),
+      CONSTRAINT `fk_item` FOREIGN KEY (`item_id`) REFERENCES `ItemManyToMany` (`item_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ```
+- Java Code:
+    ```java
+    @Entity
+    @Table(name = "CartManyToMany")
+    @Data
+    @ToString(exclude = "items")
+    @EqualsAndHashCode(exclude = "items")
+    public class CartManyToMany {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "cart_id")
+        private long id;
+
+        @Column(name = "cart_total")
+        private double total;
+
+        @ManyToMany(targetEntity = ItemManyToMany.class, cascade = { CascadeType.ALL })
+        @JoinTable(name = "CartManyToMany_ItemsManyToMany",
+                joinColumns = { @JoinColumn(name = "cart_id") },
+                inverseJoinColumns = { @JoinColumn(name = "item_id") })
+        private Set<ItemManyToMany> items;
+    }
+
+    @Entity
+    @Data
+    @Table(name = "ItemManyToMany")
+    public class ItemManyToMany {
+        @Id
+        @Column(name="item_id")
+        @GeneratedValue(strategy=GenerationType.IDENTITY)
+        private long id;
+
+        @Column(name = "item_price")
+        private double price;
+
+        @Column(name = "item_desc")
+        private String description;
+    }
+    ```
+- Things to note:
+  - Only one of the classes (`CartManyToMany`) has a Collection to the other class (`Set<IntemManyToMany>`).
+  - Using annotation this class defines all attributes of the relatin!
+    - `@ManyToMany`
+      - `targetEntity` - the other class that is used in the mapping
+      - `cascade` - cascade type
+    - `@JoinTable`
+      - `name` - name of the table that is used for ManyToMany mappings.
+      - `joinColumns` - The foreign key columns of the join table which reference the primary table of the entity that **does own** the association.
+        - Which is the owning side in ManyToMany relationship?
+          - In the case of ManytoMany relationships in bidirectional scenario the Owner of the relationship can be selected arbitrarily, but having in mind the purpose you should select the entity that makes more sense to retrieve first or the one that is more used according to your purpose.
+      - `inverseJoinColumns` - The foreign key columns of the join table which reference the primary table of the entity that does **not** own the association.
+
+#### Searches and Queries
+
+- **HQL Syntax basics**
+  - **Intro**
+    - HQL is an object-oriented query language, similar to SQL, but instead of operating on tables and columns, HQL works with persistent objects and their properties.
+    - Hibernate’s query facilities do not allow you to alter the database structure.
+    - Use HQL (or criteria) whenever possible to avoid database portability hassles, as well as to take advantage of Hibernate’s SQL-generation and caching strategies.
+    - Advantage over SQL: It can make use of the relationship information defined in the Hibernate mappings.
+  - **Update**
+    ```java
+    UPDATE [VERSIONED]
+      [FROM] path [[AS] alias] [, ...]
+      SET property = value [, ...]
+      [WHERE logicalExpression]
+
+    Query query=session.createQuery("update Person set creditscore=:creditscore where name=:name");
+    query.setInteger("creditscore", 612);
+    query.setString("name", "John Q. Public");
+    int modifications = query.executeUpdate();
+    ```
+    - `path` - The fully qualified name of the entity or entities
+    - `alias` - used to abbreviate references to specific entities or their properties, and must be used when property names in the query would otherwise be ambiguous.
+    - `VERSIONED` - means that the update will update time stamps, if any, that are part of the entity being updated.
+    - `FROM` - names of properties of entities listed in the `FROM` path.
+  - **Delete**
+    ```java
+    DELETE
+      [FROM] path [[AS] alias]
+      [WHERE logicalExpression]
+
+    Query query=session.createQuery("delete from Person where accountstatus=:status");
+    query.setString("status", "purged");
+    int rowsDeleted=query.executeUpdate();
+    ```
+  - **Insert**
+    ```java
+    INSERT
+      INTO path ( property [, ...])
+      select
+
+    Query query=session.createQuery("insert into purged_users(id, name, status) "+
+    "select id, name, status from users where status=:status");
+    query.setString("status", "purged");
+    int rowsCopied=query.executeUpdate();
+    ```
+  - **Select**
+    ```java
+    [SELECT [DISTINCT] property [, ...]]
+      FROM path [[AS] alias] [, ...] [FETCH ALL PROPERTIES]
+      WHERE logicalExpression
+      GROUP BY property [, ...]
+      HAVING logicalExpression
+      ORDER BY property [ASC | DESC] [, ...]
+    ```
+    - `FETCH ALL PROPERTIES` - is used, then lazy loading semantics will be ignored, and all the immediate properties of the retrieved object(s) will be actively loaded (this does not apply recursively).
+    - Use the select clause if you don't want to fetch all the columns but only certain properties. (= memory efficient)
+      - `select product.name from Product product`
+      - This result set contains a `List` of `Object` arrays—each array represents one set of properties.
+- **Named Queries**
+  - Named queries are created via class-level annotations on entities; normally, the queries apply to the entity in whose source file they occur, but there’s no absolute requirement for this to be true.
+  - Named queries are created with the `@NamedQueries` annotation, which contains an array of `@NamedQuery` sets; each has a query and a name.
+  - **One effect of the hierarchy we use here is that Lombok is no longer as usable as it has been** - Lombok works by analyzing Java source code. It does not walk a hierarchy; while this would be very useful, there are some real technical challenges to implementation.
+  - Adding a named query is as simple as adding an annotation to one of the entities. (You can add the annotation to any of the entities.)
+  - Examples:
+    ```java
+    @NamedQuery(name = "supplier.findAll", query = "from Supplier s")
+    /*Or "bulk" definition: */
+    @NamedQueries({
+            @NamedQuery(name = "supplier.findAll", query = "from Supplier s"),
+            @NamedQuery(name = "supplier.findByName",
+                    query = "from Supplier s where s.name=:name"),
+    })
+
+    Query query = session.getNamedQuery("supplier.findAll");
+    List<Supplier> suppliers = query.list();
+    ```
+  - Note: SQL specific stuff is case **in-sensitive**, however when referencing actual Java classes the references are **case-sensitive**!
+- **Logging and Commenting the Underlying SQL**
+  - Hibernate can output the underlying SQL behind your HQL queries into your application’s log file.
+  - `show_sql` property. Set this property to true in your `hibernate.cfg.xml` configuration file.
+  - Tracing your HQL statements through to the generated SQL can be difficult, so Hibernate provides a commenting facility on the Query object that lets you apply a comment to a specific query. The `Query` interface has a `setComment()` method that takes a String object as an argument, as follows:
+    - `public Query setComment(String comment)`
+  - You will also need to set a Hibernate property, `hibernate.use_sql_comments`, to true in your Hibernate configuration.
+    ```java
+    String hql = "from Supplier";
+    Query query = session.createQuery(hql);
+    query.setComment("My HQL: " + hql);
+    List results = query.list();
+
+    Hibernate: /*My HQL: from Supplier*/ select supplier0_.id as id, supplier0_.name ➥ as name2_ from Supplier supplier0_
+    ```
+- **Logical restrictions (WHERE clause)**
+  - Logic operators: `OR, AND, NOT`
+  - Equality operators: `=, <>, !=, ^=`
+  - Comparison operators: `<, >, <=, >=, like, not like, between, not between`
+  - Math operators: `+, -, *, /`
+  - Concatenation operator: `||`
+  - Cases: Case `when <logical expression> then <unary expression> else <unary expression> end`
+  - Collection expressions: `some, exists, all, any`
+  - In addition, you may also use the following expressions in the where clause:
+    • HQL named parameters:, such as `:date`, `:quantity`
+    • JDBC query parameter: `?`
+    • Date and time SQL-92 functional operators: `current_time(), current_date(), current_timestamp()`
+    • SQL functions (supported by the database): `length(), upper(), lower(), ltrim(), rtrim()`, etc.
+
+
+
+
+## Weaker stuff - review and deeper research needed!!!!
+
+#### Creating Hibernate Mappings with Annotations
+
+- **Annotations Advantages / Disadvantages**
   - Recompiling the application upon change. (keep in mind as a con)
   - Annotations are right in the source-code and are more intuitive.
 - **JPA2 persistance annotation**
   - Hibernate uses reflection at runtime to read the annotations and apply the mapping information.
-  - `@Entity` - The `@Entity` annotation marks this class as an entity bean, so it must have a no-argument constructor that is visible with at least protected scope. Other JPA 2 rules for an entity bean class are (a) that the class must not be final, and (b) that the entity bean class must be concrete.
+  - `@Entity` - The `@Entity` annotation marks this class as an entity bean, so it must have a no-argument constructor that is visible with at least protected scope. Other JPA 2 rules for an entity bean class are (a) that the class must not be final, and (b) that the entity bean class must be concrete. By default, table names are derived from the entity names. Therefore, given a class `Book` with a simple `@Entity` annotation, the table name would be “`book`”, adjusted for the database’s configuration. If the entity name is changed (by providing a different name in the @Entity annotation, such as `@Entity(“BookThing”)`), the new name will be used for the table name.
+  - `@Table` - The table name can be customized further, and other database-related attributes can be configured via the `@Table` annotation.
+  - `@SecondaryTable` annotation provides a way to model an entity bean that is persisted across several different database tables.
   - `@Id` defining the primary key.
     - If the annotation is applied to a field, then field access will be used.
     - If, instead, the annotation is applied to the accessor (`getXYZ()`) for the field, as shown in, then property access will be used.
   - By default, the `@Id` annotation *will not create a primary key generation strategy*, which means that you, as the code’s author, need to determine what valid primary keys are.
 - `@GeneratedValue` - decide the generation strategy.
-  - AUTO: Hibernate decides which generator type to use, based on the database’s support for primary key generation.
-  - IDENTITY: The database is responsible for determining and assigning the next primary key.
-  - SEQUENCE: Some databases support a SEQUENCE column type. It is similar to the use of an identity column type, except that a sequence is independent of any particular table and can therefore be used by multiple tables.
+  - `AUTO`: Hibernate decides which generator type to use, based on the database’s support for primary key generation.
+  - `IDENTITY`: The database is responsible for determining and assigning the next primary key.
+  - `SEQUENCE`: Some databases support a `SEQUENCE` column type. It is similar to the use of an identity column type, except that a sequence is independent of any particular table and can therefore be used by multiple tables.
     ```java
     @Id
     @SequenceGenerator(name="seq1",sequenceName="HIB_SEQ")
@@ -473,6 +886,164 @@
       }
       ```
   - ` @Embeddable` - annotation over a class defines that, it does not have independent existence. (E.g. the class "UserDetails" might be marked as embeddable, while the class "User" holds a reference to it.)
+    - An embeddable entity must be composed entirely of basic fields and attributes. An embeddable entity can only use the `@Basic`, `@Column`, `@Lob`, `@Temporal`, and `@Enumerated` annotations.
+    - It cannot maintain its own primary key with the `@Id` tag because its primary key is the primary key of the enclosing entity.
 - **Database Table Mapping with @Table and @SecondaryTable**
+  - The `@Table` annotation provides four attributes, allowing you to override the name of the table, its catalog, and its schema, and to enforce unique constraints on columns in the table. Typically, you would only provide a substitute table name thus: `@Table(name="ORDER_HISTORY")`.
+  - The @SecondaryTable annotation provides a way to model an entity bean that is persisted across several different database tables.
+- `@Basic`
+  - The first attribute is named `optional` and takes a `boolean`. Defaulting to `true`, this can be set to `false` to provide a hint to schema generation that the associated column should be created `NOT NULL`. The second is named `fetch` and takes a member of the enumeration `FetchType`. This is `EAGER` by default, but can be set to `LAZY` to permit loading on access of the value.
+- `@Transient`
+  - The `@Transient` annotation does not have any attributes—you just add it to the instance variable or the getter method as appropriate for the entity bean’s property access strategy.
+- `@Column`
+  - `name` - name of the column
+  - `length` - size of the column (e.g. for strings)
+  - `nullable`
+  - `unique`
+    ```java
+    @Column(name="working_title",length=200,nullable=false)
+    String title;
+    ```
+  - `table` is used when the owning entity has been mapped across one or more secondary tables. By default, the value is assumed to be drawn from the primary table, but the name of one of the secondary tables can be substituted here.
+  - `insertable` defaults to true, but if set to false, the annotated field will be omitted from insert statements generated by Hibernate (i.e., it won’t be persisted).
+  - `updatable` defaults to true, but if set to false, the annotated field will be omitted from update statements generated by Hibernate (i.e., it won’t be altered once it has been persisted).
+  - `columnDefinition` can be set to an appropriate DDL fragment to be used when generating the column in the database. This can only be used during schema generation from the annotated entity, and should be avoided if possible, since it is likely to reduce the portability of your application between database dialects.
+  - `precision` permits the precision of decimal numeric columns to be specified for schema generation, and will be ignored when a nondecimal value is persisted.
+  - `scale` permits the scale of decimal numeric columns to be specified for schema generation and will be ignored where a nondecimal value is persisted. The value given represents the number of places after the decimal point.
+- **Modelling Entity Relationships**
+  - **OneToOne**
+    - You should give some thought to using the embedded technique described previously before using the `@OneToOne` annotation.
+    - Advantage might be the ability to easily convert it to ManyToOne or OneToMany
+    - Parameters: `targetEntity, cascade, fetch, optional, orphanRemoval, mappedBy`
+  - **ManyToOne, OneToMany**
+    - Cascading:
+      - `ALL` requires all operations to be cascaded to dependent entities. this is the same as including `MERGE`, `PERSIST`, `REFRESH`, `DETACH`, and `REMOVE`.
+      - `MERGE` cascades updates to the entity’s state in the database (i.e., `UPDATE`...).
+      - `PERSIST` cascades the initial storing of the entity’s state in the database (i.e., `INSERT`...).
+      - `REFRESH` cascades the updating of the entity’s state from the database (i.e., `SELECT`...).
+      - `DETACH` cascades the removal of the entity from the managed persistence context.
+      - `REMOVE` cascades deletion of the entity from the database (i.e., `DELETE`...).
+      - if no cascade type is specified, no operations will be cascaded through the association.
+    - **ManyToMany**
+      - `mappedBy` is the field that owns the relationship—this is only required if the association is bidirectional. If an entity provides this attribute, then the other end of the association is the owner of the association, and the attribute must name a field or property of that entity.
+      - `targetEntity` is the entity class that is the target of the association. Again, this may be inferred from the generic or array declaration, and only needs to be specified if this is not possible.
+      - `cascade` indicates the cascade behavior of the association, which defaults to none.
+      - `fetch` indicates the fetch behavior of the association, which defaults to LAZY.
+        ```java
+        @ManyToMany(cascade = ALL)
+        Set<Author> authors;
+        /*...*/
+        @ManyToMany(mappedBy = "authors")
+        Set<Book> books;
 
+        /*Specifying link table*/
+        @ManyToMany(cascade = ALL)
+        @JoinTable(
+                name="Books_to_Author",
+                joinColumns={@JoinColumn(name="book_ident")},
+                inverseJoinColumns={@JoinColumn(name="author_ident")}
+        )
+        Set<Authors> authors;
+        ```
+- **Collection Ordering**
+  - An ordered collection can be persisted in hibernate or Jpa 2 using the `@OrderColumn` annotation to maintain the order of the collection.
+  - You can also order the collection at retrieval time by means of the `@OrderBy` annotation.
+- **Mapping Inheritance**
+  - Single table (`SINGLE_TABLE`)
+    - One table for each class hierarchy
+    - When following this strategy, you will need to ensure that columns are appropriately renamed when any field or property names collide in the hierarchy.
+    - The single-table approach can be messy, leading to many columns in the table that aren’t used in every row, as well as a rapidly horizontally growing table.
+  - Joined Table (`JOINED`)
+    - Here a discriminator column is used, but the fields of the various derived types are stored in distinct tables.
+    - It is easiest to maintain your database when using the joined-table approach. If fields are added or removed from any class in the class hierarchy, only one database table needs to be altered to reflect the changes. In addition, adding new classes to the class hierarchy only requires that a new table be added, eliminating the performance problems of adding database columns to large data sets. 
+  - Table-per-class (`TABLE_PER_CLASS`)
+    - all of the fields of each type in the inheritance hierarchy are stored in distinct tables.
+    - With the table-per-class approach, a change to a column in a parent class requires that the column change be made in all child tables.
+- **Other JPA annotations**
+  - `@Temporal(TemporalType.Time)` - The annotation accepts a single value attribute from the javax.persistence.TemporalType enumeration.
+  - `@ElementCollection` - JPA 2 introduced an `@ElementCollection` annotation for mapping collections of basic or embeddable classes. You can use the `@ElementCollection` annotation to simplify your mappings.
+  - `@Lob` for large objects. (E.g.: text strings.)
+
+#### JPA Integration adn a Lifecycle Events
+
+- **Lifecycle Events**
+  - Annotations
+    - `@PrePersist` - Executes before the data is actually inserted into a database table. It is not used when an object exists in the database and an update occurs.
+    - `@PostPersist` - Executes after the data is written to a database table.
+    - `@PreUpdate` - Executes when a managed object is updated. This annotation is not used when an object is first persisted to a database.
+    - `@PostUpdate` - Executes after an update for managed objects is written to the database.
+    - `@PreRemove` - Executes before a managed object’s data is removed from the database.
+    - `@PostRemove` - Executes after a managed object’s data is removed from the database.
+    - `@PostLoad` - Executes after a managed object’s data has been loaded from the database and the object has been initialized.
+  - Usage: Apply the annotations to `public void` ... (`no args`) methods and they will be called automatically.
+- **External Entity Listeners**
+  - Add the `@EntityListeners({UserAccountListener.class})` annotation to the class.
+  - In the other class simply mark the method with the life cycle annotation. For example: `@PrePersist void setPasswordHash(Object o) {...}`
+- **Data validation**
+  - The first step is to add Hibernate Validator to our project.
+    ```java
+    dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator</artifactId>
+        <version>5.1.0.Alpha1</version>
+    </dependency>
+    <!-- these are only necessary if not in a Java EE environment -->
+    <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator-cdi</artifactId>
+            <version>5.1.0.Alpha1</version>
+    </dependency>
+    <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+            <version>2.2.4</version>
+    </dependency>
+    <dependency>
+        <groupId>org.glassfish.web</groupId>
+        <artifactId>javax.el</artifactId>
+        <version>2.2.4</version>
+    </dependency>
+    ```
+  - Adding some lombok annotation to the class:
+    - `@AllArgsConstructor(access = AccessLevel.PACKAGE)`
+    - `@Builder` enables the builder pattern for the given class. E.g.:
+      ```java
+      ValidatedSimplePerson person=ValidatedSimplePerson.builder()
+          .age(15)
+          .fname("Johnny")
+          .lname("McYoungster").build();
+      ```
+  - Validations:
+    - `@NotNull` almost the same as `@Column(nullable=false)`, but if the prior is applied the validation occurs before persistance, if the latter then the validation occurs in the database, and gives us a database constraint violation rather than a validation failure.
+    - `@Min, @Max` for integers to specify min and max values.
+
+#### Using the Session
+
+- `SessionFactory`
+  - `SessionFactory` objects are expensive objects; needlessly duplicating them will cause problems quickly, and creating them is a relatively time-consuming process. Ideally, you should have a single `SessionFactory` for each database your application will access.
+  - `SessionFactory` objects are **threadsafe**, so it is not necessary to obtain one for each thread.
+- `Session`
+  - Sessions in Hibernate are **not threadsafe**, so sharing `Session` objects between threads could cause data loss or deadlock.
+  - **Caution** - if a hibernate `Session` object throws an exception of any sort, you must discard it and obtain a new one. this prevents data in the session’s cache from becoming inconsistent with the database.
+- **Session and Transaction**
+  - A transaction is a unit of work guaranteed to behave as if you have exclusive use of the database.
+  - If you decide to avoid transactions, you will need to invoke the `flush()` method on the session at appropriate points to ensure that your changes are persisted to the database.
+  - Setting session isolation:
+    - `session.connection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);`
+- **Locking modes**
+  - `NONE` - Reads from the database only if the object is not available from the caches.
+  - `READ` - Reads from the database regardless of the contents of the caches.
+  - `UPGRADE` - Obtains a dialect-specific upgrade lock for the data to be accessed (if this is available from your database).
+  - `UPGRADE_NOWAIT` - Behaves like `UPGRADE`, but when support is available from the database and dialect, the method will fail with a locking exception immediately. Without this option, or on databases for which it is not supported, the query must wait for a lock to be granted (or for a timeout to occur).
+- **Deadlocks**
+  - Fortunately, a database management system (DBMS) can detect this situation automatically, at which point the transaction of one or more of the offending processes will be aborted by the database. The resulting deadlock error will be received and handled by Hibernate as a normal `HibernateException`. Now you must roll back your transaction, close the session, and then (optionally) try again.
+- **Caching**
+  - Most good databases will cache the results of a query if it is run multiple times, eliminating the disk I/O and query compilation time.
+  - Problem: If many people use the DB for different queries caching has no benefit. Solution -> Client side caching! Hibernate provides one cache (the first-level, or L1, cache) through which all requests must pass. A second-level cache (L2) is optional and configurable.
+  - Items in the L1 cache can be individually discarded by invoking the `evict()` method on the session for the object that you wish to discard. To discard all items in the L1 cache, invoke the `clear()` method.
+  - L2 Cache Implementations Supported by Hibernate Out of the Box:
+    - `EHCache` - An in-process cache
+    - `Infinispan` - Open source successor to JBossCache that provides distributed cache support
+    - `OSCache` - An alternative in-process cache
+    - `SwarmCache` - A multicast distributed cache
 
