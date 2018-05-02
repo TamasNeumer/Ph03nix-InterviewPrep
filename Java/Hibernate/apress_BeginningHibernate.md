@@ -1,16 +1,16 @@
 # Beginning Hibernate
 
-#### Intro
+## Intro
 
 - Database <--> JDBC <--> [Mappings -> Hibernate <- Configuration] <--> ClientCode / POJOs
 - Hibernate uses standard Java Database Connectivity (JDBC) database drivers to access the relational database.
 - The traditional JDBC code contains loads of "boilerplate" with many try & catch blocs.  Hibernate provides cleaner resource management, which means that you do not have to worry about the actual database connections, nor do you have to have giant try/catch/finally blocks.
 - In Hibernate parlance, this is called a mapping. Mappings can be provided either through Java annotations or through an XML mapping file.
 
-#### Integrating and Configuring Hibernate
+## Integrating and Configuring Hibernate
 
 - **Hiberante Configuration**
-  - For this example a locally executed MySQL is used. (`src/test/resource/ hibernate.cfg.xml`):
+  - For this example a locally executed MySQL is used. (`src/test/resource/hibernate.cfg.xml`) For our purpose the file was put into the "test" folder, as the tests are going to use the given configuration:
     ```xml
     <?xml version="1.0"?>
     <!DOCTYPE hibernate-configuration PUBLIC
@@ -32,11 +32,10 @@
             <property name="hibernate.globally_quoted_identifiers">true</property>
             <mapping class="chapter01.hibernate.Message"/>
         </session-factory>
-
     </hibernate-configuration>
     ```
   - Note that the server is configured with a "default" schema of "hibernate" and the server can be accessed via -u "root" and -p "master"
-- **Getting into the Hibernate API**
+- **Persisting an object - example**
   - Construct a `SessionFactory` and then use the `SessionFactory` to retrieve short-lived `Session` objects through which updates, or reads, are performed.
     ```java
     StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
@@ -74,6 +73,7 @@
   - Next, we need to change the Hibernate configuration to tell it to use c3p0. To do this, all we need to do is add any c3p0 configuration property to `hibernate.cfg.xml`.
     - `<property name="c3p0.timeout">10</property>`
   - If you're using Hibernate in a Java EE context – in a web application, for example – then you'll want to configure Hibernate to use JNDI. JNDI connection pools are managed by the container (and thus controlled by the deployer), which is generally the “right way” to manage resources in a distributed environment.
+  - `HikariCP` connection pool is even better though!!!
 - **Annotations used in the Java Class**
   - `@Entity` - The class is marked as an entity and hence it must have a no-argument constructor that is visible with at least protected scope.
   - `@Id` - defines a primary key (+not null) in the database. It is NOT auto-incremented by default!
@@ -81,7 +81,7 @@
   - `@Column(nullable = false)` - adds non-null constraint.
   - `@Column(unique = true)` - unique constraint on the column.
 
-#### Building a Simple Application
+## Building a Simple Application
 
 - **Session and Persistance context**
   - Persistence context can be thought of as a container or a first-level cache for all the objects that you loaded or saved to a database during a session.
@@ -97,7 +97,7 @@
     - **Persistent** - this instance is associated with a unique `Session` object; upon flushing the `Session` to the database, this entity is guaranteed to have a corresponding consistent record in the database;
     - **Detached** - this instance was once attached to a `Session` (in a persistent state), but now it’s not; an instance enters this state if you `evict()` it from the context, clear or close the `Session`, or put the instance through serialization/deserialization process. Detached objects have a representation in the database, but changes to the object will not be reflected in the database, and vice versa. One reason you might consider doing this would be to read an object out of the database, modify the properties of the object in memory, and then store the results someplace other than your database. (Alternative would be a deep copy.)
     - **Removed** - A removed object is one that’s been marked for deletion in the current transaction. An object is changed to removed state when `Session.delete()` is called for that object reference. (=> Hibernate will remove the object from the DB on the next flush.)
-      ![Flow](http://www.baeldung.com/wp-content/uploads/2016/07/2016-07-11_13-38-11-1024x551.png)
+      ![Flow](/Java/Hibernate/res/FLOW.PNG)
   - When the entity instance is in the persistent state, all changes that you make to the mapped fields of this instance will be applied to the corresponding database records and fields upon flushing the `Session`. The persistent instance can be thought of as “online”, whereas the detached instance has gone “offline” and is not monitored for changes. --> This means that when you change fields of a persistent object, you don’t have to call `save`, `update` or any of those methods to get these changes to the database: all you need is to commit the transaction, or flush or close the session, when you’re done with it.
 - **Transactions**
   - A transaction is a “bundled unit of work” for a database. Changes are committed as a whole, so that no other transaction can see them until the transaction completes.
@@ -221,7 +221,7 @@
             }
     ```
 
-#### Identifiers, Relations, Database operations
+## Identifiers, Relations, Database operations
 
 - **Identifiers**
   - `GeneratedValue`, which tells Hibernate that it is responsible for assigning and maintaining the identifier.
@@ -395,9 +395,8 @@
       Set<Role> roles;
     }
     ```
-  - 
 
-#### An overview of mapping
+## An overview of mapping
 
 - (Learn the SQL basics first (w3schools) first...)
 - **Primary keys**
@@ -415,7 +414,7 @@
 
 ## Mapping with annotations
 
-#### Configuration
+### Configuration
 
 - Hibernate Configuration
     ```xml
@@ -457,7 +456,7 @@
     </hibernate-configuration>
     ```
 
-#### OneToOne
+### OneToOne
 
 - Executed SQL to set up tables:
     ```sql
@@ -544,7 +543,7 @@
     - When using Hibernate v 4.0 and Generation Type as `AUTO`, specifically for MySql, Hibernate would choose the `IDENTITY` strategy (and thus use the `AUTO_INCREMENT` feature) for generating IDs for the table in question.
     - Starting with version 5.0 when Generation Type is selected as `AUTO`, Hibernate uses `SequenceStyleGenerator` regardless of the database. In case of MySql Hibernate emulates a sequence using a table and is why you are seeing the `hibernate_sequence` table. MySql doesn't support the standard sequence type natively.
 
-#### OneToMany
+### OneToMany
 
 - Executed SQL:
     ```sql
@@ -632,7 +631,7 @@
         - `@EqualsAndHashCode(exclude="items")`
         - `@ToString(exclude = "items")`
 
-#### ManyToMany
+### ManyToMany
 
 - Executed SQL:
     ```sql
@@ -714,7 +713,7 @@
           - In the case of ManytoMany relationships in bidirectional scenario the Owner of the relationship can be selected arbitrarily, but having in mind the purpose you should select the entity that makes more sense to retrieve first or the one that is more used according to your purpose.
       - `inverseJoinColumns` - The foreign key columns of the join table which reference the primary table of the entity that does **not** own the association.
 
-#### Searches and Queries
+## Searches and Queries
 
 - **HQL Syntax basics**
   - **Intro**
@@ -886,7 +885,7 @@
     - Hibernate modifies the SQL and executes the following command against the database:
       - `select Supplier.id as id0_, Supplier.name as name2_0_ from Supplier supplier`
 
-#### Advanced Queries Using Criteria
+## Advanced Queries Using Criteria
 
 - **Basics**
   - We can’t use Criteria to run update or delete queries or any DDL statements. It’s only used to fetch the results from the database using more object oriented approach.
@@ -1007,7 +1006,7 @@
       List<Product> results = prdCrit.list();
       ```
 
-#### Hibernate Caching
+## Hibernate Caching
 
 - **First Level Cache**
   - Hibernate First Level cache is **enabled by default**, there are no configurations needed for this.
@@ -1055,11 +1054,9 @@
 - We also need to enable caching in our `hibernate.xml`
     ```xml
     <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</property>
-        
         <!-- For singleton factory -->
         <!-- <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</property>
         -->
-        
         <!-- enable second level cache and query cache -->
         <property name="hibernate.cache.use_second_level_cache">true</property>
         <property name="hibernate.cache.use_query_cache">true</property>
@@ -1115,6 +1112,41 @@
         @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
         @OneToMany
         private Collection<Bar> bars;
+    ```
+
+#### Adding Logging to Hibernate
+- Simply add the `slf4j` dependency to the maven configuration.
+    ```xml
+    <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+          <version>1.6.1</version>
+    </dependency>
+    ```
+- Add the following configuration (`log4j.properties`) to your resources folder:
+    ```xml
+    # Direct log messages to a log file
+    log4j.appender.file=org.apache.log4j.RollingFileAppender
+    log4j.appender.file.File=C:\\mkyongapp.log
+    log4j.appender.file.MaxFileSize=1MB
+    log4j.appender.file.MaxBackupIndex=1
+    log4j.appender.file.layout=org.apache.log4j.PatternLayout
+    log4j.appender.file.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+    
+    # Direct log messages to stdout
+    log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.Target=System.out
+    log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+    log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+    
+    # Root logger option
+    log4j.rootLogger=INFO, file, stdout
+    
+    # Log everything. Good for troubleshooting
+    log4j.logger.org.hibernate=INFO
+    
+    # Log all JDBC parameters
+    log4j.logger.org.hibernate.type=ALL
     ```
 
 ## Weaker stuff - review and deeper research needed!!!!
@@ -1347,3 +1379,4 @@
   - `UPGRADE_NOWAIT` - Behaves like `UPGRADE`, but when support is available from the database and dialect, the method will fail with a locking exception immediately. Without this option, or on databases for which it is not supported, the query must wait for a lock to be granted (or for a timeout to occur).
 - **Deadlocks**
   - Fortunately, a database management system (DBMS) can detect this situation automatically, at which point the transaction of one or more of the offending processes will be aborted by the database. The resulting deadlock error will be received and handled by Hibernate as a normal `HibernateException`. Now you must roll back your transaction, close the session, and then (optionally) try again.
+
