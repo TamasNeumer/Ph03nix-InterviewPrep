@@ -107,11 +107,17 @@
 - **Persistance operations**
   - It is important to understand from the beginning that all of the methods (`persist`, `save`, `update`, `merge`, `saveOrUpdate`) do **not** immediately result in the corresponding SQL `UPDATE` or `INSERT` statements. The actual saving of data to the database occurs on committing the transaction or flushing the `Session`. The mentioned methods basically manage the state of entity instances by transitioning them between different states along the lifecycle.
   - `session.persist(Object o)`
-    - The persist method is intended for adding a new entity instance to the persistence context, i.e. transitioning an instance from transient to persistent state.
-    - If you try to persist a detached instance, the implementation is bound to throw an exception.
+    - The `persist` method is intended for adding a new entity instance to the persistence context, i.e. transitioning an instance from transient to persistent state.
+    - If you try to `persist` a detached instance, the implementation is bound to throw an exception.
+    - If the object properties are changed before the transaction is committed or session is flushed, it will also be saved into database.
+    - `persist` doesn’t return anything so we need to use the persisted object to get the generated identifier value
   - `session.save(Object o)`
-    - Its purpose is basically the same as persist, but it has different implementation details. 
-    - The call of save on a detached instance creates a new persistent instance and assigns it a new identifier, which results in a duplicate record in a database upon committing or flushing.
+    - Its purpose is basically the same as `persist`, but it has different implementation details.
+    - The call of `save` on a detached instance creates a new persistent instance and assigns it a new identifier, which results in a duplicate record in a database upon committing or flushing.
+    - **Important:**
+      - Technically you can `save` an entity outside of the transaction boundary, however mapped entities will not be saved causing data inconsistency. It’s very normal to forget flushing the session because it doesn’t throw any exception or warnings.
+      - Hibernate `save` method returns the generated id immediately, this is possible because primary object is saved as soon as `save` method is invoked.
+      - If there are other objects mapped from the primary object, they **gets saved at the time of committing transaction or when we flush the session**.
   - `session.merge(Object o)`
     - The main intention of the merge method is to update a persistent entity instance with new field values from a detached entity instance. The `merge` method
       - finds an entity instance by id taken from the passed object (either an existing entity instance from the persistence context is retrieved, or a new instance loaded from the database);
