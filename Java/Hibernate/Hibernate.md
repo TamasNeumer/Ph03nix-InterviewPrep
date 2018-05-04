@@ -205,9 +205,129 @@
       /*...*/
       ```
 
-## Annotations
+## Reducing boilerplate using Project Lombok
 
-#### Basic Annotations
+### Intro & Install
+
+- **What is Lombok?**
+  - Project Lombok enables the user to add annotations to the code and thus reduce the usual boilerplate.
+- **Enabling Project Lombok**
+  - Add the dependency to the maven configuration:
+    ```xml
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+    ```
+  - Eclipse can use Lombok out of the box, while IntelliJ needs some configuration.
+- **IntelliJ Configuration**
+  - File - Settings/Preferences - Build. Execution, Deployment - Enable annotation processing
+  - File - Settings/Preferences - Plugins - Browse repositories - Search for "Lombok" - Install - Restart
+
+### Useful Lombok Annotations
+
+- `@NonNull`
+  - You can use `@NonNull` on the parameter of a method or constructor to have lombok generate a null-check statement for you.
+    ```java
+    /*Instead of*/
+    if (person == null) {
+        throw new NullPointerException("person");
+    }
+    /*Simply use*/
+    public NonNullExample(@NonNull Person person) { /*...*/ }
+    ```
+- `@Getter, @Setter`
+  - You can annotate any field with `@Getter` and/or `@Setter`, to let lombok generate the default getter/setter automatically.
+  - A default getter simply returns the field, and is named `getFoo` if the field is called `foo` (or `isFoo` if the field's type is `boolean`). A default setter is named `setFoo` if the field is called foo, returns `void`, and takes 1 parameter of the same type as the field. It simply sets the field to this value.
+  - Access level is `public` by default, however you can set it via `@Setter(AccessLevel.PROTECTED)` (The access levels are `PUBLIC`, `PROTECTED`, `PACKAGE`, and `PRIVATE`)
+  - Using the `AccessLevel.NONE` access level simply generates nothing. It's useful only in combination with `@Data` or a class-wide `@Getter` or `@Setter`.
+- `@ToString`
+  - Generates a `toString()` method. By default, it'll print your class name, along with each field, in order, separated by commas.
+  - If you want to skip some fields, you can name them in the `exclude` parameter. - `@ToString(exclude="id")`. As we will see later it is useful in order to avoid circular dependency in the generated methods, while using relation mapping.
+  - Alternatively, you can specify exactly which fields you wish to be used by naming them in the `of` parameter.
+  - By setting `callSuper` to true, you can include the output of the superclass implementation of toString to the output. - `@ToString(callSuper=true)`
+- `@EqualsAndHashCode`
+  - Generates implementations of the `equals(Object other)` and `hashCode()` methods. Example: `@EqualsAndHashCode(exclude={"id", "shape"})`, `@EqualsAndHashCode(callSuper=true)`
+  - Usage of `exclude` and `of` are similar to the `@ToString`
+  - Not setting `callSuper` to true when you extend another class generates a warning, because unless the superclass has no (equality-important) fields, lombok cannot generate an implementation for you that takes into account the fields declared by your superclasses.
+  - All fields marked as `transient` will not be considered for `hashCode` and `equals`.
+- `@NoArgsConstructor, @RequiredArgsConstructor, @AllArgsConstructor`
+  - `@NoArgsConstructor` will generate a constructor with no parameters. If this is not possible (because of final fields), a compiler error will result instead, unless `@NoArgsConstructor(force = true)` is used, then all final fields are initialized with `0` / `false` / `null`.
+  - `@RequiredArgsConstructor` generates a constructor with 1 parameter for each field that requires special handling. All non-initialized `final` fields get a parameter, as well as any fields that are marked as `@NonNull` that aren't initialized where they are declared. For those fields marked with `@NonNull`, an explicit null check is also generated.
+  - `@AllArgsConstructor` generates a constructor with 1 parameter for each field in your class. Fields marked with `@NonNull` result in null checks on those parameters.
+  - **Static fields are skipped by these annotations!**
+    ```java
+    @RequiredArgsConstructor(staticName = "of")
+    @AllArgsConstructor(access = AccessLevel.PROTECTED)
+    public class ConstructorExample<T> {
+      private int x, y;
+      @NonNull private T description;
+
+      @NoArgsConstructor
+      public static class NoArgsExample {
+        @NonNull private String field;
+      }
+    }
+
+    /*Generated code:*/
+    public class ConstructorExample<T> {
+      private int x, y;
+      @NonNull private T description;
+
+      private ConstructorExample(T description) {
+        if (description == null) throw new NullPointerException("description");
+        this.description = description;
+      }
+
+      public static <T> ConstructorExample<T> of(T description) {
+        return new ConstructorExample<T>(description);
+      }
+
+      @java.beans.ConstructorProperties({"x", "y", "description"})
+      protected ConstructorExample(int x, int y, T description) {
+        if (description == null) throw new NullPointerException("description");
+        this.x = x;
+        this.y = y;
+        this.description = description;
+      }
+
+      public static class NoArgsExample {
+        @NonNull private String field;
+
+        public NoArgsExample() {
+        }
+      }
+    }
+    ```
+  - `@Data`
+    - `@Data` is a convenient shortcut annotation that bundles the features of `@ToString`, `@EqualsAndHashCode`, `@Getter` / `@Setter` and `@RequiredArgsConstructor` together.
+    - The parameters of these annotations (such as `callSuper`, `includeFieldNames` and `exclude`) cannot be set with `@Data`. If you need to set non-default values for any of these parameters, just add those annotations explicitly; `@Data` is smart enough to defer to those annotations.
+    - No constructor will be generated if any explicitly written constructors already exist!
+    - All `static` fields will be skipped entirely (not considered for any of the generated methods, and no setter/getter will be made for them).
+    - Example: `@Data public class DataExample {/*...*/}`
+  - `@Value`
+    - `@Value` is the immutable variant of `@Data`; all fields are made private and final by default, and setters are not generated.
+  - `@Builder`
+    - The `@Builder` annotation produces complex builder APIs for your classes.
+    - `@Builder` lets you automatically produce the code required to have your class be instantiable with code such as: `Person.builder().name("Adam Savage").city("San Francisco").job("Mythbusters").job("Unchained Reaction").build();`
+    - For more info: [Link](https://projectlombok.org/features/Builder)
+  - `@Log`
+    - You put the variant of `@Log` on your class (whichever one applies to the logging system you use); you then have a static final log field, initialized to the name of your class, which you can then use to write log statements.
+    - `@Log4j` Creates `private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(LogExample.class);`
+    - `@Log4j2` Creates `private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(LogExample.class);`
+    - `@Slf4j` Creates `private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LogExample.class);`
+      ```java
+      @Slf4j
+      public class LogExampleOther {
+        public static void main(String... args) {
+          log.error("Something else is wrong here");
+        }
+      }
+      ```
+
+## Table and Type Annotations
+
+### Basic Annotations
 
 - `@Entity`
   - Specifies that the class is an entity. (Class is to be handled by ORM)
@@ -228,7 +348,7 @@
   - `int length` (Optional) The column length.
   - Any many [other](https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html)
 
-#### ID Generation Strategies
+### ID Generation Strategies
 
 - **Primary key**
   - The JPA specification requires that every entity must have a primary key. From the JPA perspective, an `@Id` attribute is used to define how an identifier is generated.
@@ -304,4 +424,174 @@
       private UUID id;
     }
     ```
-- **Composite keys**
+
+### Putting things together
+
+- In the example below we have a simple POJO Java class that is annotated and now ready to be persisted to the database:
+    ```java
+    @Entity
+    @Table(name = "EMPLOYEE")
+    @Data
+    public class Employee {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "emp_id")
+        private long id;
+
+        @Column(name = "emp_name")
+        private String name;
+
+        @Column(name = "emp_salary")
+        private double salary;
+    }
+    ```
+
+## Mapping Components
+
+### @Embedded, @Embeddable
+
+- **Intro**
+  - Imagine that you want to create classes that are "Composites" meaning that they contain references to other classes, however for efficiency reasons you want to store the composite class in a single table. `@Embedded` and `@Embeddable` allow exactly this feature.
+- ` @Embeddable`
+  - The `@Embeddable` annotation over a class defines that, it does not have independent existence. (E.g. the class "`UserDetails`" might be marked as `@Embeddable`, while the class "`User`" holds a reference to it.)
+  - An `@Embeddable` entity must be composed entirely of basic fields and attributes. An `@Embeddable` entity can only use the `@Basic`, `@Column`, `@Lob`, `@Temporal`, and `@Enumerated` annotations.
+  - It cannot maintain its own primary key with the `@Id` tag because its primary key is the primary key of the enclosing entity.
+- `@Embedded`
+  - The `@Embedded` annotation is used to express that the class field is an `@Embeddable` type.
+- **Example**
+    ```java
+    @Embeddable
+    @Data
+    public class EmbeddedContact {
+        @Column
+        String name;
+        @Column
+        String address;
+        @Column
+        String phone;
+    }
+
+    @Entity
+    @Data
+    public class OrderWithEmbeddedContact {
+        @Id
+        @GeneratedValue
+        Long id;
+        @Embedded
+        EmbeddedContact weekdayContact;
+        @Embedded
+        @AttributeOverrides({
+                @AttributeOverride(name = "name", column = @Column(name = "holidayname")),
+                @AttributeOverride(name = "address", column = @Column(name = "holidayaddress")),
+                @AttributeOverride(name = "phone", column = @Column(name = "holidayphone")),
+        })
+        EmbeddedContact holidayContact;
+    }
+    ```
+  - In the example above you have two `@Embedded EmbeddedContact` fields meaning that Hibernate would try to map each of the object's attributes to the same table columns.
+    ![DirtyRead](/Java/Hibernate/res/EmbeddedContact.PNG)
+- **Reference to the Parent within the @Embeddable class**
+  - In Hibernate Annotation, while using embeddable object we can assign parent class reference in embeddable class. `@Parent` annotation is used to assign the parent reference. We can call this reference through the parent class.
+  - In the above example the `EmbeddedContact` class will have a reference to its parent class. `@Parent OrderWithEmbeddedContact parentRef;`
+
+### @ElementCollection
+
+- **Intro**
+  - JPA 2.0 defines an `ElementCollection` mapping. It is meant to handle several non-standard relationship mappings. An `ElementCollection` can be used to define a one-to-many relationship to an `Embeddable` object, or a `Basic` value (such as a collection of Strings). An `ElementCollection` can also be used in combination with a `Map` to define relationships where the key can be any type of object, and the value is an `Embeddable` object or a `Basic` value.
+  - This is **not** a typical usage of `Embeddable` objects as the objects are not embedded in the source object's table, but stored in a separate collection table. This is similar to a `OneToMany`, except the target object is an `Embeddable` instead of an Entity.
+  - **Advantage:** This allows collections of simple objects to be easily defined, without requiring the simple objects to define an `Id` or `ManyToOne` inverse mapping.
+  - The limitations of using an `ElementCollection` instead of a `OneToMany` is that the target objects cannot be queried, persisted, merged independently of their parent object. There is no cascade option on an `ElementCollection`, the target objects are always persisted, merged, removed with their parent.
+- **Implementation**
+    ```java
+    @ElementCollection(targetClass=Address.class,fetch=FetchType.EAGER)
+            @JoinTable (name = "Address", joinColumns = @JoinColumn(name="Customer_ID"))
+            private Set<Address> contacts;
+    ```
+  - The generated table for the `Address` class will have a "Customer_ID" column in which the parent's primary key is stored. Other than that each property will have its own column.
+
+## Mapping Inheritance
+
+### Single table
+
+- **Intro**
+  - The single table inheritance is the **default** JPA strategy, funneling a whole inheritance Domain Model hierarchy into a single database table.
+  - Annotation: `@Inheritance` or `@Inheritance(strategy = InheritanceType.SINGLE_TABÖE)`
+- **Implementation**
+  - The parent class simply receives one of the two above mentioned annotations and defines the column in which the "Class Types" are stored with the `@DiscriminatorColumn` annotation.
+    ```java
+    @Data
+    @NoArgsConstructor
+    @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+    @DiscriminatorColumn(name = "disc_type")
+    @Entity
+    public class Disc {
+        @Id
+        @GeneratedValue
+        Long id;
+        @Column(nullable = false)
+        String name;
+        @Column(nullable = false)
+        int price;
+    }
+    ```
+  - As you can see on the results all classes are saved in the same table.
+   ![DirtyRead](/Java/Hibernate/res/SingleTable.PNG)
+- **Performance**
+  - Since only one table is used for storing entities, both read and write operations are fast.
+  - Because all subclass properties are collocated in a single table, `NOT NULL` constraints are not allowed for columns belonging to subclasses. Being automatically inherited by all subclasses, the base class properties may be non-nullable. From a data integrity perspective, this limitation defeats the purpose of Consistency (guaranteed by the ACID properties).
+
+### Join table
+
+- **Intro**
+  - The join table inheritance resembles the Domain Model class diagram since each class is mapped to an individual table. The subclass tables have a foreign key column referencing the base class table primary key.
+- **Implementation**
+  - Compared to the previous scenario simply change the strategy to `strategy = InheritanceType.JOINED`
+  - As seen on the result below the DISC table now only contains the `DISC` specific information. All the other tables contain the "extra" class-specific information, with an `id` as the foreign key.
+  ![DirtyRead](/Java/Hibernate/res/JoinTableMerge.PNG)
+- **Performance**
+  - Unlike single table inheritance, the joined table strategy allows nullable subclass property columns.
+  - When writing data, Hibernate requires two insert statements for each subclass entity, so there’s a performance impact compared to single table inheritance. The index memory footprint also increases because instead of a single table primary key, the database must index the base class and all subclasses primary keys.
+  - The table takes up less space because we don't have that many `NULL` values.
+
+### Table-per-class
+
+- **Intro**
+  - This strategy creates tables for every type in the hierarchy, so we end up with a table for Disc, AudioDisc, VideoDisc.
+  - Changes in the hierarchy have to be reflected across each table, and polymorphic queries have to span multiple tables as well.
+- **Implementation**
+  - `@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)`
+  ![DirtyRead](/Java/Hibernate/res/TablePerClass.PNG)
+- **Performance**
+  - While write operations are faster than in the joined table strategy, the read operations are only efficient when querying against the actual subclass entities. Polymorphic queries can have a considerable performance impact because Hibernate must select all subclass tables and use `UNION ALL` to build the whole inheritance tree result set. As a rule of thumb, the more subclass tables, the least efficient the polymorphic queries will get.
+
+### Mapped Superclass
+
+- **Intro**
+  - What happens if our superclass contains common attributes, but is abstract?
+  - Everything in common among the various subclasses can be located in the superclass, which is annotated normally, except that it receives a `@MappedSuperclass` annotation instead of being marked with `@Entity`.
+  - Being an abstract class the entity is leaved out of the database. Note that the class is note annotated with `@Enttity` anymore, instead it got the `@MappedSuperclass` annotation!
+- **Implementation**
+    ```java
+    @Data
+    @NoArgsConstructor
+    @MappedSuperclass
+    public class Disc {
+        @Id
+        @GeneratedValue
+        Long id;
+        @Column(nullable = false)
+        String name;
+        @Column(nullable = false)
+        int price;
+    }
+    ```
+  ![DirtyRead](/Java/Hibernate/res/MappedSuperClass.PNG)
+  - **Performance**
+    - Although polymorphic queries and associations are no longer permitted, the `@MappedSuperclass` yields very efficient read and write operations. Like single and table-per-class inheritance, write operations require a single insert statement and reading only needs to select from one table only.
+
+### Summary
+
+- All the aforementioned inheritance mapping models require trading something in order to accommodate the impedance mismatch between the relational database system and the object-oriented Domain Model.
+- The default single table inheritance performs the best in terms of reading and writing data, but it forces the application developer to overcome the column nullability limitation. This strategy is useful when the database can provide support for trigger procedures and the number of subclasses is relatively small.
+- The join table is worth considering when the number of subclasses is higher and the data access layer doesn’t require polymorphic queries. When the number of subclass tables is large, polymorphic queries will require many joins, and fetching such a result set will have an impact on application performance. This issue can be mitigated by restricting the result set (e.g. pagination), but that only applies to queries and not to `@OneToMany` or `@ManyToMany` associations. On the other hand, polymorphic `@ManyToOne` and `@OneToOne` associations are fine since, in spite of joining multiple tables, the result set can have at most one record only.
+- Table-per-class is the least effective when it comes to polymorphic queries or associations. If each subclass is stored in a separate database table, the `@MappedSuperclass` Domain Model inheritance is often a better alternative anyway.
