@@ -595,3 +595,339 @@
 - The default single table inheritance performs the best in terms of reading and writing data, but it forces the application developer to overcome the column nullability limitation. This strategy is useful when the database can provide support for trigger procedures and the number of subclasses is relatively small.
 - The join table is worth considering when the number of subclasses is higher and the data access layer doesn’t require polymorphic queries. When the number of subclass tables is large, polymorphic queries will require many joins, and fetching such a result set will have an impact on application performance. This issue can be mitigated by restricting the result set (e.g. pagination), but that only applies to queries and not to `@OneToMany` or `@ManyToMany` associations. On the other hand, polymorphic `@ManyToOne` and `@OneToOne` associations are fine since, in spite of joining multiple tables, the result set can have at most one record only.
 - Table-per-class is the least effective when it comes to polymorphic queries or associations. If each subclass is stored in a separate database table, the `@MappedSuperclass` Domain Model inheritance is often a better alternative anyway.
+
+## Mapping Relationships
+
+### @ManyToOne
+
+- **Intro**
+  - When using a `@ManyToOne` association, the underlying foreign key is controlled by the child-side, no matter the association is unidirectional or bidirectional.
+- **Code**
+  - Executed SQL:
+      ```sql
+        CREATE TABLE `Cart` (
+          `cart_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+          `total` decimal(10,0) NOT NULL,
+          `name` varchar(10) DEFAULT NULL,
+          PRIMARY KEY (`cart_id`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+        CREATE TABLE `Items` (
+          `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+          `cart_id` int(11) unsigned NOT NULL,
+          `item_id` varchar(10) NOT NULL,
+          `item_total` decimal(10,0) NOT NULL,
+          `quantity` int(3) NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `cart_id` (`cart_id`),
+          CONSTRAINT `items_ibfk_1` FOREIGN KEY (`cart_id`) REFERENCES `Cart` (`cart_id`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+      ```
+  - Java Code:
+      ```java
+      @Entity
+      @Table(name="CART")
+      @Data
+      @EqualsAndHashCode(exclude="items")
+      @ToString(exclude = "items")
+      public class Cart {
+
+          @Id
+          @GeneratedValue(strategy=GenerationType.IDENTITY)
+          @Column(name="cart_id")
+          private long id;
+
+          @Column(name="total")
+          private double total;
+
+          @Column(name="name")
+          private String name;
+      }
+
+      @Entity
+      Data
+      @NoArgsConstructor
+      @Table(name="Items")
+      public class Items {
+
+          @Id
+          @GeneratedValue(strategy = GenerationType.IDENTITY)
+          @Column(name = "id")
+          private long id;
+
+          @Column(name = "item_id")
+          private String itemId;
+
+          @Column(name = "item_total")
+          private double itemTotal;
+
+          @Column(name = "quantity")
+          private int quantity;
+
+          @ManyToOne
+          @JoinColumn(name = "cart_id", nullable = false)
+          private Cart cart;
+
+          public Items(String itemId, double total, int qty, Cart c){
+              this.itemId=itemId;
+              this.itemTotal=total;
+              this.quantity=qty;
+              this.cart=c;
+          }
+      }
+      ```
+  - Notes:
+    - In this scenario the `Cart` class doesn't necessarily have to posses a `Set<Items>`. If we remove this line it would still work!
+    - Because the `@ManyToOne` association controls the foreign key directly, the automatically generated DML statements are very efficient.
+    - When working with ORM and doing `OneToMany` or `ManyToMany` relationships you introduce **circular dependencies**. In our case the `Cart` class has a `Set<Items>` reference, while the `Item` class has a `Cart` reference. When you want to generate `toString` or `hashCode` using Project Lombok or IntelliJ's auto-generator the generated functions will contain circular dependencies as well!
+      - For example the generated `hashCode` method contains the following line: `result = result * PRIME + ($items == null ? 43 : $items.hashCode());`. While evaluating this line the `items.hashCode()` triggers a circular call and results in a `StackOverFlowError`.
+      - The generated `toString` method contains `items=" + this.getItems()` which also triggers a circular dependency.
+      - **Solution**
+        - Exclude the circular dependency.
+        - In lombok:
+          - `@EqualsAndHashCode(exclude="items")`
+          - `@ToString(exclude = "items")`
+    - Fetching mode:
+      - Once fetched an Item do you want the Cart to be fatched as well? If not, then use the `@ManyToOne(fetch = FetchType.LAZY)` annotation.
+      - The **default** fetch type is `EAGER`
+
+### @OneToMany
+
+#### Bidirectional @OneToMany
+
+- **Code**
+  - Take the same SQL table.
+  - Add the following modification to the `Cart` class:
+    ```java
+    @OneToMany(mappedBy="cart")
+    Set<Items> items;
+    ```
+- **Notes**
+  - In a bidirectional association, only one side can control the underlying table relationship. For the bidirectional `@OneToMany` mapping, it’s the child-side `@ManyToOne` association in charge of keeping the foreign key column value in sync with the in-memory Persistence Context. This is the reason why the bidirectional `@OneToMany` relationship must define the mappedBy attribute, indicating that it only mirrors the `@ManyToOne` child-side mapping.
+  - The bidirectional `@OneToMany` association generates efficient DML statements because the `@ManyToOne` mapping is in charge of the table relationship. Because it simplifies data access operations as well, the bidirectional `@OneToMany` association is worth considering when the size of the child records is relatively low.
+
+#### Unidirectional @OneToMany
+
+- **Intro**
+  - The unidirectional `@OneToMany` association is very tempting because the mapping is simpler than its bidirectional counterpart. Because there is only one side to take into consideration, there’s no need for helper methods and the mapping doesn’t feature a mappedBy attribute either.
+- **Code**
+  - In this case you would remove the `Cart` reference from the `Item` class and probably change the association to `@OneToMany(cascade = CascadeType.ALL)`
+- **Notes**
+  - Unfortunately, in spite its simplicity, the unidirectional `@OneToMany` association is less efficient than the unidirectional `@ManyToOne` mapping or the bidirectional `@OneToMany` association. Because there is no `@ManyToOne` side to control this relationship, Hibernate uses a separate junction table to manage the association between a parent row and its child records. (If the tables are generated by hibernate)
+  - The unidirectional `@OneToMany` relationship is less efficient both for reading data (three joins are required instead of two), as for adding (two tables must be written instead of one) or removing (entries are removed and added back again) child entries.
+
+#### @OneToMany with @JoinColumn
+
+- **Intro**
+  - JPA 2.0 added support for mapping the @OneToMany association with a @JoinColumn so that it can map the one-to-many table relationship. With the @JoinColumn, the @OneToMany association controls the child table foreign key so there is no need for a junction table.
+- **Code**
+    ```java
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "item_id")
+    private List<Item> items = new ArrayList<>();
+    ```
+- **Notes**
+  - Although it’s an improvement over the regular `@OneToMany` mapping, in practice, it’s still not as efficient as a regular bidirectional `@OneToMany` association.
+
+### @OneToOne
+
+#### Bidirectional @OneToOne
+
+- **Code**
+  - Executed SQL to set up tables:
+      ```sql
+      DROP TABLE IF EXISTS `Customer`;
+      DROP TABLE IF EXISTS `Transaction`;
+      DROP TABLE IF EXISTS `Cart`;
+      DROP TABLE IF EXISTS `Items`;
+      -- Create Transaction Table
+        CREATE TABLE `Transaction` (
+          `txn_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+          `txn_date` date NOT NULL,
+          `txn_total` decimal(10,0) NOT NULL,
+          PRIMARY KEY (`txn_id`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+        -- Create Customer table
+        CREATE TABLE `Customer` (
+          `txn_id` int(11) unsigned NOT NULL,
+          `cust_name` varchar(20) NOT NULL DEFAULT '',
+          `cust_email` varchar(20) DEFAULT NULL,
+          `cust_address` varchar(50) NOT NULL DEFAULT '',
+          PRIMARY KEY (`txn_id`),
+          CONSTRAINT `customer_ibfk_1` FOREIGN KEY (`txn_id`) REFERENCES `Transaction` (`txn_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ```
+  - Java Code:
+      ```java
+      @Entity
+      @Data
+      @Table(name="Customer")
+      public class Customer {
+
+          @Id
+          @Column(name="txn_id", unique=true, nullable=false)
+          @GeneratedValue(generator="gen")
+          @GenericGenerator(name="gen", strategy="foreign", parameters={@Parameter(name="property", value="txn")})
+          private long id;
+
+          @Column(name = "cust_name")
+          private String name;
+
+          @Column(name = "cust_email")
+          private String email;
+
+          @Column(name = "cust_address")
+          private String address;
+
+          @OneToOne
+          @PrimaryKeyJoinColumn
+          private Txn txn;
+      }
+
+      @Entity
+      @Data
+      @Table(name = "Transaction")
+      public class Txn {
+          @Id
+          @GeneratedValue(strategy = GenerationType.IDENTITY)
+          @Column(name = "txn_id")
+          private long id;
+
+          @Column(name = "txn_date")
+          private Date date;
+
+          @Column(name = "txn_total")
+          private double total;
+
+          @OneToOne(mappedBy = "txn")
+          @Cascade(value = CascadeType.SAVE_UPDATE)
+          private Customer customer;
+      }
+      ```
+- **Notes**:
+  - The `Txn` class declares the relationship `@OneToOne(mappedBy = "txn")` meaning that the `Customer` class will be the owner of the relationship. Also the table used for `Customer` objects will be responsible to store the foreign key.
+  - ``@Cascade(value = CascadeType.SAVE_UPDATE)`` - cascading will be used on save or update, but not on delete!
+  - The One-to-One relationship requires some “extra” code because it has a special property of inheriting the foreign
+    key from the parent table (`Txn`) and using it as the primary key of the child table (Customer). --> The ``Customer`` class holds the primary key id of `Txn` as its own primary key / id.
+  - To prevent Hibernate creating (or looking for in our case) a `txn_txn_id` column, (which would be confusing and a waste of space) we need to
+    help Hibernate by letting it know which column is our join column in our one-to-one relationship.
+  - To ensure the id generation we used: ``@GenericGenerator(name="gen", strategy="foreign", parameters={@Parameter(name="property", value="txn")})``
+    - use “foreign” strategy.
+    - Lastly, we need to tell the `@GenericGenerator` where the actual relationship exists.
+      In our case, our `@OneToOne` relationship exists via the `txn` object, so we point it to that object via the use of the `@Parameter` annotation.
+  - If you use `strategy="AUTO"`, Hibernate will generate a table called `hibernate_sequence` to provide the next number for the ID sequence. If you are using a pre-defined mysql database this is not the desired behavior.
+    - When using Hibernate v 4.0 and Generation Type as `AUTO`, specifically for MySql, Hibernate would choose the `IDENTITY` strategy (and thus use the `AUTO_INCREMENT` feature) for generating IDs for the table in question.
+    - Starting with version 5.0 when Generation Type is selected as `AUTO`, Hibernate uses `SequenceStyleGenerator` regardless of the database. In case of MySql Hibernate emulates a sequence using a table and is why you are seeing the `hibernate_sequence` table. MySql doesn't support the standard sequence type natively.
+  - If you don't want to use the primary key as a foreign key, then you could simply write:
+    ```java
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Txn txn;
+    ```
+  - Sicne JPA 2.0 you dont necessarily need this complex generic generator stuff. You could simply write `@MapsId`
+
+#### Unidirectional @OneToOne
+
+- **Notes**
+  - In this case only one of the two classes has a reference to the other.
+- **Code**
+    ```java
+    @OneToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    ```
+
+### @ManyToMany
+
+### ManyToMany
+
+#### Unidirectional @ManyToMany
+
+- **Code**
+  - Executed SQL:
+      ```sql
+      DROP TABLE IF EXISTS `Cart_Items`;
+      DROP TABLE IF EXISTS `CartManyToMany`;
+      DROP TABLE IF EXISTS `ItemManyToMany`;
+
+      CREATE TABLE `CartManyToMany` (
+        `cart_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `cart_total` decimal(10,0) NOT NULL,
+        PRIMARY KEY (`cart_id`)
+      ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+      CREATE TABLE `ItemManyToMany` (
+        `item_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `item_desc` varchar(20) NOT NULL,
+        `item_price` decimal(10,0) NOT NULL,
+        PRIMARY KEY (`item_id`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+      CREATE TABLE `CartManyToMany_ItemsManyToMany` (
+        `cart_id` int(11) unsigned NOT NULL,
+        `item_id` int(11) unsigned NOT NULL,
+        PRIMARY KEY (`cart_id`,`item_id`),
+        CONSTRAINT `fk_cart` FOREIGN KEY (`cart_id`) REFERENCES `CartManyToMany` (`cart_id`),
+        CONSTRAINT `fk_item` FOREIGN KEY (`item_id`) REFERENCES `ItemManyToMany` (`item_id`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      ```
+  - Java Code:
+      ```java
+      @Entity
+      @Table(name = "CartManyToMany")
+      @Data
+      @ToString(exclude = "items")
+      @EqualsAndHashCode(exclude = "items")
+      public class CartManyToMany {
+
+          @Id
+          @GeneratedValue(strategy = GenerationType.IDENTITY)
+          @Column(name = "cart_id")
+          private long id;
+
+          @Column(name = "cart_total")
+          private double total;
+
+          @ManyToMany(targetEntity = ItemManyToMany.class, cascade = { CascadeType.ALL })
+          @JoinTable(name = "CartManyToMany_ItemsManyToMany",
+                  joinColumns = { @JoinColumn(name = "cart_id") },
+                  inverseJoinColumns = { @JoinColumn(name = "item_id") })
+          private Set<ItemManyToMany> items;
+      }
+
+      @Entity
+      @Data
+      @Table(name = "ItemManyToMany")
+      public class ItemManyToMany {
+          @Id
+          @Column(name="item_id")
+          @GeneratedValue(strategy=GenerationType.IDENTITY)
+          private long id;
+
+          @Column(name = "item_price")
+          private double price;
+
+          @Column(name = "item_desc")
+          private String description;
+      }
+      ```
+- **Notes**:
+  - Only one of the classes (`CartManyToMany`) has a Collection to the other class (`Set<IntemManyToMany>`).
+  - Using annotation this class defines all attributes of the relatin!
+    - `@ManyToMany`
+      - `targetEntity` - the other class that is used in the mapping
+      - `cascade` - cascade type
+    - `@JoinTable`
+      - `name` - name of the table that is used for ManyToMany mappings.
+      - `joinColumns` - The foreign key columns of the join table which reference the primary table of the entity that **does own** the association.
+        - Which is the owning side in ManyToMany relationship?
+          - In the case of ManytoMany relationships in bidirectional scenario the Owner of the relationship can be selected arbitrarily, but having in mind the purpose you should select the entity that makes more sense to retrieve first or the one that is more used according to your purpose.
+      - `inverseJoinColumns` - The foreign key columns of the join table which reference the primary table of the entity that does **not** own the association.
+
+#### Bidirectional @ManyToMany
+
+- **Code**
+  - Same as above, except that `Item` also get a collection of `Cart`
+    ```java
+    @ManyToMany(mappedBy = "items")
+    private List<CartManyToMany> carts = new ArrayList<>();
+    ```
