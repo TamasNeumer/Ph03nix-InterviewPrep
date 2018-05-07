@@ -369,7 +369,7 @@
   - Once done so the following insertion generates the SQL output:
     ```java
     for (int i = 0; i < batchSize; i++) {
-      entityManager.persist(new Post()); 
+      entityManager.persist(new Post());
     }
     /*Commit*/
 
@@ -415,7 +415,7 @@
   - Requiring less space and being more index-friendly, **numerical sequences are preferred over UUID keys**.
   - **MYQL** The UUID must be stored in a `BINARY(16)` column type.
     ```java
-    @Entity @Table(name = "post") 
+    @Entity @Table(name = "post")
     public class Post {
       @Id
       @Column(columnDefinition = "BINARY(16)")
@@ -452,7 +452,7 @@
 
 - **Intro**
   - Imagine that you want to create classes that are "Composites" meaning that they contain references to other classes, however for efficiency reasons you want to store the composite class in a single table. `@Embedded` and `@Embeddable` allow exactly this feature.
-- ` @Embeddable`
+- `@Embeddable`
   - The `@Embeddable` annotation over a class defines that, it does not have independent existence. (E.g. the class "`UserDetails`" might be marked as `@Embeddable`, while the class "`User`" holds a reference to it.)
   - An `@Embeddable` entity must be composed entirely of basic fields and attributes. An `@Embeddable` entity can only use the `@Basic`, `@Column`, `@Lob`, `@Temporal`, and `@Enumerated` annotations.
   - It cannot maintain its own primary key with the `@Id` tag because its primary key is the primary key of the enclosing entity.
@@ -930,4 +930,1037 @@
     ```java
     @ManyToMany(mappedBy = "items")
     private List<CartManyToMany> carts = new ArrayList<>();
+    ```
+
+## Collection Mapping
+
+### Mapping a Set
+
+- Can be done using the `@ElementCollection` as seen previously. The solution below has two separate entities and uses a `ManyToOne` relationship.
+    ```java
+    @Entity
+    @Data
+    @NoArgsConstructor
+    public class Book1 {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        int id;
+        String title;
+        @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
+        Set<Chapter1> chapters = new HashSet<>();
+        @ElementCollection(fetch = FetchType.EAGER)
+        @Column(name = "review")
+        Set<String> reviews = new HashSet<>();
+    }
+
+    @Entity
+    @NoArgsConstructor
+    @Builder
+    @AllArgsConstructor
+    @EqualsAndHashCode(exclude = "book")
+    @ToString(exclude = "book")
+    public class Chapter1 {
+        @Getter
+        @Setter
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        int id;
+        @Getter
+        @Setter
+        String title;
+        @Getter
+        @Setter
+        String content;
+        @ManyToOne(optional = false)
+        @Getter
+        @Setter
+        Book1 book;
+    }
+    ```
+  - The `Chapter1` code doesn't use the `@Data` annotation because of the generated `toString` and `hashCode` methods would contain circular dependencies.
+- Another option would be to use an `Embeddable`. In this case the class is not an entity anymore, hence no `Id` column.
+    ```java
+    @Embeddable
+    @NoArgsConstructor
+    @Builder
+    @AllArgsConstructor
+    public class Chapter1Embedded {
+        @Getter
+        @Setter
+        String title;
+        @Getter
+        @Setter
+        String content;
+    }
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    public class Book1Embedded {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        int id;
+        String title;
+        @ElementCollection
+        Set<Chapter1Embedded> chapters = new HashSet<>();
+        @ElementCollection
+        @Column(name="review")
+        Set<String> reviews = new HashSet<>();
+    }
+    ```
+  - In this case `Chapter1Embedded` is no longer an entity.
+    ![ListMapping](/Java/Hibernate/res/BookEmbedded.PNG)
+
+### Mapping a List
+
+- The `@OrderColumn` annotation provides the capability to preserve the order of a `List`. To add order to our collection, we add the annotation and ordering definition; Hibernate automatically maintains the order of the `List`.
+    ```java
+    @Entity
+    @NoArgsConstructor
+    @Data
+    public class Book3 {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        int id;
+        @Getter
+        @Setter
+        String title;
+        @ElementCollection
+        @OrderColumn(columnDefinition = "int", name = "order_column")
+        @Column(name = "review")
+        List<String> reviews = new ArrayList<>();
+    }
+    ```
+- If auto-table generation is enabled Hibernate generates a table where the List elements are stored. Note the `order_column` which stores the order of the elements.
+    ![ListMapping](/Java/Hibernate/res/ListMapping.PNG)
+- Storing an array would be the same as storing a `List`.
+
+### Mapping a Map
+
+- The code:
+    ```java
+    @Entity
+    @NoArgsConstructor
+    @Data
+    public class Book5 {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        int id;
+        @Getter
+        @Setter
+        String title;
+        @ElementCollection(targetClass = String.class)
+        @Column(name = "reference")
+        @MapKeyColumn(name = "topic")
+        Map<String, String> topicMap = new HashMap<>();
+    }
+    ```
+- If done correctly, hibernate generates a new table called `Book5_reviews` where the individual map elements are stored.
+    ![ListMapping](/Java/Hibernate/res/MappingMap.PNG)
+
+## Transactions
+
+### Intro
+
+- A transaction is a collection of read and write operations that can either succeed or fail together, as a unit. **All database statements must execute within a transactional context**, even when the database client doesn’t explicitly define its boundaries.
+- In computer science, **ACID (Atomicity, Consistency, Isolation, Durability)** of database transactions intended to guarantee validity even in the event of errors, power failures, etc. In the context of databases, a sequence of database operations that satisfies the ACID properties, and thus can be perceived as a single logical operation on the data, is called a transaction.
+
+### ACID
+
+- **Atomicity**
+  - Atomicity is the property of grouping multiple operations into an all-or-nothing unit of work, which can succeed only if all individual operations succeed.
+  - **MYSQL**
+    - The undo log is stored in the rollback segment of the system tablespace.
+- **Consistency**
+  - A modifying transaction can be seen like a state transformation, moving the database from one valid state to another.
+    - Ensuring that constrains are followed. E.g.: column types, column length, nullability, foreign key constraints, unique key constraints, custom check constraints
+  - **MYSQL**
+    - Traditionally, MySQL constraints are not strictly enforced, and the database engine replaces invalid values with predefined defaults:
+      - out of range numeric values are set to either 0 or the maximum possible value
+      - `String` values are trimmed to the maximum length
+      - Incorrect data values are permitted (e.g. 2015-02-30)
+      - `NOT NULL` constraints are only enforced for single `INSERT` statements. For multi-row inserts, 0 replaces a null numeric values, and the empty value is used for a null String.
+    - Since the 5.0.2 version, strict constraints are possible if the database engine is configured to use a custom sql mode:
+      - `SET GLOBAL sql_mode='POSTGRESQL,STRICT_ALL_TABLES';`
+    - Because the sql_mode resets on server startup, it’s better to set it up in the MySQL configuration file: `[mysqld] sql_mode = POSTGRESQL,STRICT_ALL_TABLES`
+- **Isolation**
+  - **Concurrency control**
+    - **Two-phase locking**
+      - Locking on lower-levels (e.g. rows) can offer better concurrency as it reduces the likelihood of contention. Because each lock takes resources, holding multiple lower-level locks can add up, so the database might decide to substitute multiple lower-level locks into a single upper-level one. This process is called lock escalation and it trades off concurrency for database resources.
+      - Each database system comes with its own lock hierarchy but the most common types
+        - shared (read) lock, preventing a record from being written while allowing concurrent reads
+        - exclusive (write) lock, disallowing both read and write operations
+      - The 2PL protocol splits a transaction in two sections:
+        - expanding phase (locks are acquired and no lock is released)
+        - shrinking phase (all locks are released and no other lock is further acquired).
+      ![Statement Lifecycle](/Java/Hibernate/res/TwoPhaseLock.PNG)
+          - both Alice and Bob select a post record, both acquiring a shared lock on this record
+          - when Bob attempts to update the post entry, his statement is blocked by the Lock Manager because Alice is still holding a shared lock on this database row
+          - only after Alice’s transaction ends and all locks are being released,Bob can resume his update operation
+          - Bob’s update will generate a lock upgrade, so the shared lock is replaced by an exclusive lock, which will prevent any other concurrent read or write operation
+          - Alice starts a new transaction and issues a select query for the same post entry, but the statement is blocked by the Lock Manager since Bob owns an exclusive lock on this record
+          - after Bob’s transaction is committed, all locks are released and Alice’s query can be resumed, so she will get the latest value of this database record.
+    - **Multi-Version Concurrency Control**
+      - The promise of MVCC is that readers don’t block writers and writers don’t block readers. The only source of contention comes from writers blocking other concurrent writers, which otherwise would compromise transaction rollback and atomicity.
+      - **MYSQL**
+        - The InnoDB storage engine offers support for ACID transactions and uses MVCC for controlling access to shared resources. The InnoDB MVCC implementation is very similar to Oracle, and previous versions of database rows are stored in the rollback segment as well.
+  - **Phenomena**
+    - **Intro**
+      - As the incoming traffic grows, the price for strict data integrity becomes too high, and this is the primary reason for having multiple isolation levels. Relaxing serializability guarantees may generate data integrity anomalies, which are also referred as *phenomena*.
+      - Choosing a certain isolation level is a trade-off between increasing concurrency and acknowledging the possible anomalies that might occur.
+      - Scalability is undermined by contention and coherency costs. The lower the isolation level, the less locking (or multi-version transaction abortions), and the more scalable the application will get. But a lower isolation level allows more phenomena, and the data integrity responsibility is shifted from the database side to the application logic, which must ensure that it takes all measures to prevent or mitigate any such data anomaly.
+    - **Dirty Write**
+      - A dirty write happens when two concurrent transactions are allowed to modify the same row at the same time. As previously mentioned, all changes are applied against the actual database object structures, which means that the **second transaction simply overwrites the first transaction pending change**.
+      ![DirtyWrite](/Java/Hibernate/res/DirtyWrite.PNG)
+      - If the two transactions commit, one transaction will silently overwrite the other transaction, causing a lost update. Another problem arises when the first transaction wants to roll back.
+      - Although the SQL standard doesn’t mention this phenomenon, even the lowest isolation level (Read Uncommitted) is able to prevent it.
+    - **Dirty Read**
+      - A dirty read happens when a transaction is allowed to read the uncommitted changes of some other concurrent transaction.
+      ![DirtyRead](/Java/Hibernate/res/DirtyRead.PNG)
+      - This anomaly is only permitted by the Read Uncommitted isolation level, and, because of the serious impact on data integrity, most database systems offer a higher default isolation level.
+      - To prevent dirty reads, the database engine must hide uncommitted changes from all the concurrent transactions (but the one that authored the change). Each transaction is allowed to see its own changes because otherwise the read-your-own-writes consistency guarantee is compromised.
+    - **Non-repeatable read**
+      - If one transaction reads a database row without applying a shared lock on the newly fetched record, then a concurrent transaction might change this row before the first transaction has ended.
+      ![NonRepeatableRead](/Java/Hibernate/res/NonRepeatableRead.PNG)
+      - Most database systems have moved to a Multi-Version Concurrency Control model, and shared locks are no longer mandatory for preventing non-repeatable reads. By verifying the current row version, a transaction can be aborted if a previously fetched record has changed in the meanwhile.
+    - **Phantom read**
+      - If a transaction makes a business decision based on a set of rows satisfying a given predicate, without predicate locking, a concurrent transaction might insert a record matching that particular predicate.
+      ![PhantomRead](/Java/Hibernate/res/PhantomRead.PNG)
+      - Phantom rows can lead a buyer into purchasing a product without being aware of a better offer that was added right after the user has finished fetching the offer list.
+      - Phantom reads are not a problem on MySQL.
+    - **Read skew**
+      - Read skew is a lesser known anomaly that involves a constraint on more than one database tables. In the following example, the application requires the post and the post_details be updated in sync. Whenever a post record changes, its associated post_details must register the user who made the current modification.
+      ![ReadSkew](/Java/Hibernate/res/ReadSkew.PNG)
+      - The first transaction will see an older version of the post row and the latest version of the associated post_details. Because of this read skew, the first transaction will assume that this particular post was updated by Bob, although, in fact, it is an older version updated by Alice.
+      - Like with non-repeatable reads, there are two ways to avoid this phenomenon:
+        - the first transaction can acquire shared locks on every read, therefore preventing the second transaction from updating these records
+        - the first transaction can be aborted upon validating the commit constraints (when using an MVCC implementation of the Repeatable Read or Serializable isolation levels).
+      - On Mysql `READ UNCOMMITTED` and `READ COMMITTED` permit Read Skew, while `REPEATABLE READ` and `SERIALIZABLE` isolation levels don't.
+    - **Write skew**
+      - Like read skew, this phenomenon involves disjoint writes over two different tables that are constrained to be updated as a unit. Whenever the post row changes, the client must update the post_details with the user making the change.
+      ![DirtyWrite](/Java/Hibernate/res/WriteSkew.PNG)
+      - Both Alice and Bob will select the post and its associated post_details record. If write skew is allowed, Alice and Bob can update these two records separately, therefore breaking the constraint.
+      - Prevention: same as above.
+      - On MySQL only the `SERIALIZABLE` isolation level forbids write skew!
+    - **Lost update**
+      - This phenomenon happens when a transaction reads a row while another transaction modifies it prior to the first transaction to finish. In the following example, Bob’s update is silently overwritten by Alice, who is not aware of the record update.
+      ![DirtyWrite](/Java/Hibernate/res/LostUpdate.PNG)
+      - This anomaly can have serious consequences on data integrity (a buyer might purchase a product without knowing the price has just changed), especially because it affects Read Committed, the default isolation level in many database systems.
+      - With MVCC, the second transaction is allowed to make the change, while the first transaction is aborted when the database engine detects the row version mismatch (during the first transaction commit).
+  - **Isolation Levels**
+    - **Serializable is the only isolation level to provide a truly ACID transaction** interleaving. But serializability comes at a price as locking introduces contention, which, in turn, limits concurrency and scalability.
+    ![IsolationLevels](/Java/Hibernate/res/IsolationLevels.PNG)
+    - To read/set these values in JDBC:
+      - `int level = connection.getMetaData().getDefaultTransactionIsolation();`
+      - `connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);`
+    - **Isolation levels used by Database systems:**
+      - Read Committed (Oracle, SQL Server, PostgreSQL)
+      - Repeatable Read (MySQL)
+    - **Prevented phenomena by Read Uncommitted**:
+      ![Phenomens](/Java/Hibernate/res/Phenomenas.PNG)
+      - **MYSQL** Although it uses MVCC, InnoDB implements Read Uncommitted so that dirty reads are permitted.
+    - **Prevented phenomena by Read Committed**:
+      ![PhenomenaDirtyRead](/Java/Hibernate/res/PhenomenaDirtyRead.PNG)
+      - **MYSQL:** Query-time snapshots are used to isolate statements from other concurrent transactions. When explicitly acquiring shared or exclusive locks or when issuing update or delete statements (which acquire exclusive locks to prevent dirty writes), if the selected rows are filtered by unique search criteria (e.g. primary key), the locks can be applied to the associated index entries.
+    - **Repeatable Read**
+      ![RepeatableRead](/Java/Hibernate/res/PhRepeatableRead.PNG)
+      - **MYSQL** Every transaction can only see rows as if they were when the current transaction started. This prevents non-repeatable reads, but it still allows lost updates and write skews.
+    - **Serializable**
+
+      ![Serlializable](/Java/Hibernate/res/PhSerializable.PNG)
+      - **MYSQL** The Serializable isolation builds on top of Repeatable Read with the difference that every record that gets selected is protected with a shared lock as well. The locking-based approach allows MySQL to prevent the write skew phenomena, which is prevalent among many Snapshot Isolation implementations.
+- **Durability**
+  - Durability ensures that all committed transaction changes become permanent.
+  - When a transaction is committed, the database persists all current changes in an append-only, sequential data structure commonly known as the *redo log*.
+  - **MYSQL** All the redo log entries associated with a single transaction are stored in the mini transaction buffer and flushed at once into the global redo buffer. The global buffer is flushed to disk during commit. By default, there are two log files which are used alternatively.
+
+### Read Only Transactions
+
+- **Intro**
+  - The JDBC Connection defines the `setReadOnly(boolean readOnly)` method which can be used to hint the driver to apply some database optimizations for the upcoming read-only transactions. This method shouldn’t be called in the middle of a transaction because the database system cannot turn a read-write transaction into a read-only one (a transaction must start as read-only from the very beginning).
+  - **MYSQL** If a modifying statement is executed when the `Connection` is set to read-only, the JDBC driver throws an exception. InnoDB can optimize read-only transactions because it can skip the transaction ID generation as it’s not required for read-only transactions.
+- **Read-only transaction routing**
+  - Setting up a database replication environment is useful for both high-availability (a Slave can replace a crashing Master) and traffic splitting. In a Master-Slave replication topology, the Master node accepts both read-write and read-only transactions, while Slave nodes only take read-only traffic.
+  - **MYSQL** The `com.mysql.jdbc.ReplicationDriver` supports transaction routing on a Master-Slave topology, the decision being made on the `Connection` read-only status basis.
+  ![TransactionRouting](/Java/Hibernate/res/TransactionRouting.PNG)
+
+#### Transaction Boundaries
+
+- **Separating DAO from usage**
+  - By default, every **JDBC (!)** `Connection` **starts in auto-commit mode**, each statement being executed in a separate transaction. Unfortunately, it doesn’t work for multi-statement transactions as it moves atomicity boundaries from the logical unit of work to each individual statement.
+    - (**Hibernate Connections are NOT auto-committing by default.**)
+  - In the following example, a sum of money is transferred between two bank accounts. The balance must always be consistent, so if an account gets debited, the other one must always be credited with the same amount of money.
+    ```java
+    try(Connection connection = dataSource.getConnection(); PreparedStatement transferStatement = connection.prepareStatement(
+            "UPDATE account SET balance = ? WHERE id = ?"
+        )) {
+        transferStatement.setLong(1, Math.negateExact(cents));
+        transferStatement.setLong(2, fromAccountId);
+        transferStatement.executeUpdate();
+        transferStatement.setLong(1, cents);
+        transferStatement.setLong(2, toAccountId);
+        transferStatement.executeUpdate();
+    }
+    ```
+  - **Because of the auto-commit mode**, if the second statement failed, only those particular changes can be rolled back, **the first statement being already committed cannot be reverted anymore**.
+  - The correct version:
+    ```java
+    try(Connection connection = dataSource.getConnection()) { connection.setAutoCommit(false);
+    try(PreparedStatement transferStatement = connection.prepareStatement(
+            "UPDATE account SET balance = ? WHERE id = ?"
+        )) {
+            transferStatement.setLong(1, Math.negateExact(cents));
+            transferStatement.setLong(2, fromAccountId);
+            transferStatement.executeUpdate();
+            transferStatement.setLong(1, cents);
+            transferStatement.setLong(2, toAccountId);
+            transferStatement.executeUpdate();
+    connection.commit(); } catch (SQLException e) { connection.rollback();
+    throw e; }
+    }
+    ```
+  - This is however shitty code - violating Single Responsibility Principle. One way to extract the transaction management logic is to use the Template method pattern:
+    ```java
+    public void transact(Consumer<Connection> callback) {
+      Connection connection = null;
+        try {
+            connection = dataSource.getConnection();
+            callback.accept(connection);
+            connection.commit();
+        } catch (Exception e) {
+          if (connection != null) {
+            try {
+              connection.rollback();
+            } catch (SQLException ex) {
+              throw new DataAccessException(e);
+            }
+          }
+          throw (e instanceof DataAccessException ?
+            (DataAccessException) e : new DataAccessException(e));
+        } finally {
+          if(connection != null) {
+            try { connection.close();
+          } catch (SQLException e) {
+            throw new DataAccessException(e);
+          }
+        }
+      }
+    }
+    ```
+  - **Transactions should never be abandoned on failure**, and it’s mandatory to initiate a transaction rollback (to allow the database to revert any uncommitted changes and release any lock as soon as possible).
+    ```java
+    transact((Connection connection) -> {
+    try(PreparedStatement transferStatement = connection.prepareStatement(
+            "UPDATE account SET balance = ? WHERE id = ?"
+        )) {
+            transferStatement.setLong(1, Math.negateExact(cents));
+            transferStatement.setLong(2, fromAccountId);
+            transferStatement.executeUpdate();
+            transferStatement.setLong(1, cents);
+            transferStatement.setLong(2, toAccountId);
+            transferStatement.executeUpdate();
+    } catch (SQLException e) {
+    throw new DataAccessException(e);
+    } });
+    ```
+- **Application-level transactions**
+  - **Intro**
+    - A logical transaction may be composed of multiple web requests, including user think time, for which reason it can be visualized as a long conversation. (Alice and Bob are working on Motius's ticket manager, both opening the same ticket making some changes and then overwriting each others changes.) --> A logical transaction may be composed of multiple web requests, including user think time, for which reason it can be visualized as a long conversation.
+      - Spanning a database transaction over multiple web requests is prohibitive since locks would be held during user think time, therefore hurting scalability.
+    - HTTP is stateless by nature and, for very good reasons, stateless applications are easier to scale than stateful ones. But application-level transactions cannot be stateless as otherwise newer requests would not continue from where the previous request was left. Preserving state across multiple web requests allows building a conversational context, providing application-level repeatable reads guarantees. In the next diagram, Alice uses a stateful conversational context, but, in the absence of a record versioning system, it’s still possible to lose updates.
+    ![DirtyRead](/Java/Hibernate/res/Stateful.PNG)
+    - Without Alice to notice, the batch process resets the product quantity. Thinking the product version hasn’t changed, Alice attempts to purchase one item which decreases the previous product quantity by one. In the end, Alice has simply overwritten the batch processor modification and data integrity has been compromised. --> To prevent lost updates, a concurrency control mechanism becomes mandatory.
+  - **Pessimic Locking**
+    - Most database systems already offer the possibility of **manually requesting shared or exclusive locks**. This concurrency control is said to be pessimistic because it assumes that conflicts are bound to happen, and so they must be prevented accordingly.
+    - Acquiring locks on critical records can prevent non-repeatable reads, lost updates, as well as read and write skew phenomena.
+  - **Optimistic Locking**
+    - Optimistic locking doesn’t incur any locking at all. A much better name would be optimistic concurrency control since it uses a totally different approach to managing conflicts than pessimistic locking.
+    - Each database row must have an associated version, which is locally incremented by the logical transaction. Every modifying SQL statement (update or delete) uses the previously loaded version as an assumption that the row hasn’t been changed in the meanwhile.
+    - Because even the lowest isolation level can prevent write-write conflicts, only one transaction is allowed to update a row version at any given time. Since the database already offers monotonic updates, the row versions can also be incremented monotonically, and the application can detect when an updating record has become stale. The optimistic locking concurrency algorithm looks like this:
+    ![DirtyRead](/Java/Hibernate/res/OptimisticLocking.PNG)
+      - when a client reads a particular row, its version comes along with the other fields
+      - upon updating a row, the client filters the current record by the version it has previously loaded.
+        ```java
+        UPDATE product
+              SET (quantity, version) = (4, 2)
+              WHERE id = 1 AND version = 1
+        ```
+      - if the statement update count is zero, the version was incremented in the meanwhile, and the current transaction now operates on a stale record version.
+      - **Using timestamps to order events is rarely a good idea. System time is not always monotonically incremented, and it can even go backwards, due to network time synchronization.**
+
+## Persisting objects
+
+- **Intro**
+  - It is important to understand from the beginning that all of the methods (`persist`, `save`, `update`, `merge`, `saveOrUpdate`) do **not** immediately result in the corresponding SQL `UPDATE` or `INSERT` statements. (Hibernate defaults auto-commit to false!) The actual saving of data to the database occurs on committing the transaction or flushing the `Session`. The mentioned methods basically manage the state of entity instances by transitioning them between different states along the lifecycle.
+- **Persistance operations**
+  - Summary of the persistance operations:
+  ![Flow](/Java/Hibernate/res/FLOW.PNG)
+  - `session.persist(Object o)`
+    - The `persist` method is intended for adding a **new** entity instance to the persistence context, i.e. transitioning an instance from transient to persistent state. (The `persist` operation **must be used only for new entities**.)
+    - If you try to `persist` a detached instance, the implementation is bound to throw an exception.
+    - If the object properties are changed before the transaction is committed or session is flushed, it will also be saved into database.
+      ```java
+      Foo foo = new Foo();
+      foo.setValue(4);
+      session.persist(foo);
+      foo.setValue(5);
+      session.commit(); // foo is saved with value of 5!
+      ```
+    - `persist` doesn’t return anything so we need to use the persisted object to get the generated identifier value
+  - `session.save(Object o)`
+    - Its purpose is basically the same as `persist`, but it has different implementation details.
+    - The call of `save` on a detached instance creates a new persistent instance and assigns it a new identifier, which results in a duplicate record in a database upon committing or flushing.
+    - **Important:**
+      - Technically you can `save` an entity outside of the transaction boundary, however mapped entities will not be saved causing data inconsistency. It’s very normal to forget flushing the session because it doesn’t throw any exception or warnings.
+      - Hibernate `save` method returns the generated id immediately, this is possible because primary object is saved as soon as `save` method is invoked.
+      - If there are other objects mapped from the primary object, they **gets saved at the time of committing transaction or when we flush the session**.
+  - `session.merge(Object o)`
+    - The main intention of the merge method is to update a persistent entity instance with new field values from a detached entity instance. The `merge` method
+      - finds an entity instance by id taken from the passed object (either an existing entity instance from the persistence context is retrieved, or a new instance loaded from the database);
+      - copies fields from the passed object to this instance;
+      - returns newly updated instance
+    - Note that the merge method returns an object — it is the mergedPerson object that was loaded into persistence context and updated, not the person object that you passed as an argument.
+      ```java
+      Person person = new Person();
+      person.setName("John");
+      session.save(person);
+
+      session.evict(person);
+      person.setName("Mary");
+
+      Person mergedPerson = (Person) session.merge(person);
+      ```
+  - `session.refresh(Object o)`
+    - Hibernate provides a mechanism to refresh persistent objects from their database representation. These methods will reload the properties of the object from the database, overwriting them; thus, as stated, `refresh()` is the inverse of `merge()`.
+      ```java
+        public void refresh(Object object)
+        public void refresh(Object object, LockMode lockMode)
+      ```
+  - `session.update(Object o)`
+    - it acts upon passed object (its return type is void) the update method transitions the passed object from detached to persistent state;
+    - this method throws an exception if you pass it a transient entity.
+  - `saveOrUpdate(Object o)`
+    - The main difference of `saveOrUpdate` method is that it does not throw exception when applied to a transient instance; instead, it makes this transient instance persistent.
+  - `void delete(Object object)`
+    - This method takes a persistent object as an argument. The argument can also be a transient object with the identifier set to the ID of the object that needs to be erased.
+    - If you set the cascade attribute to `delete` or `all`, the delete will be cascaded to all of the associated objects.
+    - Hibernate also supports **bulk deletes**, where your application executes a DELETE HQL statement against the database. These are very useful for deleting more than one object at a time because each object does not need to be loaded into memory just to be deleted:
+      - `session.createQuery("delete from User").executeUpdate();`
+    - Bulk deletes **do not cause cascade** operations to be carried out. If cascade behavior is needed, you will need to carry out the appropriate deletions yourself, or use the session’s `delete()` method.
+
+- **Updating data**
+  - Imagine that we want to change an attribute of an object, that is already persisted to the database. We fetch the object with a query and then:
+    ```java
+    Ranking ranking = query.uniqueResult();
+    assertNotNull(ranking, "Could not find matching ranking");
+    ranking.setRanking(9);
+    tx.commit();
+    ```
+  - Hibernate watches the (persistent) data model, and when something is changed, it automatically updates the database to reflect the changes. It generally does this by using a proxied object. When you change the data values in the object, the proxy records the change so that the transaction knows to write the data to the database on transaction commit. To summarize:
+    - All "persistent" objects are tracked within a transaction.
+    - In order for the changes to take effect, the transaction must be committed!
+- **Removing data**
+  - Find ranking -> which will give us a Ranking in *persistent* state. Then we remove it via the session and commit the change.
+    ```java
+    session.delete(ranking);
+    tx.commit();
+    ```
+- **Notes**
+  - If you call `persist` on an object you can see immediately that the database has assigned an ID to it. However when you look into the database you see that the object has not yet been actually saved. Where does this ID come from, if your object is not even saved?
+  - The answer is the Isolation context. When calling the `persist` method **inside a transaction**, the changes are not visible for others until the transaction is committed. If you log the SQL statements executed by hibernate you can see that the object is in fact inserted into its table, but as long as the transaction is not committed it won't be visible to you via the MySQL workbench interface.
+
+## Loading objects from the dabase
+
+### Sesstion context
+
+#### Session context while loading/saving
+
+- **Loading**
+  - Requesting a persistent object again from the same Hibernate session returns the same Java instance of a class, which means that you can compare the objects using the standard Java `==` equality syntax. If, however, you request a persistent object from more than one Hibernate session, Hibernate will provide distinct instances from each session, and the `==` operator will return `false` if you compare these object instances.
+- **Saving**
+  - For saving it's similar. If you save an object in session "A", close the session, open a new session, change a field of the object and save it, then hibernate creates a new entry in the database! That is because the session is taking care of tracking "persisted" objects!
+  - However if you call `saveOrUpdate()` then even if we are in a new session, the object is updated and no new row is created.
+- **Implementing equals()**
+  - Taking this into account, if you are comparing objects in two different sessions, you will need to implement the `equals()` method on your Java persistence objects, which you should probably do as a regular occurrence anyway. (Just don’t forget to implement `hashCode()` along with it.)
+  - Implementing `equals()` can be interesting. Hibernate wraps the actual object in a proxy (for various performance-enhancing reasons, like loading data on demand), so you need to factor in a class hierarchy for equivalency; it’s also typically more efficient to **use accessors** (`getXYZ()`) in your `equals()` and `hashCode()` methods, as opposed to the actual fields.
+  - In the example below we check if all fields if `this` are equal to the field of the other object.
+    ```java
+    @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof SimpleObject)) return false;
+
+            SimpleObject that = (SimpleObject) o;
+
+            // we prefer the method versions of accessors, because of Hibernate's proxies.
+            if (getId() != null ?
+              !getId().equals(that.getId()) : that.getId() != null)
+                return false;
+            if (getKey() != null ?
+              !getKey().equals(that.getKey()) : that.getKey() != null)
+                return false;
+            return getValue() != null ? getValue().equals(that.getValue()) : that.getValue() == null;
+        }
+    ```
+
+#### Loading and managing entities
+
+- **Session.load()**
+  - Each of the following `load()` method requires the object’s primary key as an identifier.
+    ```java
+    public <T> T load(Class<T> theClass, Serializable id)
+    public Object load(String entityName, Serializable id)
+    public void load(Object object, Serializable id)
+    ```
+  - With the more advanced loading methods you can specify the locking mode.
+    ```java
+    public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode)
+    public Object load(String entityName, Serializable id, LockMode lockMode)
+    ```
+    - `NONE`: Uses no row-level locking, and uses a cached object if available; this is the Hibernate **default**.
+    - `READ`: Prevents other `SELECT` queries from reading data that is in the middle of a transaction (and thus possibly invalid) until it is committed.
+    - `UPGRADE`: Uses the SELECT FOR UPDATE SQL syntax to lock the data until the transaction is finished.
+    - `UPGRADE_NOWAIT`: Uses the NOWAIT keyword (for Oracle), which returns an error immediately if there is another thread using that row; otherwise this is similar to UPGRADE.
+    - `UPGRADE_SKIPLOCKED`: Skips locks for rows already locked by other updates, but otherwise this is similar to UPGRADE.
+    - `OPTIMISTIC`: This mode assumes that updates will not experience contention. The entity’s contents will be verified near the transaction’s end.
+    - `OPTIMISTIC_FORCE_INCREMENT`: This is like OPTIMISTIC, except it forces the version of the object to be incremented near the transaction’s end.
+    - `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE`: Both of these obtain a lock immediately on row access.
+    - `PESSIMISTIC_FORCE_INCREMENT`: This obtains the lock immediately on row access, and also immediately updates the entity version.
+  - `Session.load` will always return a **“proxy”** (Hibernate term) without hitting the database. In Hibernate, proxy is an object with the given identifier value, its properties are not initialized yet, it just look like a temporary fake object. Properties are only fetched from the database when you actually refer to them / i.e. when you actually use them. If it turns out, that the object with the given ID doesn't exist in the database anymore, it throws an `ObjectNotFoundException`.
+  - You should not use a `load()` method unless you are sure that the object exists. If you are not certain, then use one of the `get()` methods. The `load()` methods will **throw an exception** if the unique ID is not found in the database, whereas the `get()` methods will merely return a `null` reference.
+- **Session.get()**
+  - `get()` returns the object by fetching it from database or from hibernate cache.
+    ```java
+    public <T> T get(Class<T> clazz, Serializable id)
+    public Object get(String entityName, Serializable id)
+    public <T> T get(Class<T> clazz, Serializable id, LockMode lockMode)
+    public Object get(String entityName, Serializable id, LockMode lockMod
+
+    /*Usage*/
+    Supplier supplier = session.get(Supplier.class,id);
+    if (supplier == null) {
+        System.out.println("Supplier not found for id " + id);
+    return; }
+    ```
+
+#### Lazy loading
+
+- Imagine that you have a huge "web" of objects, i.e. there are a lot of references between the objects. Loading 10k rows from a table would mean loading another 80k from various tables due to the references. To manage this problem, Hibernate provides a facility called lazy loading.
+- At lazy loading an entity’s associated entities will be *loaded only when they are directly requested*! So until the object is not actually required Hibernate provides "proxies", and when requested, then these proxies are replaced by the actual objects loaded from the database.
+- This only works in active sessions. Hibernate can only access the database via a session. If an entity is detached from the session when we try to access an association (via a proxy or collection wrapper) that has not yet been loaded, Hibernate throws a `LazyInitializationException`.
+- `isInitialized(Object proxy), isPropertyInitialized(Object proxy, String propertyName)` - to check if an object is initialized
+- `initialize(Object proxy)` force a proxy to be initialized (within a session)
+- Certain relationships can be marked as being “lazy,” and they will not be loaded from the database until they are actually required.
+- The **default** in Hibernate is that classes (including collections like `Set` and `Map`) should be lazily loaded. Given the following class only `userId` and `username` are loaded.
+    ```java
+    public class User {
+      int userId;
+      String username;
+      EmailAddress emailAddress;
+      Set<Role> roles;
+    }
+    ```
+
+#### Session flushing
+
+- Flushing the session (`(void) session.flush()`) forces Hibernate to synchronize the in-memory state of the Session with the database (i.e. to write changes to the database). By default, Hibernate will flush changes automatically for you:
+  - before some query executions
+  - when a transaction is committed
+- Allowing to explicitly flush the Session gives finer control that may be required in some circumstances (to get an ID assigned, to control the size of the Session,...).
+- Hibernate automatically persists changes made to persistent objects into the database.
+- You can determine if the session is dirty with the `boolean isDirty()` method.
+- You can also instruct Hibernate to use a flushing mode for the session with the `void setHibernateFlushMode(FlushMode flushMode)` method. The `FlushMode getHibernateFlushMode()` method returns the flush mode for the current session.
+- Flush modes:
+- `ALWAYS`: Every query flushes the session before the query is executed. This is going to be very slow.
+- `AUTO`: Hibernate manages the query flushing to guarantee that the data returned by a query is up to date.
+- `COMMIT`: Hibernate flushes the session on transaction commits.
+- `MANUAL`: Your application needs to manage the session flushing with the `flush()` method. Hibernate never flushes the session itself.
+
+#### Cascading operations
+
+- The cascade types supported by the Java Persistence Architecture are as follows:
+  - `PERSIST`, `MERGE`, `REFRESH`, `REMOVE`, `DETACH`, `ALL`
+- It’s worth pointing out that Hibernate has its own configuration options for cascading, which represent a superset of these.
+  - `CascadeType.PERSIST` means that `save()` or  operations cascade to related entities.
+  - `CascadeType.MERGE` means that related entities are merged into managed state when the owning entity is merged.
+  - `CascadeType.REFRESH` does the same thing for the `refresh()` operation.
+  - `CascadeType.REMOVE` removes all related entities association with this setting when the owning entity is deleted.
+  - `CascadeType.DETACH` detaches all related entities if a manual detach were to occur.
+  - `CascadeType.ALL` is shorthand for all of the cascade operations.
+- To include only refreshes and merges in the cascade operation for a one-to-one relationship, you might see the following:
+    ```java
+    @OneToOne(cascade={CascadeType.REFRESH, CascadeType.MERGE})
+    EntityType otherSide;
+    ```
+
+#### Orphan removal
+
+- Orphan removal is an entirely ORM-specific thing. It marks "child" entity to be removed when it's no longer referenced from the "parent" entity, e.g. when you remove the child entity from the corresponding collection of the parent entity. (In contrast ON DELETE CASCADE is a database-specific thing, it deletes the "child" row in the database when the "parent" row is deleted.)
+- Imagine that you have a `Library` (object) with 3 books (`List<Book>`). Now if orphan removal is turned on, removing an object via `library.getBooks().remove(0);` will mark it as an orphan (as the parent "abandoned it), and hence when the transaction is **committed**, the orphan will be deleted by the ORM.
+    ```java
+    @OneToMany(orphanRemoval = true, mappedBy = "library")
+    List<Book> books = new ArrayList<>();
+    ```
+
+### Hibernate Query Language (HQL) and SQL
+
+#### Simple HQL examples
+
+  ```java
+  private Person findPerson(Session session, String name) {
+      Query<Person> query = session.createQuery("from Person p where p.name=:name",
+              Person.class);
+      query.setParameter("name", name);
+      Person person = query.uniqueResult();
+      return person;
+  }
+  ```
+
+- Select data from the table associated with the `Person` entity (aliased to “p”) and limited to objects whose “name” attribute is equal to a parameter value. It also specifies the reference type of the query (with `Person.class`) to cut down on typecasting and potential errors of incorrect return types.
+- Note that `uniqueResult()` returns a single instance that matches the query, or null if the query returns no results. Throws `NonUniqueResultException` - if there is more than one matching result
+- We could fix the exception throwing in case of multiple matches by using `query.setMaxResults(1)`, and returning the first (and only) entry in `query.list()`, but the right way to fix it is to figure out how to be very specific in returning the right `Person`.
+
+- **Simple query with some math**
+    ```java
+      /**...**/
+      Transaction tx = session.beginTransaction();
+      Query<Ranking> query = session.createQuery("from Ranking r "
+                      + "where r.subject.name=:name "
+                      + "and r.skill.name=:skill", Ranking.class);
+      query.setParameter("name", "J. C. Smell");
+      query.setParameter("skill", "Java");
+      IntSummaryStatistics stats = query.list()
+              .stream()
+              .collect(Collectors.summarizingInt(Ranking::getRanking));
+      long count = stats.getCount();
+      int average = (int) stats.getAverage();
+
+      tx.commit();
+      session.close();
+      assertEquals(count, 3);
+      assertEquals(average, 7);
+      ```
+  - Imagine a scenario where the "Ranking" entity represents an assessment of a given person. A `Ranking` entity contains:
+    - the person who submitted the evaluation
+    - the person who receives the evalutation
+    - the name of the programming language that is "ranked"
+    - the score
+  - For example `Rank(joe, mike, "Java", 5)` means that joe `Person` ranked mike `Person`'s Java skills to be 5 on the scale of 10. In this scenario `Ranking` and `Person` are different entities, stored in different tables, hence using traditional SQL a JOIN would be necessary.
+  - What happens if we already have multiple rankings (integer values in a "ranking" field) saved for a given `Person` and we want to calculate the average? Things to note:
+    - Hibernate takes care of writing all of the SQL for us, and we can use the objects “naturally.” --> We are **not** using JOINs in the query!
+    - When dirty reads are not acceptable, then a transaction for the select is appropriate. Most of the time, with that kind of scenario, the select will be done in conjunction with some data modification that requires full consistency for a point in time. -> hence the transaction around the query.
+- **A more advanced query**
+  - On the query below we are actually writing a full SQL query with the "select" statement included. The result is but List{["Name1", avgScoreForSkill], ["Name2", avgScore2] ...} ordered by the score. Since the returned data structure doesn't correspond to any of our POJOs, the returned type is declared as `List<Object[]>` To get the best person for the given skill we take the first element and extract the first column value (his name). -> `(String) result.get(0)[0])`
+    ```java
+    Query<Object[]> query = session.createQuery("select r.subject.name, avg(r.ranking)"
+                    + " from Ranking r where "
+                    + "r.skill.name=:skill "
+                    + "group by r.subject.name "
+                    + "order by avg(r.ranking) desc", Object[].class);
+            query.setParameter("skill", skill);
+            List<Object[]> result = query.list();
+            if (result.size() > 0) {
+                return findPerson(session, (String) result.get(0)[0]);
+            }
+    ```
+
+#### Getting deeper into HQL
+
+- **HQL Syntax basics**
+  - **Intro**
+    - HQL is an object-oriented query language, similar to SQL, but instead of operating on tables and columns, HQL works with persistent objects and their properties.
+    - Hibernate’s query facilities do not allow you to alter the database structure.
+    - Use HQL (or criteria) whenever possible to avoid database portability hassles, as well as to take advantage of Hibernate’s SQL-generation and caching strategies.
+    - Advantage over SQL: It can make use of the relationship information defined in the Hibernate mappings.
+  - **Update**
+    ```java
+    UPDATE [VERSIONED]
+      [FROM] path [[AS] alias] [, ...]
+      SET property = value [, ...]
+      [WHERE logicalExpression]
+
+    Query query=session.createQuery("update Person set creditscore=:creditscore where name=:name");
+    query.setInteger("creditscore", 612);
+    query.setString("name", "John Q. Public");
+    int modifications = query.executeUpdate();
+    ```
+    - `path` - The fully qualified name of the entity or entities
+    - `alias` - used to abbreviate references to specific entities or their properties, and must be used when property names in the query would otherwise be ambiguous.
+    - `VERSIONED` - means that the update will update time stamps, if any, that are part of the entity being updated.
+    - `FROM` - names of properties of entities listed in the `FROM` path.
+  - **Delete**
+    ```java
+    DELETE
+      [FROM] path [[AS] alias]
+      [WHERE logicalExpression]
+
+    Query query=session.createQuery("delete from Person where accountstatus=:status");
+    query.setString("status", "purged");
+    int rowsDeleted=query.executeUpdate();
+    ```
+  - **Insert**
+    ```java
+    INSERT
+      INTO path ( property [, ...])
+      select
+
+    Query query=session.createQuery("insert into purged_users(id, name, status) "+
+    "select id, name, status from users where status=:status");
+    query.setString("status", "purged");
+    int rowsCopied=query.executeUpdate();
+    ```
+  - **Select**
+    ```java
+    [SELECT [DISTINCT] property [, ...]]
+      FROM path [[AS] alias] [, ...] [FETCH ALL PROPERTIES]
+      WHERE logicalExpression
+      GROUP BY property [, ...]
+      HAVING logicalExpression
+      ORDER BY property [ASC | DESC] [, ...]
+    ```
+    - `FETCH ALL PROPERTIES` - is used, then lazy loading semantics will be ignored, and all the immediate properties of the retrieved object(s) will be actively loaded (this does not apply recursively).
+    - Use the select clause if you don't want to fetch all the columns but only certain properties. (= memory efficient)
+      - `select product.name from Product product`
+      - This result set contains a `List` of `Object` arrays—each array represents one set of properties.
+- **Named Queries**
+  - Named queries are created via class-level annotations on entities; normally, the queries apply to the entity in whose source file they occur, but there’s no absolute requirement for this to be true.
+  - Named queries are created with the `@NamedQueries` annotation, which contains an array of `@NamedQuery` sets; each has a query and a name.
+  - **One effect of the hierarchy we use here is that Lombok is no longer as usable as it has been** - Lombok works by analyzing Java source code. It does not walk a hierarchy; while this would be very useful, there are some real technical challenges to implementation.
+  - Adding a named query is as simple as adding an annotation to one of the entities. (You can add the annotation to any of the entities.)
+  - Examples:
+    ```java
+    @NamedQuery(name = "supplier.findAll", query = "from Supplier s")
+    /*Or "bulk" definition: */
+    @NamedQueries({
+            @NamedQuery(name = "supplier.findAll", query = "from Supplier s"),
+            @NamedQuery(name = "supplier.findByName",
+                    query = "from Supplier s where s.name=:name"),
+    })
+
+    Query query = session.getNamedQuery("supplier.findAll");
+    List<Supplier> suppliers = query.list();
+    ```
+  - Note: SQL specific stuff is case **in-sensitive**, however when referencing actual Java classes the references are **case-sensitive**!
+- **Logging and Commenting the Underlying SQL**
+  - Hibernate can output the underlying SQL behind your HQL queries into your application’s log file.
+  - `show_sql` property. Set this property to true in your `hibernate.cfg.xml` configuration file.
+  - Tracing your HQL statements through to the generated SQL can be difficult, so Hibernate provides a commenting facility on the Query object that lets you apply a comment to a specific query. The `Query` interface has a `setComment()` method that takes a String object as an argument, as follows:
+    - `public Query setComment(String comment)`
+  - You will also need to set a Hibernate property, `hibernate.use_sql_comments`, to true in your Hibernate configuration.
+    ```java
+    String hql = "from Supplier";
+    Query query = session.createQuery(hql);
+    query.setComment("My HQL: " + hql);
+    List results = query.list();
+
+    Hibernate: /*My HQL: from Supplier*/ select supplier0_.id as id, supplier0_.name ➥ as name2_ from Supplier supplier0_
+    ```
+- **Logical restrictions (WHERE clause)**
+  - Logic operators: `OR, AND, NOT`
+  - Equality operators: `=, <>, !=, ^=`
+  - Comparison operators: `<, >, <=, >=, like, not like, between, not between`
+  - Math operators: `+, -, *, /`
+  - Concatenation operator: `||`
+  - Cases: Case `when <logical expression> then <unary expression> else <unary expression> end`
+  - Collection expressions: `some, exists, all, any`
+  - In addition, you may also use the following expressions in the where clause:
+    - HQL named parameters:, such as `:date`, `:quantity`
+    - JDBC query parameter: `?`
+    - Date and time SQL-92 functional operators: `current_time(), current_date(), current_timestamp()`
+    - SQL functions (supported by the database): `length(), upper(), lower(), ltrim(), rtrim()`, etc.
+- **Named Parameters**
+    ```java
+    String hql = "from Product where price > :price";
+    Query query = session.createQuery(hql);
+    query.setDouble("price",25.0);
+    List results = query.list();
+    ```
+  - When the value to be provided will be known only at run time, you can use some of HQL’s object-oriented features to provide objects as values for named parameters. The Query interface has a setEntity() method that takes the name of a parameter and an object.
+    ```java
+    String supplierHQL = "from Supplier where name='MegaInc'";
+    Query supplierQuery = session.createQuery(supplierHQL);
+    Supplier supplier = (Supplier) supplierQuery.list().get(0);
+    String hql = "from Product as product where product.supplier=:supplier";
+    Query query = session.createQuery(hql);
+    query.setEntity("supplier",supplier);
+    List results = query.list();
+    ```
+- **Paging through the result set**
+  - There are two methods on the `Query` interface for paging: `setFirstResult(int)` (takes an integer that represents the first row in your result set, starting with row 0) and `setMaxResults(int)` (only retrieve a fixed number of objects), just as with the Criteria interface.
+  - E.g. Getting the second element of the query:
+    ```java
+    Query query = session.createQuery("from Product");
+    query.setFirstResult(1);
+    query.setMaxResults(2);
+    List results = query.list();
+    displayProductsList(results);
+    ```
+- **Obtaining unique result**
+  - The `uniqueResult()` method on the Query object returns a single object, or `null` if there are zero results.
+  - `Product product = (Product) query.uniqueResult();`
+- **Ordering results**
+  - via `order by`
+    - `from Product p order by p.supplier.name asc, p.price asc`
+- **Associations**
+  - Associations allow you to use more than one class in an HQL query, just as SQL allows you to use joins between tables in a relational database. You add an association to an HQL query with the `join` clause.
+  - Hibernate supports five different types of joins: `inner join,cross join,left outer join,right outer join` ,and `full outer join`. If you use `cross join`,just specify both classes in the `from` clause `(from Product p, Supplier s)`.
+    - `from Product p inner join p.supplier as s`
+- **Aggregate Methods**
+  - `avg(property name)`: The average of a property’s value
+  - `count(property name or *)`: The number of times a property occurs in the results
+  - `max(property name)`: The maximum value of the property values
+  - `min(property name)`: The minimum value of the property values
+  - `sum(property name)`: The sum total of the property values
+- **Bulk Updates and Deletes with HQL**
+  - The `Query` interface contains a method called `executeUpdate()` for executing HQL `UPDATE` or `DELETE` statements. The `executeUpdate()` method returns an `int` that contains the number of rows affected by the update or delete.
+    - `int rowCount = query.executeUpdate();`
+  - **Be careful** when you use bulk delete with objects that are in relationships. Hibernate will not know that you removed the underlying data in the database, and you can get foreign key integrity errors. To get around this, you could set the not-found attribute to ignore on your one-to-many and many-to-one mappings, which will make IDs that are not in the database resolve to null references. The default value for the not-found attribute is exception.
+- **Native SQL**
+  - One reason to use native SQL is that your database supports some special features through its dialect of SQL that are not supported in HQL.
+  - Another reason is that you may want to call stored procedures from your Hibernate application.
+  - `public SQLQuery createSQLQuery(String queryString) throws HibernateException`
+  - After you pass a string containing the SQL query to the `createSQLQuery()` method, you should associate the SQL result with an existing Hibernate entity, a join, or a scalar result. The SQLQuery interface has `addEntity()`, `addJoin()`, and `addScalar()` methods.
+    ```java
+    String sql = "select avg(product.price) as avgPrice from Product product";
+    SQLQuery query = session.createSQLQuery(sql);
+    query.addScalar("avgPrice",Hibernate.DOUBLE);
+    List results = query.list();
+    ```
+  - Or a bit more complex example:
+    ```java
+    String sql = "select {supplier.*} from Supplier supplier";
+    SQLQuery query = session.createSQLQuery(sql);
+    query.addEntity("supplier", Supplier.class);
+    List results = query.list();
+    ```
+    - Hibernate modifies the SQL and executes the following command against the database:
+      - `select Supplier.id as id0_, Supplier.name as name2_0_ from Supplier supplier`
+
+### Advanced Queries Using Criteria
+
+- **Basics**
+  - We can’t use Criteria to run update or delete queries or any DDL statements. It’s only used to fetch the results from the database using more object oriented approach.
+  - The Criteria Query API lets you build nested, structured query expressions in Java, providing a **compile-time syntax checking** that is not possible with a query language like HQL or SQL.
+  - The Criteria API also includes **query by example** (QBE) functionality. This lets you supply example objects that contain the properties you would like to retrieve instead of having to step-by-step spell out the components of the query. It also includes projection and aggregation methods, including counts.
+- **Usage**
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    List<Product> results = crit.list();
+    ```
+  - Lists all `Products` and any objects of derived classes.
+- **Restrictions**
+  - To retrieve objects that have a property value that equals your restriction, use the `eq()` method on `Restrictions`:
+    - `public static SimpleExpression eq(String propertyName, Object value)`
+      ```java
+      Criteria crit = session.createCriteria(Product.class);
+      crit.add(Restrictions.eq("description","Mouse"));
+      List<Product> results = crit.list()
+      ```
+    - To search for products that are **not** equal use the `ne()` method.
+    - You **cannot** use the not-equal restriction to retrieve records with a `NULL` value in the database for that property (in sQL, and therefore in hibernate, `NULL` represents the absence of data, and so cannot be compared with data). -> you will have to use the `isNull()` restriction.
+      ```java
+      Criteria crit = session.createCriteria(Product.class);
+      crit.add(Restrictions.isNull("name"));
+      List<Product> results = crit.list();
+      ```
+
+  - Instead of searching for exact matches, we can retrieve all objects that have a property matching part of a given pattern. To do this, we need to create an SQL `LIKE` clause, with either the `like()` or the `ilike()` method. The `ilike()` method is case-insensitive.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.add(Restrictions.like("name","Mou%"));
+    //OR: crit.add(Restrictions.ilike("name","Mou", MatchMode.START));
+    List<Product> results = crit.list();
+    ```
+  - A complex Criteria query can be seen below:
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    Criterion priceLessThan = Restrictions.lt("price", 10.0);
+    Criterion mouse = Restrictions.ilike("description", "mouse", MatchMode.ANYWHERE);
+    LogicalExpression orExp = Restrictions.or(priceLessThan, mouse);
+    crit.add(orExp);
+    List<Product> results=crit.list();
+    ```
+  - If we wanted to create an OR expression with more than two different criteria (for example, “price > 25.0 OR name like Mou% OR description not like blocks%”), we would use an `org.hibernate.criterion.Disjunction` object to represent a disjunction.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    Criterion priceLessThan = Restrictions.lt("price", 10.0);
+    Criterion mouse = Restrictions.ilike("description", "mouse", MatchMode.ANYWHERE);
+    Criterion browser = Restrictions.ilike("description", "browser", MatchMode.ANYWHERE);
+    Disjunction disjunction = Restrictions.disjunction();
+    disjunction.add(priceLessThan);
+    disjunction.add(mouse);
+    disjunction.add(browser);
+    crit.add(disjunction);
+    List<Product> results = crit.list();
+    ```
+  - The last type of restriction is the SQL restriction `sqlRestriction()`. This restriction allows you to directly specify SI.QL in the Criteria API.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.add(Restrictions.sqlRestriction("{alias}.description like 'Mou%'"));
+    List<Product> results = crit.list();
+    ```
+  - Ordering can be added like: `crit.addOrder(Order.desc("name"));`
+- **Projection and aggregates**
+  - Instead of working with objects from the result set, you can treat the results from the result set as a set of rows and columns, also known as a projection of the data.
+  - To use projections, start by getting the o`rg.hibernate.criterion.Projection` object you need from t`he org.hibernate.criterion.Projections` factory class.
+  - After you get a `Projection` object, add it to your `Criteria` object with the `setProjection()` method.
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    crit.setProjection(Projections.rowCount());
+    List<Long> results = crit.list();
+    ```
+    - The results list will contain one object, a Long that contains the results of executing the COUNT SQL statement.
+  - Other aggregate functions available through the `Projections` factory class include the following::
+  - `avg(String propertyName)`: Gives the average of a property’s value
+  - `count(String propertyName)`: Counts the number of times a property occurs
+  - `countDistinct(String propertyName)`: Counts the number of unique values the property contains
+  - `max(String propertyName)`: Calculates the maximum value of the property values
+  - `min(String propertyName)`: Calculates the minimum value of the property values
+  - `sum(String propertyName)`: Calculates the sum total of the property values
+    ```java
+    Criteria crit = session.createCriteria(Product.class);
+    ProjectionList projList = Projections.projectionList();
+    projList.add(Projections.max("price"));
+    projList.add(Projections.min("price"));
+    projList.add(Projections.avg("price"));
+    projList.add(Projections.countDistinct("description"));
+    crit.setProjection(projList);
+    List<Object[]> results = crit.list();
+    ```
+- **Query By Example (QBE)**
+  - The `org.hibernate.criterion.Example` class contains the QBE functionality.
+  - To use QBE, we first need to construct an `Example` object. Then we need to create an instance of the `Example` object, using the static `create()` method on the `Example` class. The `create()` method takes the `Example` object as its argument. You add the `Example` object to a `Criteria` object just like any other `Criterion` object.
+    ```java
+    Criteria crit = session.createCriteria(Supplier.class);
+    Supplier supplier = new Supplier();
+    supplier.setName("MegaInc");
+    crit.add(Example.create(supplier));
+    List<Supplier> results = crit.list();
+    ```
+  - When Hibernate translates our Example object into an SQL query, **all the properties on our Example objects get examined**.
+  - Default is to ignore null-valued properties. --> Hence if you used primitives you **must** tell hibernate to ignore these while searching (since these have non-null values.)
+    - `excludeZeros`
+    - `excludeProperty()`
+    - `excludeNothing()` - compare for null values and zeroes exactly as they appear in the `Example` object.
+      ```java
+      Criteria prdCrit = session.createCriteria(Product.class);
+      Product product = new Product();
+      product.setName("M%");
+      Example prdExample = Example.create(product);
+      prdExample.excludeProperty("price");
+      prdExample.enableLike();
+      Criteria suppCrit = prdCrit.createCriteria("supplier");
+      Supplier supplier = new Supplier();
+      supplier.setName("SuperCorp");
+      suppCrit.add(Example.create(supplier));
+      prdCrit.add(prdExample);
+      List<Product> results = prdCrit.list();
+      ```
+
+## Hibernate Caching
+
+- **First Level Cache**
+  - Hibernate First Level cache is **enabled by default**, there are no configurations needed for this.
+  - Hibernate first level cache is **session specific**. --> Within the same session two `load(className.class, 1)` queries will return the same object even if table was changed between the two calls! Hibernate only "hits" the database on the first query, but not on the second! However if you open a new session and issue the query, it will hit the database and reflect the changes!
+  - We can use session `session.evict(Object o)` method to remove a single object from the hibernate first level cache.
+  - We can use session `clear()` method to clear the cache i.e delete all the objects from the cache.
+  - We can use session `contains(Object o)` method to check if an object is present in the hibernate cache or not, if the object is found in cache, it returns true or else it returns false.
+  - Since hibernate cache all the objects into session first level cache, while running bulk queries or batch updates it’s necessary to clear the cache at certain intervals to avoid memory issues.
+- **Second Level Cache**
+  - Once the session is closed, first-level cache is terminated as well. This is actually desirable, as it allows for concurrent sessions to work with entity instances in isolation from each other. On the other hand, second-level cache is **SessionFactory-scoped**, meaning it is shared by all sessions created with the same session factory.
+  - Using the secondary cache the process is the following:
+    - If an instance is already present in the first-level cache, it is returned from there
+    - If an instance is not found in the first-level cache, and the corresponding instance state is cached in the second-level cache, then the data is fetched from there and an instance is assembled and returned
+    - Otherwise, the necessary data are loaded from the database and an instance is assembled and returned
+  - Hibernate only needs to be provided with an implementation of the org.hibernate.cache.spi.RegionFactory interface which encapsulates all details specific to actual cache providers.
+    - We will look into Hibernate `EHCache` that is the most popular Hibernate Second Level Cache provider.
+    - Make sure that the `EHCache` version matches your hibernate version!
+  - **Caching strategies**
+    - **Read Only**: This caching strategy should be used for persistent objects that will always read but never updated. It’s good for reading and caching application configuration and other static data that are never updated. This is the simplest strategy with best performance because there is no overload to check if the object is updated in database or not.
+    - **Read Write**: It’s good for persistent objects that can be updated by the hibernate application. However if the data is updated either through backend or other applications, then there is no way hibernate will know about it and data might be stale. So while using this strategy, make sure you are using Hibernate API for updating the data.
+    - **Nonrestricted Read Write**: If the application only occasionally needs to update data and strict transaction isolation is not required, a nonstrict-read-write cache might be appropriate.
+    - **Transactional**: The transactional cache strategy provides support for fully transactional cache providers such as JBoss TreeCache. Such a cache can only be used in a JTA environment and you must specify hibernate.transaction.manager_lookup_class.
+  - In order to enable second level caching we need to introduce the following dependencies:
+    ```xml
+    <!-- EHCache Core APIs -->
+        <dependency>
+          <groupId>net.sf.ehcache</groupId>
+          <artifactId>ehcache-core</artifactId>
+          <version>2.6.11</version>
+        </dependency>
+        <!-- Hibernate EHCache API -->
+        <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-ehcache</artifactId>
+          <!-- Make sure to match hib. versioN! -->
+          <version>4.3.5.Final</version>
+        </dependency>
+        <!-- EHCache uses slf4j for logging -->
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+          <version>1.7.5</version>
+        </dependency>
+    ```
+- We also need to enable caching in our `hibernate.xml`
+    ```xml
+    <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</property>
+        <!-- For singleton factory -->
+        <!-- <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</property>
+        -->
+        <!-- enable second level cache and query cache -->
+        <property name="hibernate.cache.use_second_level_cache">true</property>
+        <property name="hibernate.cache.use_query_cache">true</property>
+        <property name="net.sf.ehcache.configurationResourceName">/myehcache.xml</property>
+    ```
+  - `hibernate.cache.region.factory_class` is used to define the Factory class for Second level caching, I am using `org.hibernate.cache.ehcache.EhCacheRegionFactory` for this. If you want the factory class to be singleton, you should use org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory` class.
+  - `hibernate.cache.use_second_level_cache` is used to enable the second level cache.
+  - `hibernate.cache.use_query_cache` is used to enable the query cache, without it HQL queries results will not be cached.
+  - `net.sf.ehcache.configurationResourceName` is used to define the EHCache configuration file location, it’s an optional parameter and if it’s not present EHCache will try to locate `ehcache.xml` file in the application classpath.
+- Finally we need to define the `ecache.xml`
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd" updateCheck="true"
+            monitoring="autodetect" dynamicConfig="true">
+
+        <diskStore path="java.io.tmpdir/ehcache" />
+
+        <defaultCache maxEntriesLocalHeap="10000" eternal="false"
+                      timeToIdleSeconds="120" timeToLiveSeconds="120" diskSpoolBufferSizeMB="30"
+                      maxEntriesLocalDisk="10000000" diskExpiryThreadIntervalSeconds="120"
+                      memoryStoreEvictionPolicy="LRU" statistics="true">
+            <persistence strategy="localTempSwap" />
+        </defaultCache>
+
+        <cache name="employee" maxEntriesLocalHeap="10000" eternal="false"
+              timeToIdleSeconds="5" timeToLiveSeconds="10">
+            <persistence strategy="localTempSwap" />
+        </cache>
+
+        <cache name="org.hibernate.cache.internal.StandardQueryCache"
+              maxEntriesLocalHeap="5" eternal="false" timeToLiveSeconds="120">
+            <persistence strategy="localTempSwap" />
+        </cache>
+
+        <cache name="org.hibernate.cache.spi.UpdateTimestampsCache"
+              maxEntriesLocalHeap="5000" eternal="true">
+            <persistence strategy="localTempSwap" />
+        </cache>
+    </ehcache>
+    ```
+  - `diskStore`: EHCache stores data into memory but when it starts overflowing, it start writing data into file system. We use this property to define the location where EHCache will write the overflown data.
+  - `defaultCache`: It’s a mandatory configuration, it is used when an Object need to be cached and there are no caching regions defined for that.
+  - `cache name=”employee”`: We use cache element to define the region and it’s configurations. We can define multiple regions and their properties, while defining model beans cache properties, we can also define region with caching strategies. The cache properties are easy to understand and clear with the name.
+  - Cache regions `org.hibernate.cache.internal.StandardQueryCache` and `org.hibernate.cache.spi.UpdateTimestampsCache` are defined because EHCache was giving warning to that.
+- Lastly we need to annotate our classes:
+  - `@Cacheable`
+  - `@Cache(usage=CacheConcurrencyStrategy.READ_ONLY)`
+  - Hibernate will use a separate cache region to store state of instances for that class. The region name is the fully qualified class name. For example, Foo instances are stored in a cache name `org.baeldung.persistence.model.Foo` in Ehcache.
+- Collections are not cached by default, and we need to explicitly mark them as cacheable.
+    ```java
+        @Cacheable
+        @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+        @OneToMany
+        private Collection<Bar> bars;
     ```

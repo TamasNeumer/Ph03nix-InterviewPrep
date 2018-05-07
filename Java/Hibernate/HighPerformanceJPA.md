@@ -560,7 +560,7 @@
     - Requiring less space and being more index-friendly, **numerical sequences are preferred over UUID keys**.
     - **MYQL** The UUID must be stored in a `BINARY(16)` column type.
       ```java
-      @Entity @Table(name = "post") 
+      @Entity @Table(name = "post")
       public class Post {
         @Id @Column(columnDefinition = "BINARY(16)")
         @GeneratedValue(generator = "uuid2")

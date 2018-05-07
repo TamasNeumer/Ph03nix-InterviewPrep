@@ -125,8 +125,8 @@
       - returns newly updated instance
     - Note that the merge method returns an object — it is the mergedPerson object that was loaded into persistence context and updated, not the person object that you passed as an argument.
       ```java
-      Person person = new Person(); 
-      person.setName("John"); 
+      Person person = new Person();
+      person.setName("John");
       session.save(person);
 
       session.evict(person);
@@ -232,11 +232,11 @@
     - The *TableGenerator* uses an underlying database table that holds segments of identifier generation values.
       ```java
       @Id
-      @GeneratedValue(strategy = GenerationType.TABLE, 
+      @GeneratedValue(strategy = GenerationType.TABLE,
         generator = "table-generator")
-      @TableGenerator(name = "table-generator", 
-        table = "dep_ids", 
-        pkColumnName = "seq_id", 
+      @TableGenerator(name = "table-generator",
+        table = "dep_ids",
+        pkColumnName = "seq_id",
         valueColumnName = "seq_value")
       private long depId;
       ```
@@ -986,7 +986,7 @@
     crit.add(Example.create(supplier));
     List<Supplier> results = crit.list();
     ```
-  - When Hibernate translates our Example object into an SQL query, **all the properties on our Example objects get examined**. 
+  - When Hibernate translates our Example object into an SQL query, **all the properties on our Example objects get examined**.
   - Default is to ignore null-valued properties. --> Hence if you used primitives you **must** tell hibernate to ignore these while searching (since these have non-null values.)
     - `excludeZeros`
     - `excludeProperty()`
@@ -1114,7 +1114,8 @@
         private Collection<Bar> bars;
     ```
 
-#### Adding Logging to Hibernate
+### Adding Logging to Hibernate
+
 - Simply add the `slf4j` dependency to the maven configuration.
     ```xml
     <dependency>
