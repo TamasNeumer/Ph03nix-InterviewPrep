@@ -169,7 +169,7 @@
     </dependency>
     ```
     - Add the following configuration (`log4j.properties`) to your resources folder:
-        ```xml
+        ```yml
         # Direct log messages to a log file
         log4j.appender.file=org.apache.log4j.RollingFileAppender
         log4j.appender.file.File=C:\\mkyongapp.log
@@ -667,13 +667,6 @@
           @ManyToOne
           @JoinColumn(name = "cart_id", nullable = false)
           private Cart cart;
-
-          public Items(String itemId, double total, int qty, Cart c){
-              this.itemId=itemId;
-              this.itemTotal=total;
-              this.quantity=qty;
-              this.cart=c;
-          }
       }
       ```
   - Notes:
@@ -802,6 +795,8 @@
           @OneToOne(mappedBy = "txn")
           @Cascade(value = CascadeType.SAVE_UPDATE)
           private Customer customer;
+
+          //Bidirectional Relationship -> SETTER for Customer manually!!!
       }
       ```
 - **Notes**:
@@ -823,7 +818,7 @@
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Txn txn;
     ```
-  - Sicne JPA 2.0 you dont necessarily need this complex generic generator stuff. You could simply write `@MapsId`
+  - Sicne JPA 2.0 you dont necessarily need this complex generic generator stuff. **You could simply write `@MapsId`**
 
 #### Unidirectional @OneToOne
 
@@ -1149,7 +1144,8 @@
       - With MVCC, the second transaction is allowed to make the change, while the first transaction is aborted when the database engine detects the row version mismatch (during the first transaction commit).
   - **Isolation Levels**
     - **Serializable is the only isolation level to provide a truly ACID transaction** interleaving. But serializability comes at a price as locking introduces contention, which, in turn, limits concurrency and scalability.
-    ![IsolationLevels](/Java/Hibernate/res/IsolationLevels.PNG)
+
+      ![IsolationLevels](/Java/Hibernate/res/IsolationLevels.PNG)
     - To read/set these values in JDBC:
       - `int level = connection.getMetaData().getDefaultTransactionIsolation();`
       - `connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);`
@@ -1157,12 +1153,15 @@
       - Read Committed (Oracle, SQL Server, PostgreSQL)
       - Repeatable Read (MySQL)
     - **Prevented phenomena by Read Uncommitted**:
+
       ![Phenomens](/Java/Hibernate/res/Phenomenas.PNG)
       - **MYSQL** Although it uses MVCC, InnoDB implements Read Uncommitted so that dirty reads are permitted.
     - **Prevented phenomena by Read Committed**:
+
       ![PhenomenaDirtyRead](/Java/Hibernate/res/PhenomenaDirtyRead.PNG)
       - **MYSQL:** Query-time snapshots are used to isolate statements from other concurrent transactions. When explicitly acquiring shared or exclusive locks or when issuing update or delete statements (which acquire exclusive locks to prevent dirty writes), if the selected rows are filtered by unique search criteria (e.g. primary key), the locks can be applied to the associated index entries.
     - **Repeatable Read**
+
       ![RepeatableRead](/Java/Hibernate/res/PhRepeatableRead.PNG)
       - **MYSQL** Every transaction can only see rows as if they were when the current transaction started. This prevents non-repeatable reads, but it still allows lost updates and write skews.
     - **Serializable**
@@ -1182,7 +1181,8 @@
 - **Read-only transaction routing**
   - Setting up a database replication environment is useful for both high-availability (a Slave can replace a crashing Master) and traffic splitting. In a Master-Slave replication topology, the Master node accepts both read-write and read-only transactions, while Slave nodes only take read-only traffic.
   - **MYSQL** The `com.mysql.jdbc.ReplicationDriver` supports transaction routing on a Master-Slave topology, the decision being made on the `Connection` read-only status basis.
-  ![TransactionRouting](/Java/Hibernate/res/TransactionRouting.PNG)
+
+    ![TransactionRouting](/Java/Hibernate/res/TransactionRouting.PNG)
 
 #### Transaction Boundaries
 
@@ -1478,15 +1478,79 @@
 
 #### Cascading operations
 
+- Cascading only makes sense only for Parent – Child associations (the Parent entity state transition being cascaded to its Child entities). Cascading from Child to Parent is not very useful and usually, it’s a mapping code smell.
 - The cascade types supported by the Java Persistence Architecture are as follows:
   - `PERSIST`, `MERGE`, `REFRESH`, `REMOVE`, `DETACH`, `ALL`
 - It’s worth pointing out that Hibernate has its own configuration options for cascading, which represent a superset of these.
   - `CascadeType.PERSIST` means that `save()` or  operations cascade to related entities.
   - `CascadeType.MERGE` means that related entities are merged into managed state when the owning entity is merged.
+    - "push this detached entity back into managed status and save its state changes"; the cascading means that all associated entities get pushed back the same way, and the managed-entity handle you get back from .merge() has all managed entities associated with it."
   - `CascadeType.REFRESH` does the same thing for the `refresh()` operation.
   - `CascadeType.REMOVE` removes all related entities association with this setting when the owning entity is deleted.
   - `CascadeType.DETACH` detaches all related entities if a manual detach were to occur.
-  - `CascadeType.ALL` is shorthand for all of the cascade operations.
+  - `CascadeType.ALL` is shorthand for **all** of the cascade operations.
+    ```java
+    @Entity
+    public class Post {
+
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      @Getter
+      private Long id;
+
+      @Getter
+      @Setter
+      private String name;
+
+      @OneToOne(mappedBy = "post",
+              cascade = CascadeType.ALL, orphanRemoval = true)
+      @Getter
+      private PostDetails details;
+
+      public void addDetails(PostDetails details) {
+          this.details = details;
+          details.setPost(this);
+      }
+
+      public void removeDetails(PostDetails details) {
+          if (details != null) {
+              details.setPost(null);
+          }
+          this.details = null;
+      }
+    }
+
+    @Entity
+    public class PostDetails {
+
+        @Id
+        @Getter
+        private Long id;
+
+        @Column(name = "created_on")
+        @Temporal(TemporalType.TIMESTAMP)
+        private Date createdOn = new Date();
+
+        @Getter
+        @Setter
+        private boolean visible;
+
+        @OneToOne
+        @MapsId
+        private Post post;
+
+        public void setPost(Post post) {
+            this.post = post;
+        }
+    }
+    ```
+    - **Notes**
+      - The setter is **NOT** generated on details. Instead we add our own setter where we set the other side's reference as well. Same for removal! (The **bidirectional associations should always be updated on both sides**, therefore the Parent side should contain the addChild and removeChild combo. These methods ensure we always synchronize both sides of the association, to avoid object or relational data corruption issues.)
+      - The `Post` entity plays the Parent role and the `PostDetails` is the Child.
+      - Note how the date is saved! `@Temporal(TemporalType.TIMESTAMP)`
+      - `@MapsId` creates a `post_id` column in the `PostDetails` that stores the `Post`'s primary key.
+      - Note that in the `PostDetails` in the setter method in order to avoid circular dependency via `Post`'s setter we **only** set the `this.post`
+      - When using this type of cascading upon deleting the parent (post) the child (postdetails) is also removed from the database.
 - To include only refreshes and merges in the cascade operation for a one-to-one relationship, you might see the following:
     ```java
     @OneToOne(cascade={CascadeType.REFRESH, CascadeType.MERGE})
@@ -1964,3 +2028,476 @@
         @OneToMany
         private Collection<Bar> bars;
     ```
+
+## Batch Updates
+
+- **Batching Statements**
+  - Sending multiple statements in a single request reduces the number of database roundtrips, therefore decreasing transaction response time.
+  - For executing static SQL statements, JDBC defines the ``Statement`` interface and batching multiple DML statements is as straightforward as the following code snippet:
+    ```java
+    statement.addBatch(
+      "INSERT INTO post (title, version, id) " +
+      "VALUES ('Post no. 1', 0, 1)");
+    statement.addBatch(
+      "INSERT INTO post_comment (post_id, review, version, id) " +
+      "VALUES (1, 'Post comment 1.1', 0, 1)");
+    int[] updateCounts = statement.executeBatch();
+    ```
+  - **Oracle:** For ``Statement`` and ``CallableStatement``, the Oracle JDBC Driver doesn’t actually support batching For anything but ``PreparedStatement``, the driver ignores batching, and each statement is executed separately.
+  - **MySQL** Although it implements the JDBC specification, by default, the MySQL JDBC driver doesn’t send the batched statements in a single request. For this purpose, the JDBC driver defines the ``rewriteBatchedStatements`` connection property, so that statements get rewritten into a single String buffer. In order to fetch the auto-generated row keys, the batch must contain insert statements only.
+    ```java
+    String myConnectionString =
+          "jdbc:mysql://localhost:3307/mydb?" +
+          "useUnicode=true&characterEncoding=UTF-8";
+    try {
+        Connection con = DriverManager.getConnection(myConnectionString,"root", "whatever");
+        PreparedStatement ps = con.prepareStatement("INSERT INTO jdbc (`name`) VALUES (?)");
+        for (int i = 1; i <= 5; i++) {
+            ps.setString(1, String.format("Line %d: Lorem ....", i));
+            ps.addBatch();
+        }
+        ps.executeBatch();
+    }
+    ```
+    - This will send **individual** statements.
+    - However, if we change the connection string to include ``rewriteBatchedStatements=true``, then JDBC will send one or more multi-row INSERT statements.
+    ```java
+    String myConnectionString =
+            "jdbc:mysql://localhost:3307/mydb?" +
+            "useUnicode=true&characterEncoding=UTF-8" +
+            "&rewriteBatchedStatements=true";
+    ```
+    - Such statement rewriting can improve performance in a **0-25%** range!
+- **Batching PreparedStatements**
+  - **Basics**
+    - To address the vulnerabilities of JDBC `Statements` (SQL Injection etc.) JDBC offers the ``PreparedStatement`` interface for binding parameters in a safely manner.
+        ```java
+        PreparedStatement postStatement = connection.prepareStatement(
+        "INSERT INTO Post (title, version, id) " +
+        "VALUES (?, ?, ?)");
+        postStatement.setString(1, String.format("Post no. %1$d", 1));
+        postStatement.setInt(2, 0);
+        postStatement.setLong(3, 1);
+        postStatement.addBatch();
+        postStatement.setString(1, String.format("Post no. %1$d", 2));
+        postStatement.setInt(2, 0);
+        postStatement.setLong(3, 2);
+        postStatement.addBatch();
+        int[] updateCounts = postStatement.executeBatch();
+        ```
+    - The **batch size** as a variable here has to be set correctly. From the book's diagramms it seems that in the "sample measurements" **batch size of ca. 30 and above** were optimal.
+    - Compared to the previous ``Statement`` batch insert results, it’s clear that, for the same data load, the ``PreparedStatement`` use case performs just better.
+  - **Choosing the right batch size**
+    - As a rule of thumb you should always measure the performance improvement for various batch sizes. In practice, **a relatively low value (between 10 and 30) is usually a good choice**.
+  - **Bulk operations**
+    - For example: `UPDATE post SET version = version + 1;`
+    - The bulk alternative is one order of magnitude faster than batching, but, even so, batch updates are more flexible since each row can take a different update logic. Batch updates can also prevent lost updates if the data access logic employs an optimistic locking mechanism.
+    - **Note**: Processing too much data in a single transaction can degrade application performance, especially in a highly concurrent environment. In case the bulk updated records conflict with other concurrent transactions, then either the bulk update transaction might have to wait for some row-level locks to be released or other transactions might wait for the bulk updated rows to be committed.
+- **Retrieving auto-generated keys**
+  - To retrieve the newly created row identifier, the JDBC ``PreparedStatement`` must be instructed to return the auto-generated keys.
+    ```java
+    PreparedStatement postStatement = connection.prepareStatement(
+      "INSERT INTO post (title, version) VALUES (?, ?)",
+      Statement.RETURN_GENERATED_KEYS
+    );
+    ```
+  - Many database engines use sequence number generation optimizations to lower the sequence call execution as much as possible. If the number of inserted records is relatively low, then the sequence call overhead (extra database roundtrips) is insignificant.
+
+## Statement Caching
+
+- **Statement lifecycle**
+  - **Parser**
+    - The Parser checks the SQL statement and ensures its validity.
+    - During parsing, the SQL statement is transformed into a database internal representation, called the *syntax tree* (also known as parse tree or query tree).
+  - **Optimizer**
+    - For a given syntax tree, the database must decide the most efficient data fetching algorithm.
+    - The list of access path, chosen by the Optimizer, is assembled into an execution plan.
+    - Execution plans are often cached, however there are many challenges.
+  - **Execution plan visualization**
+    - In MySQL the plan is displayed using `EXPLAIN` or E`XPLAIN EXTENDED`:
+      - `EXPLAIN EXTENDED SELECT COUNT(*) FROM post;`
+  - **Executor**
+    - From the Optimizer, the execution plan goes to the Executor where it is used to fetch the associated data and build the result set.
+    ![Statement Lifecycle](/Java/Hibernate/res/2_StatementLifecycle.PNG)
+- **Caching performance gain**
+  - According to the Book's measurements the caching has increased the performance by **20-55%** (Statements per Minute).
+- **Server-side statement caching**
+  - **Intro**
+    - The statement string value is used as input to a hashing function, and the resulting value becomes the execution plan cache entry key. If the statement string value changes from one execution to the other, the database cannot reuse an already generated execution plan. For this purpose, **dynamic-generated JDBC Statement(s) are not suitable for reusing execution plans**.
+    - **Server-side prepared statements** allow the data access logic to reuse the same execution plan for multiple executions. A `PreparedStatement` is always associated with a single SQL statement, and bind parameters are used to vary the runtime execution context. Because `PreparedStatement`(s) take the SQL query at creation time, the database can precompile the associated SQL statement prior to executing it.
+    - When it comes to executing the `PreparedStatement`, the driver sends the actual parameter values, and the database can jump to compiling and running the actual execution plan.
+    - Because of index selectivity, in the absence of the actual bind parameter values, the Optimizer cannot compile the syntax tree into an execution plan. For prepared statements, the execution plan can either be compiled on every execution or it can be cached and reused. Recompiling the plan can generate the best data access paths for any given bind variable set while paying the price of additional database resources usage. Reusing a plan can spare database resources, but it might not be suitable for every parameter value combination.
+  - **Bind-sensitive execution plans**
+    - Imagine that we have 100'000 tickets out of which 95% has the status "DONE", 1000 are "TODO" and 4000 are "FAILED".
+    - If you search for the "DONE" tickes: `EXPLAIN SELECT * FROM task WHERE status = 'DONE' LIMIT 100;`
+      - You see that the the optimizer tends to prefer **sequential scans** over index lookups for high selectivity percentages, to reduce the total number of disk-access roundtrips (especially when data is scattered among multiple data blocks).
+    - If you search for the "TODO" tickets: `SQL> EXPLAIN SELECT * FROM task WHERE status = 'TO_DO' LIMIT 100;`
+      - You see that the optimizer selects index scanning!
+    - So, the **execution plan depends on bind parameter** value selectivity.
+  - **MYSQL**
+    - MySQL doesn’t cache **execution plans** (don't confuse with query caching!), so every statement execution is optimized for the current bind parameter values, therefore avoiding data skew issues.
+    - Because of some unresolved issues, since version 5.0.5, the MySQL JDBC driver only emulates server-side prepared statements. To switch to server-side prepared statements, both the `useServerPrepStmts` and the `cachePrepStmts` connection properties must be set to `true`.
+- **Client side statement caching**
+  - Not only the database side can benefit from caching statements, but also the JDBC driver can reuse already constructed statement objects. Advantages:
+    - reducing client-side statement processing, which, in turn, lowers transaction response time
+    - sparing application resources by recycling statement objects along with their associated database-specific metadata.
+  - **MYSQL**
+    - The client-side statement cache is configured using the following properties:
+      - `cachePrepStmts` - enables the client-side statement cache as well as the server-side state- ment validity checking. By default, the statement cache is disabled.
+      - `prepStmtCacheSize` - the number of statements cached for each database connection. The default cache size is 25.
+      - `prepStmtCacheSqlLimit` - the maximum length of an SQL statement allowed to be cached. The default maximum value is 256.
+    - These properties can be set both as connection parameters or at `DataSource` level:
+      - `((MysqlDataSource) dataSource).setCachePrepStmts(true);`
+      - `((MysqlDataSource) dataSource).setPreparedStatementCacheSize(cacheSize);`
+      - `(MysqlDataSource) dataSource).setPreparedStatementCacheSqlLimit(maxLength);`
+
+## ResultSet Fetching
+
+- **Intro**
+  - The SQL Standard defines both the result set and the cursor descriptor through the following properties:
+    - scrollability (the direction in which the result set can be iterated)
+    - sensitivity (when should data be fetched)
+    - updatability (available for cursors, it allows the client to modify records while traversing the
+    result set)
+    - holdability (the result set scope in regard to a transaction lifecycle).
+  - **JDBC ResultSet properties**
+    - `TYPE_FORWARD_ONLY` - The result set can only be iterated from the first to the last element. This is the default scrollability value.
+    - `TYPE_SCROLL_INSENSITIVE` - The result set takes a loading time snapshot which can be iterated both forward and backwards.
+    - `TYPE_SCROLL_SENSITIVE` - The result set is fetched on demand, while being iterated without any direction restriction.
+    - `CONCUR_READ_ONLY` - The result set is just a static data projection which doesn’t allow row-level manipulation. This is the default changeability value.
+    - `CONCUR_UPDATABLE` - The cursor position can be used to update or delete records, or even insert a new one.
+    - `CLOSE_CURSORS_AT_COMMIT` - The result set is closed when the current transaction ends.
+    - `HOLD_CURSORS_OVER_COMMIT` - The result set remains open even after the current transaction is committed.
+- **ResultSet scrollability**
+  - The JDBC ResultSet can be traversed using an application-level cursor. The fetching mechanism is therefore hidden behind an iterator API which decouples the application code from the data retrieval strategy. Some database drivers prefetch the whole result set on the client-side, while other implementations retrieve batches of data on a demand basis.
+  - By default, the ResultSet uses a **forward-only** application-level cursor, which can be traversed only once, from the first position to last one. JDBC also offers scrollable cursors, therefore allowing the row-level pointer to be positioned freely.
+  - The main difference between the two scrollable result sets lays in their **selectivity**.
+    - An **insensitive** cursor **offers a static view** over the current result set, so the **data needs to be fetched entirely prior** to being iterated.
+    - A **sensitive** cursor allows the **result set to be fetched dynamically**, so it can reflect concurrent changes.
+  - **MYSQL**
+    - **Only the insensitive scroll type is supported**, even when explicitly specifying a forward-only result set. Because MySQL doesn’t support database cursors, the driver retrieves the whole result set and caches it on the client-side.
+- **ResultSet changeability**
+  - By default, the result set is just a read-only view of the underlying data projection.
+  - For web applications, requests should be as short as possible - an updatable result set is of little use, especially because holding it open (along with the underlying database connection) over multiple requests can really hurt application scalability.
+  - **As a rule of thumb, if the current transaction doesn’t require updating selected records, the forward-only and read-only default result set type is the most efficient option.**
+- **ResultSet holdability**
+  - **MYSQL**
+    - The default and the only supported holdability value is `HOLD_CURSORS_OVER_COMMIT`.
+    - In a typical enterprise application, database connections are reused from one transaction to another, so **holding a result set after a transaction ends is risky**.
+- **Fetching size**
+  - The JDBC `ResultSet` acts as an application-level cursor, so whenever the statement is traversed, the result must be transferred from the database to the client. The transfer rate is controlled by the Statement fetch size. - `statement.setFetchSize(fetchSize);`
+  - A custom fetch size gives the driver a hint as to the number of rows needed to be retrieved in a single database roundtrip. The default value of 0 leaves each database choose its own driver-specific fetching policy.
+  - **MYSQL**
+    - Because of the network protocol design consideration, fetching the whole result set is the most efficient data retrieval strategy. The only streaming option requires processing one row at a time, which, for large result sets, it implies many database roundtrips.
+- **ResultSet size**
+  - **Intro**
+    - All too often, unfortunately, **especially with the widespread of ORM tools**, the statement might select more data than necessary. This issue might be caused by selecting too many rows or too many columns, which are later discarded in the data access or the business layer.
+    - Tables tend to grow in size (especially if the application gains more traction), and, with time, a moderate result set might easily turn into a performance bottleneck. This issues are often discovered in production systems, long after the application code was shipped.
+    - A user interface can accommodate just as much info as the view allows displaying. For this reason, it’s inefficient to fetch a result set entirely if it cannot fit into the user interface. Pagination or dynamic scrolling are common ways of addressing this issue, and partitioning data sets becomes unavoidable. -> Limiting queries can therefore ensure predictable response times and database resource utilization.
+  - **Too many rows**
+    - Include the row restriction clause in the SQL statement. This way, the Optimizer can better come up with an execution plan that’s optimal for the current result set size (like selecting an index scan instead of a full scan).
+      - `SELECT pc.id FROM post_comment LIMIT ?`
+    - Configure a maximum row count at the JDBC Statement level. Ideally, the driver can adjust the statement to include the equivalent result set size restriction as an SQL clause, but, most often, it only hints the database engine to use a database cursor instead.
+      - `statement.setMaxRows(maxRows);` - Unlike the SQL construct, the JDBC alternative is portable across all driver implementations.
+      - **MYSQL:** The `maxRows` attribute is not sent to the database server, so neither the Optimizer nor the Extractor can benefit from this hint. While the JDBC driver would normally fetch all rows, by placing an upper bound on the result set size, the client-side can spare some networking overhead.
+    - In practice (Book's tests) SQL level restriction proves to be the optimal strategy for limiting a result set.
+  - **Too many columns**
+    - This situation is more prevalent among ORM tools, as for populating entities entirely, all columns are needed to be selected. This might pass unnoticed when selecting just a few entities, but, for large result sets, this can turn into a noticeable performance issue.
+    - **No Solution?!**
+
+## Implementing Application Server Side Connection Pooling using JNDI
+
+### SQL and TomCat Setup
+
+- **SQL Setup**
+    ```sql
+    CREATE TABLE `Employee` (
+      `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+      `name` varchar(20) DEFAULT NULL,
+      `role` varchar(20) DEFAULT NULL,
+      `insert_time` datetime DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
+
+    INSERT INTO `Employee` (`id`, `name`, `role`, `insert_time`)
+    VALUES
+      (3, 'Puppy', 'CEO', now());
+    INSERT INTO `Employee` (`id`, `name`, `role`, `insert_time`)
+    VALUES
+      (14, 'David', 'Developer', now());
+    ```
+- **TomCat - server.xml in GlobalNamingResources section**
+    ```xml
+    <Resource name="jdbc/testDatasource"
+              global="jdbc/testDatasource"
+              auth="Container"
+              factory="com.zaxxer.hikari.HikariJNDIFactory"
+              type="javax.sql.DataSource"
+              driverClassName="com.mysql.jdbc.Driver"
+              jdbcUrl="jdbc:mysql://localhost:3306/hibernate?verifyServerCertificate=false&amp;useSSL=true"
+              username="root"
+              password="master"
+              minimumIdle="8" maximumPoolSize="15" connectionTimeout="300000" maxLifetime="1800000" />
+    ```
+- **TomCat Context.xml ->**
+    ```xml
+    <ResourceLink name="jdbc/testDatasource"
+                global="jdbc/testDatasource"
+                auth="Container"
+                type="javax.sql.DataSource" />
+    ```
+- **TomCat jars**
+  - You need to manually copy the `HikariCP-3.1.0.jar` and `mysql-connector-java-5.1.45.jar` to the lib folder on the app server!
+
+### Maven Setup
+
+- **Maven Config**
+    ```xml
+    <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+      <groupId>HibernateDataSource</groupId>
+      <artifactId>HibernateDataSource</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <packaging>war</packaging>
+
+      <dependencies>
+        <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-core</artifactId>
+          <version>5.2.17.Final</version>
+        </dependency>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <version>5.0.5</version>
+          <scope>provided</scope>
+        </dependency>
+
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>2.3</version>
+            <configuration>
+              <warSourceDirectory>WebContent</warSourceDirectory>
+              <failOnMissingWebXml>false</failOnMissingWebXml>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
+            <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
+            </configuration>
+          </plugin>
+        </plugins>
+        <finalName>${project.artifactId}</finalName>
+      </build>
+    </project>
+    ```
+- **Hibernate Config**
+    ```xml
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE hibernate-configuration PUBLIC
+          "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+          "http://hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+      <hibernate-configuration>
+          <session-factory>
+              <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+              <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+              <property name="hibernate.connection.datasource">java:comp/env/jdbc/testDatasource</property>
+              <property name="hibernate.current_session_context_class">thread</property>
+
+              <!-- Mapping with model class containing annotations -->
+          <mapping class="com.tamasne.servlet.hibernate.model.Employee"/>
+          </session-factory>
+      </hibernate-configuration>
+    ```
+
+- **Entity**
+    ```java
+    @Entity
+    @Data
+    @Table(name="Employee",
+        uniqueConstraints={@UniqueConstraint(columnNames={"ID"})})
+    public class Employee {
+
+      @Id
+      @GeneratedValue(strategy=GenerationType.IDENTITY)
+      @Column(name="ID", nullable=false, unique=true, length=11)
+      private int id;
+
+      @Column(name="NAME", length=20, nullable=true)
+      private String name;
+
+      @Column(name="ROLE", length=20, nullable=true)
+      private String role;
+
+      @Column(name="insert_time", nullable=true)
+      private Date insertTime;
+    }
+    ```
+
+- **listener/HibernateSessionFactoryListener.java**
+    ```java
+    @WebListener
+    public class HibernateSessionFactoryListener implements ServletContextListener {
+
+      public final Logger logger = Logger.getLogger(HibernateSessionFactoryListener.class);
+
+        public void contextDestroyed(ServletContextEvent servletContextEvent) {
+          SessionFactory sessionFactory = (SessionFactory) servletContextEvent.getServletContext().getAttribute("SessionFactory");
+          if(sessionFactory != null && !sessionFactory.isClosed()){
+            logger.info("Closing sessionFactory");
+            sessionFactory.close();
+          }
+          logger.info("Released Hibernate sessionFactory resource");
+        }
+
+        public void contextInitialized(ServletContextEvent servletContextEvent) {
+          Configuration configuration = new Configuration();
+          configuration.configure("hibernate.cfg.xml");
+          configuration.addAnnotatedClass(Employee.class);
+          logger.info("Hibernate Configuration created successfully");
+
+          ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
+          logger.info("ServiceRegistry created successfully");
+          SessionFactory sessionFactory = configuration
+            .buildSessionFactory(serviceRegistry);
+          logger.info("SessionFactory created successfully");
+
+          servletContextEvent.getServletContext().setAttribute("SessionFactory", sessionFactory);
+          logger.info("Hibernate SessionFactory Configured successfully");
+        }
+
+    }
+    ```
+
+- **And the Servlet Definition Itself**
+    ```java
+    @WebServlet("/GetEmployeeByID")
+    public class GetEmployeeByID extends HttpServlet {
+      private static final long serialVersionUID = 1L;
+      public final Logger logger = Logger.getLogger(GetEmployeeByID.class);
+      protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int empId = Integer.parseInt(request.getParameter("empId"));
+        logger.info("Request Param empId="+empId);
+        SessionFactory sessionFactory = (SessionFactory) request.getServletContext().getAttribute("SessionFactory");
+        Session session = sessionFactory.getCurrentSession();
+        Transaction tx = session.beginTransaction();
+        Employee emp = (Employee) session.get(Employee.class, empId);
+        tx.commit();
+        PrintWriter out = response.getWriter();
+            response.setContentType("text/html");
+            if(emp != null){
+            out.print("<html><body><h2>Employee Details</h2>");
+            out.print("<table border=\"1\" cellspacing=10 cellpadding=5>");
+            out.print("<th>Employee ID</th>");
+            out.print("<th>Employee Name</th>");
+            out.print("<th>Employee Role</th>");
+                out.print("<tr>");
+                out.print("<td>" + empId + "</td>");
+                out.print("<td>" + emp.getName() + "</td>");
+                out.print("<td>" + emp.getRole() + "</td>");
+                out.print("</tr>");
+            out.print("</table></body><br/>");
+            out.print("</html>");
+            }else{
+              out.print("<html><body><h2>No Employee Found with ID="+empId+"</h2></body></html>");
+            }
+      }
+    }
+    ```
+  - Unfortunately for some reason I had to add manually the `configuration.addAnnotatedClass(Employee.class);` to make it work. (Config file was not read.) If everything done correclty this should work.
+
+## Interview Questions
+
+- **What is Hibernate Framework?**
+  - Object-relational mapping or ORM is the programming technique to map application domain model objects to the relational database tables. Hibernate is java based ORM tool that provides framework for mapping application domain objects to the relational database tables and vice versa.
+  - Hibernate provides reference implementation of Java Persistence API, that makes it a great choice as ORM tool with benefits of loose coupling. We can use Hibernate persistence API for CRUD operations.
+- **What is Java Persistence API (JPA)?**
+  - Java Persistence API (JPA) provides specification for managing the relational data in applications.
+  - JPA specifications is defined with annotations in javax.persistence package. Using JPA annotation helps us in writing implementation independent code.
+- **What are the important benefits of using Hibernate Framework?**
+  - Eliminate boiler plate code that coems with JDBC
+  - XML/JPA annotation configuration
+  - HQL
+  - Open Source
+  - Supports lazy initialization using proxy objects
+  - Its cache improves perofrmance
+- **Which are the most important interfaces if Hibarenate?**
+  - `SessionFactory` (org.hibernate.SessionFactory): SessionFactory is an immutable thread-safe cache of compiled mappings for a single database. We need to initialize SessionFactory once and then we can cache and reuse it. SessionFactory instance is used to get the Session objects for database operations.
+  - `Session` (org.hibernate.Session): Session is a single-threaded, short-lived object representing a conversation between the application and the persistent store. It wraps JDBC java.sql.Connection and works as a factory for org.hibernate.Transaction. We should open session only when it’s required and close it as soon as we are done using it. Session object is the interface between java application code and hibernate framework and provide methods for CRUD operations.
+  - `Transaction` (org.hibernate.Transaction): Transaction is a single-threaded, short-lived object used by the application to specify atomic units of work. It abstracts the application from the underlying JDBC or JTA transaction. A org.hibernate.Session might span multiple org.hibernate.Transaction in some cases.
+- **What is hibernate configuration file?**
+  - Hibernate configuration file contains database specific configurations and used to initialize SessionFactory. We provide database credentials or JNDI resource information in the hibernate configuration xml file. Some other important parts of hibernate configuration file is Dialect information, so that hibernate knows the database type and mapping file or class details. (`hiberante.cfg.xmkl`)
+- **What is hibernate mapping file?**
+  - Hibernate mapping file is used to define the entity bean fields and database table column mappings. We know that JPA annotations can be used for mapping but sometimes XML mapping file comes handy when we are using third party classes and we can’t use annotations.
+- **Name the most used JPA annotations!**
+  - `@Entity`, `@Table`, `@Id`, `@Embedded`, `@Column`, `@GeneratedValue`, `@Cascade`, `@PrimaryKeyJoinColumn`, and the mappings.
+- **What is Hibernate SessionFactory and how to configure it?**
+  - SessionFactory is the factory class used to get the Session objects. SessionFactory is responsible to read the hibernate configuration parameters and connect to the database and provide Session objects. Usually an application has a single SessionFactory instance and threads servicing client requests obtain Session instances from this factory.
+  - The internal state of a SessionFactory is immutable. Once it is created this internal state is set. This internal state includes all of the metadata about Object/Relational Mapping.
+  - SessionFactory also provide methods to get the Class metadata and Statistics instance to get the stats of query executions, second level cache details etc.
+- **Hibernate SessionFactory is thread safe?**
+  - Internal state of SessionFactory is immutable, so it’s thread safe. Multiple threads can access it simultaneously to get Session instances.
+- **What is Hibernate Session and how to get it?**
+  - Hibernate Session is the interface between java application layer and hibernate. This is the core interface used to perform database operations. Lifecycle of a session is bound by the beginning and end of a transaction.
+  - Session provide methods to perform create, read, update and delete operations for a persistent object. We can execute HQL queries, SQL native queries and create criteria using Session object.
+- **Hibernate Session is thread safe?**
+  - Hibernate Session object is not thread safe, every thread should get it’s own session instance and close it after it’s work is finished.
+- **What is difference between openSession and getCurrentSession?**
+  - Hibernate SessionFactory openSession() method always opens a new session, while the other returns the session bound to the context.
+- **What is difference between Hibernate Session get() and load() method?**
+  - get() loads the data as soon as it’s called whereas load() returns a proxy object and loads data only when it’s actually required, so load() is better because it support lazy loading.
+  - Since load() throws exception when data is not found, we should use it only when we know data exists.
+  - We should use get() when we want to make sure data exists in the database.
+- **What is hibernate caching? Explain Hibernate first level cache?**
+  - Hibernate first level cache is associated with the Session object. Hibernate first level cache is enabled by default and there is no way to disable it. However hibernate provides methods through which we can delete selected objects from the cache or clear the cache completely.
+- **What are different states of an entity bean?**
+  - Transient, Persistent, Detached
+- **What is use of Hibernate Session merge() call?**
+  - Hibernate merge can be used to update existing values, however this method create a copy from the passed entity object and return it. The returned object is part of persistent context and tracked for any changes, passed object is not tracked.
+- **What is difference between Hibernate save(), saveOrUpdate() and persist() methods?**
+  - Hibernate save can be used to save entity to database. Problem with save() is that it can be invoked without a transaction and if we have mapping entities, then only the primary object gets saved causing data inconsistencies. Also save returns the generated id immediately.
+  - Hibernate persist is similar to save with transaction. I feel it’s better than save because we can’t use it outside the boundary of transaction, so all the object mappings are preserved. Also persist doesn’t return the generated id immediately, so data persistence happens when needed.
+  - Hibernate saveOrUpdate results into insert or update queries based on the provided data. If the data is present in the database, update query is executed. We can use saveOrUpdate() without transaction also, but again you will face the issues with mapped objects not getting saved if session is not flushed.
+- **What will happen if we don’t have no-args constructor in Entity bean?**
+  - `HibernateException`
+- **What is difference between sorted collection and ordered collection, which one is better?**
+  - When we use (Java's) Collection API sorting algorithms to sort a collection, it’s called sorted list.
+  - If we are using Hibernate framework to load collection data from database, we can use it’s Criteria API to use “order by” clause to get ordered list. Below code snippet shows you how to get it.
+    - `List<Employee> empList = session.createCriteria(Employee.class).addOrder(Order.desc("id")).list();`
+  - Ordered list is better than sorted list because the actual sorting is done at database level, that is fast and doesn’t cause memory issues.
+- **What are the collection types in Hibernate?**
+  - Bag, Set, List, Array, Map
+- **Why we should not make Entity Class final?**
+  - Hibernate use proxy classes for lazy loading of data, only when it’s needed. This is done by extending the entity bean, if the entity bean will be final then lazy loading will not be possible, hence low performance.
+- **What is HQL and what are it’s benefits?**
+  - Supports object oriened queries
+- **What is Query Cache in Hibernate?**
+  - Hibernate implements a cache region for queries resultset that integrates closely with the hibernate second-level cache.
+  - This is an optional feature and requires additional steps in code. This is only useful for queries that are run frequently with the same parameters. First of all we need to configure below property in hibernate configuration file.
+- **What is Named SQL Query?**
+  - Hibernate provides Named Query that we can define at a central location (e.g. over a class definition using annotations) and use them anywhere in the code. We can created named queries for both HQL and Native SQL.
+  - Hibernate Named Query syntax is checked when the hibernate session factory is created, thus making the application fail fast in case of any error in the named queries.
+- **What is the benefit of Hibernate Criteria API?**
+  - Hibernate provides Criteria API that is more object oriented for querying the database and getting results. We can’t use Criteria to run update or delete queries or any DDL statements. It’s only used to fetch the results from the database using more object oriented approach.
+- **What is Hibernate Proxy and how it helps in lazy loading?**
+  - Hibernate uses proxy object to support lazy loading. Basically when you load data from tables, hibernate doesn’t load all the mapped objects. As soon as you reference a child or lookup object via getter methods, if the linked entity is not in the session cache, then the proxy code will go to the database and load the linked object. It uses javassist to effectively and dynamically generate sub-classed implementations of your entity objects.
+- **How transaction management works in Hibernate?**
+  - Transaction management is very easy in hibernate because most of the operations are not permitted outside of a transaction. So after getting the session from SessionFactory, we can call session beginTransaction() to start the transaction. This method returns the Transaction reference that we can use later on to either commit or rollback the transaction.
+- **What is cascading and what are different types of cascading?**
+  - When we have relationship between entities, then we need to define how the different operations will affect the other entity. This is done by cascading and there are different types of it.
+  - ALL, SAVE_UPDATE, DELETE, DETACH, MERGE, PERSIST, REFRESH, REMOVE, LOCK, REPLCIATE
+- **How to use application server JNDI DataSource with Hibernate framework?**
+  - For web applications, it’s always best to allow servlet container to manage the connection pool. That’s why we define JNDI resource for DataSource and we can use it in the web application. It’s very easy to use in Hibernate, all we need is to remove all the database specific properties and use below property to provide the JNDI DataSource name.
+  - `<property name="hibernate.connection.datasource">java:comp/env/jdbc/MyLocalDB</property>`

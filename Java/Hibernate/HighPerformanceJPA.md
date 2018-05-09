@@ -104,7 +104,7 @@
 - **Batching Statements**
   - Sending multiple statements in a single request reduces the number of database roundtrips, therefore decreasing transaction response time.
   - For executing static SQL statements, JDBC defines the ``Statement`` interface and batching multiple DML statements is as straightforward as the following code snippet:
-    ```sql
+    ```java
     statement.addBatch(
       "INSERT INTO post (title, version, id) " +
       "VALUES ('Post no. 1', 0, 1)");
