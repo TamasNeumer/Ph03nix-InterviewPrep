@@ -221,7 +221,7 @@
     ```
   - Eclipse can use Lombok out of the box, while IntelliJ needs some configuration.
 - **IntelliJ Configuration**
-  - File - Settings/Preferences - Build. Execution, Deployment - Enable annotation processing
+  - File - Settings/Preferences - Build. Execution, Deployment - Compiler - Enable annotation processing
   - File - Settings/Preferences - Plugins - Browse repositories - Search for "Lombok" - Install - Restart
 
 ### Useful Lombok Annotations
