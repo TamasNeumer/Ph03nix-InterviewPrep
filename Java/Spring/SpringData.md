@@ -73,28 +73,47 @@
       - `List<Person> findByAddress_ZipCode(ZipCode zipCode);`
   - **Pagination, Slicing, Sorting**
     - **Paging**
-      - We can paginate the query results of our database queries by following these steps:
-        - Obtain the `Pageable` object that specifies the information of the requested page.
-          ```java
-          /* MANUALLY */
-          Pageable p = new PageRequest(0, 10); // first page
-          Pageable p = new PageRequest(1, 10, Sort.Direction.ASC, "title", "description"); // second page using sorting
-          Pageable p = new PageRequest(1, 10,
-                      new Sort(Sort.Direction.DESC, "description")
-                        .and(new Sort(Sort.Direction.ASC, "title"));
-              );
-          ```
+      - **Static Pagination**
+        - This is the most convenient way to implement pagination in a web application. It only needs to get the page and the number of result per page for a query. Instead of using `Repository` or `CrudRepository`, you should use `PaginationAndSortingRepository`, which accepts an object of the "Pageable" type.
+        - The `Pageable` object needs the number of a page and the number of the element per page.
+        - The result is a "page" that has the element from specific rows of the whole result set. The response also includes the metadata of the total element of the specific query you sent, as well as total pages.
+        - We can paginate the query results of our database queries by following these steps:
+          - Obtain the `Pageable` object that specifies the information of the requested page.
+            ```java
+            /* MANUALLY */
+            Pageable p = new PageRequest(0, 10); // first page
+            Pageable p = new PageRequest(1, 10, Sort.Direction.ASC, "title", "description"); // second page using sorting
+            Pageable p = new PageRequest(1, 10,
+                        new Sort(Sort.Direction.DESC, "description")
+                          .and(new Sort(Sort.Direction.ASC, "title"));
+                );
+            ```
+          - Use this `Pagable` in our function:
+            ```java
+            @Repository
+            public interface SomethingRepository extends PaginationAndSortingRepository<Something, Long> {
+              @Query("Select s from  Something s "
+                      + "join s.somethingelse as se "
+                      + "where se.id = :somethingelseid ")
+              Page<Something> findBySomethingElseId(@Param("somethingelseid") long somethingelseid,
+                                                                                  Pageable pageable);
+            ```
+          - **Since Spring Data 2.0 the `Page` class doesn't contain methods for retrieving the Content. TODO: Research how we can extract data from paged results!**
+  - **Streaming results**
+    ```java
+    @Query("select u from User u")
+    Stream<User> findAllByCustomQueryAndStream();
 
-        - Pass the `Pageable` object forward to the correct repository method as a method parameter.
-    - Besides that, the infrastructure recognizes certain specific types like `Pageable` and `Sort`, to apply pagination and sorting to your queries dynamically. The following example demonstrates these features:
-      ```java
-      Page<User> findByLastname(String lastname, Pageable pageable);
-      Slice<User> findByLastname(String lastname, Pageable pageable);
-      List<User> findByLastname(String lastname, Sort sort);
-      List<User> findByLastname(String lastname, Pageable pageable);
-      ```
-      - **Page (extends Slice)**
-        - A page is a sublist of a list of objects. It allows gain information about the position of it in the containing entire list.
+    Stream<User> readAllByFirstnameNotNull();
+
+    @Query("select u from User u")
+    Stream<User> streamAllPaged(Pageable pageable);
+
+    /*Usage*/
+    try (Stream<User> stream = repository.findAllByCustomQueryAndStream()) {
+      stream.forEach(…);
+    }
+    ```
 - **Error handling and Nullability**
   - **Annotations**
     - `@NonNullApi` - Used on the *package level* to declare that the default behavior for parameters and return values is to not accept or produce `null` values.
@@ -109,3 +128,4 @@
       - Returns `Optional.empty()` when the query executed does not produce a result. Throws an `IllegalArgumentException` when the `emailAddress` handed to the method is `null`.
 
 ## JPA Repository
+
