@@ -46,6 +46,113 @@
   - `@ResponseBody` - It is a Spring annotation which binds a method return value to the web response body. It is not interpreted as a view name. It uses HTTP Message converters to convert the return value to HTTP response body, based on the content-type in the request HTTP header. The message converter in our case is `MappingJackson2HttpMessageConverter`, which reads and writes JSON using Jackson's ObjectMapper.
   - `@RequestMapping` - Annotation for mapping web requests onto methods in request-handling classes with flexible method signatures.
 
+## Designing a complete REST API with fle upload
+
+### Basics of class design
+
+- **Basic directory structure**
+  - **Model/EntityDomain** - contains the annotated Java POJOs
+  - **Service** - contains the functions that are used to operate on the database. (`getAllUser()`, `createUser(String username, String...)`)
+  - **Repository** - An interface extending Spring's `CrudRepositoy` interface.
+  - **Controller** - contains the functions that process the incoming HTTP requests, interpret the data and call the appropriate services with the correct arguments.
+  - **Command** - Command objects represent an abstraction between the API endpoints and the actual Entities that are stored in the database.
+  - **Converter** - Classes used to convert the command entities to their corresponding "database entity" types.
+
+- **Maven dependencies**
+    ```java
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-orm</artifactId>
+                <version>5.0.6.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <optional>true</optional>
+            </dependency>
+
+            <!--Hibernate & HikariCP-->
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>5.2.17.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-hikaricp</artifactId>
+                <version>5.2.17.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>3.1.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    ```
+- **Application Config**
+    ```properties
+    # DataSource
+    spring.datasource.url = jdbc:mysql://localhost:3306/hibernate?useSSL=false
+    spring.datasource.username = root
+    spring.datasource.password = master12345
+
+    # Hikari will use the above plus the following to setup connection pooling
+    spring.datasource.hikari.minimumIdle=5
+    spring.datasource.hikari.maximumPoolSize=10
+    spring.datasource.hikari.idleTimeout=30000
+    spring.datasource.hikari.poolName=SpringBootJPAHikariCP
+    spring.datasource.hikari.maxLifetime=2000000
+    spring.datasource.hikari.connectionTimeout=30000
+
+    # Without below HikariCP uses deprecated com.zaxxer.hikari.hibernate.HikariConnectionProvider
+    # Surprisingly enough below ConnectionProvider is in hibernate-hikaricp dependency and not hibernate-core
+    # So you need to pull that dependency but, make sure to exclude it's transitive dependencies or you will end up
+    # with different versions of hibernate-core
+    spring.jpa.hibernate.connection.provider_class=org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+
+    # JPA specific configs
+    spring.jpa.properties.hibernate.show_sql=true
+    spring.jpa.properties.hibernate.format_sql=true
+    spring.jpa.properties.hibernate.use_sql=true
+    spring.jpa.properties.hibernate.id.new_generator_mappings=false
+    spring.jpa.properties.hibernate.default_schema=littracker
+    spring.jpa.properties.hibernate.search.autoregister_listeners=false
+    spring.jpa.properties.hibernate.bytecode.use_reflection_optimizer=false
+    spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.MySQL57InnoDBDialect
+
+    # Hibernate ddl auto (create, create-drop, validate, update)
+    spring.jpa.hibernate.ddl-auto = create
+
+    # Enable logging
+    logging.level.org.hibernate.SQL=DEBUG
+    # Enable logging for HikariCP to verify that it is used
+    logging.level.com.zaxxer.hikari.HikariConfig=DEBUG
+    logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+    ```
+
+- ****
+  - 
+
 ## Adding reactive programming
 
 - **Basics of reactive programming**
