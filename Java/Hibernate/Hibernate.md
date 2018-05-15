@@ -515,7 +515,7 @@
 
 - **Intro**
   - The single table inheritance is the **default** JPA strategy, funneling a whole inheritance Domain Model hierarchy into a single database table.
-  - Annotation: `@Inheritance` or `@Inheritance(strategy = InheritanceType.SINGLE_TABÖE)`
+  - Annotation: `@Inheritance` or `@Inheritance(strategy = InheritanceType.SINGLE_TABLE)`
 - **Implementation**
   - The parent class simply receives one of the two above mentioned annotations and defines the column in which the "Class Types" are stored with the `@DiscriminatorColumn` annotation.
     ```java
@@ -597,6 +597,46 @@
 - Table-per-class is the least effective when it comes to polymorphic queries or associations. If each subclass is stored in a separate database table, the `@MappedSuperclass` Domain Model inheritance is often a better alternative anyway.
 
 ## Mapping Relationships
+
+### Unidirectional vs Bidirectional relatipnship
+
+- In the unidirectional case only one of the entities has a reference to the other side.
+    ```java
+    public class User {
+        private int     id;
+        private String  name;
+        @ManyToOne
+        @JoinColumn(
+                name = "groupId")
+        private Group   group;
+    }
+
+    public class Group {
+        private int     id;
+        private String  name;
+    }
+    ```
+- In the bidirectional case both classes have a reference to each other.
+    ```java
+    public class User {
+        private int     id;
+        private String  name;
+        @ManyToOne
+        @JoinColumn(
+                name = "groupId")
+        private Group   group;
+    }
+    public class Group {
+        private int         id;
+        private String      name;
+        @OneToMany(mappedBy="group")
+        private List<User>  users;
+    }
+    ```
+- Note that navigational access is not always good, especially for "one-to-very-many" and "many-to-very-many" relationships. Imagine a `Group` that contains thousands of `User`s:
+  - How would you access them? With so many Users, you usually need to apply some filtering and/or pagination, so that you need to execute a query anyway.
+  - How would you add new `User`s to the `Group`? Fortunately, Hibernate looks at the owning side of relationship when persisting it, so you can only set `User.group`. However, if you want to keep objects in memory consistent, you also need to add `User` to `Group.users`. But it would make Hibernate to fetch all elements of `Group.users` from the database! **This has a performance impact, if you have a lot of Users assigned to a Group!**
+- **CONCLUSION: Always consider if you really need the bidirectional association! (aka. if you really need to access the other entity from the given object.**
 
 ### @ManyToOne
 
@@ -823,12 +863,34 @@
 #### Unidirectional @OneToOne
 
 - **Notes**
-  - In this case only one of the two classes has a reference to the other.
+  - The best way to map a `@OneToOne` relationship is to use `@MapsId`. In case of two classes - `Post` and `PostDetail`, the `PostDetail` will contain the following code.
+  - This way, the `id` column serves as both Primary Key and FK. You’ll notice that the `@Id` column no longer uses a `@GeneratedValue` annotation since the identifier is populated with the identifier of the `post` association.
 - **Code**
     ```java
-    @OneToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
+    @Entity(name = "PostDetails")
+    @Table(name = "post_details")
+    public class PostDetails {
+        @Id
+        private Long id;
+
+        @Column(name = "created_on")
+        private Date createdOn;
+
+        @Column(name = "created_by")
+        private String createdBy;
+
+        @OneToOne(fetch = FetchType.LAZY)
+        @MapsId
+        private Post post;
+
+        public PostDetails() {}
+
+        public PostDetails(String createdBy) {
+            createdOn = new Date();
+            this.createdBy = createdBy;
+        }
+        //Getters and setters omitted for brevity
+    }
     ```
 
 ### @ManyToMany
