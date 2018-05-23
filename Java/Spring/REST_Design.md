@@ -1,5 +1,26 @@
 # Rest Design
 
+## Exception handling
+
+- Basically you want a uniform way to handle exceptions. (I.e. wrap different exceptions in a given template.)
+- Use [@ControllerAdvice](https://dzone.com/articles/global-exception-handling-with-controlleradvice) - this will pick up exceptions originating from **ALL** classes annotated via `@Controller`.
+- In this class (that was annotated with `@ControllerAdvice`) you wrap the thrown exceptions and return a `ResponseEntity`. This will be sent back to the client.
+- The `@ExceptionHandler` annotation defines which exception type is handled by the function.
+
+    ```java
+    @ExceptionHandler(EntityNotFoundException.class)
+        protected ResponseEntity<Object> handleEntityNotFound(
+                EntityNotFoundException ex) {
+            ApiError apiError = new ApiError(NOT_FOUND);
+            apiError.setMessage(ex.getMessage());
+            return buildResponseEntity(apiError);
+        }
+    ```
+
+## Key Points
+- **Entities**
+
+
 ## Basics
 
 - **NOT** a protocol but an **Achitectural principle** for managing state information.

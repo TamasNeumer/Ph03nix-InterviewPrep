@@ -126,6 +126,3 @@
       - Returns `null` when the query executed does not produce a result. Also accepts `null` as the value for `emailAddress`.
     - `Optional<User> findOptionalByEmailAddress(EmailAddress emailAddress);`
       - Returns `Optional.empty()` when the query executed does not produce a result. Throws an `IllegalArgumentException` when the `emailAddress` handed to the method is `null`.
-
-## JPA Repository
-
