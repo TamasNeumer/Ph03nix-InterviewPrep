@@ -146,6 +146,7 @@
       stream.forEach(…);
     }
     ```
+<<<<<<< HEAD
   - **Querydsl Extension**
     - Querydsl is a framework that enables the construction of statically typed SQL-like queries through its fluent API.
     - The Interface:
@@ -315,3 +316,17 @@
     }
     ```
 // TODO ...
+=======
+- **Error handling and Nullability**
+  - **Annotations**
+    - `@NonNullApi` - Used on the *package level* to declare that the default behavior for parameters and return values is to not accept or produce `null` values.
+    - `@NonNull` - Used on a parameter or return value that must not be `null` (not needed on a parameter and return value where `@NonNullApi` applies).
+    - `@Nullable` -  Used on a parameter or return value that can be `null`.
+  - **Examples**
+    - `User getByEmailAddress(EmailAddress emailAddress);`
+      - Throws an `EmptyResultDataAccessException` when the query executed does not produce a result. Throws an `IllegalArgumentException` when the `emailAddress` handed to the method is `null`.
+    - `@Nullable User findByEmailAddress(@Nullable EmailAddress emailAdress);`
+      - Returns `null` when the query executed does not produce a result. Also accepts `null` as the value for `emailAddress`.
+    - `Optional<User> findOptionalByEmailAddress(EmailAddress emailAddress);`
+      - Returns `Optional.empty()` when the query executed does not produce a result. Throws an `IllegalArgumentException` when the `emailAddress` handed to the method is `null`.
+>>>>>>> d6ec70ba444ba2c19492763c764a513b212d6907

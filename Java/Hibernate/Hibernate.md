@@ -160,50 +160,59 @@
     </dependency>
     ```
   - **Enabling Logging**
-    - Simply add the `slf4j` dependency to the maven configuration.
-    ```xml
-    <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-          <version>1.6.1</version>
-    </dependency>
-    ```
-    - Add the following configuration (`log4j.properties`) to your resources folder:
-        ```yml
-        # Direct log messages to a log file
-        log4j.appender.file=org.apache.log4j.RollingFileAppender
-        log4j.appender.file.File=C:\\mkyongapp.log
-        log4j.appender.file.MaxFileSize=1MB
-        log4j.appender.file.MaxBackupIndex=1
-        log4j.appender.file.layout=org.apache.log4j.PatternLayout
-        log4j.appender.file.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
-
-        # Direct log messages to stdout
-        log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-        log4j.appender.stdout.Target=System.out
-        log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-        log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
-
-        # Root logger option
-        log4j.rootLogger=INFO, file, stdout
-
-        # Log everything. Good for troubleshooting
-        log4j.logger.org.hibernate=INFO
-
-        # Log all JDBC parameters
-        log4j.logger.org.hibernate.type=ALL
-        ```
-    - Optionally you can add `<property name="hibernate.generate_statistics">true</property>` to the configuration file to enable live statistics, that will be logged. Once done so you can add statistics to your transactions:
-      ```java
-      /*...*/
-      SessionStatistics sessionStats = session.getStatistics();
-      Statistics stats = sessionFactory.getStatistics();
-      /*...*/
-      logger.info("getEntityCount- "+sessionStats.getEntityCount());
-      logger.info("openCount- "+stats.getSessionOpenCount());
-      logger.info("getEntityInsertCount- "+stats.getEntityInsertCount());
-      /*...*/
+    - The **GOOD** way
+      - [Link](https://github.com/gavlyukovskiy/spring-boot-data-source-decorator)
+    - The **LESS GOOD** way
+      - Configuration properties
+        - `hiberante.show_sql` - Should be avoided as it prints to console.
+        - `hiberante.format_sql` - formats SQL statements before being logged or printed to the console. (Instead of a one-liner it is formatted into seperate lines.)
+        - `hibernate.use_sql_comments` - Add comments to the automatically generated SQL statement. In a production environment **DON'T turn it off**
+      - Because Hibernate uses `PreparedStatement`(s) exclusively the bind parameter values are not available when the statement gets printed into the log.
+      - The best way is to use an external JDBC statement proxy. (Either the JDBC Driver or the DataSource can be proxied to intercept statement executions and log them along with the actual parameters.)
+      - Simply add the `slf4j` dependency to the maven configuration.
+      ```xml
+      <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.6.1</version>
+      </dependency>
       ```
+      - Add the following configuration (`log4j.properties`) to your resources folder:
+          ```yml
+          # Direct log messages to a log file
+          log4j.appender.file=org.apache.log4j.RollingFileAppender
+          log4j.appender.file.File=C:\\mkyongapp.log
+          log4j.appender.file.MaxFileSize=1MB
+          log4j.appender.file.MaxBackupIndex=1
+          log4j.appender.file.layout=org.apache.log4j.PatternLayout
+          log4j.appender.file.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+
+          # Direct log messages to stdout
+          log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+          log4j.appender.stdout.Target=System.out
+          log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+          log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+
+          # Root logger option
+          log4j.rootLogger=INFO, file, stdout
+
+          # Log everything. Good for troubleshooting
+          log4j.logger.org.hibernate=INFO
+
+          # Log all JDBC parameters
+          log4j.logger.org.hibernate.type=ALL
+          ```
+      - Optionally you can add `<property name="hibernate.generate_statistics">true</property>` to the configuration file to enable live statistics, that will be logged. Once done so you can add statistics to your transactions:
+        ```java
+        /*...*/
+        SessionStatistics sessionStats = session.getStatistics();
+        Statistics stats = sessionFactory.getStatistics();
+        /*...*/
+        logger.info("getEntityCount- "+sessionStats.getEntityCount());
+        logger.info("openCount- "+stats.getSessionOpenCount());
+        logger.info("getEntityInsertCount- "+stats.getEntityInsertCount());
+        /*...*/
+        ```
 
 ## Reducing boilerplate using Project Lombok
 
@@ -515,7 +524,7 @@
 
 - **Intro**
   - The single table inheritance is the **default** JPA strategy, funneling a whole inheritance Domain Model hierarchy into a single database table.
-  - Annotation: `@Inheritance` or `@Inheritance(strategy = InheritanceType.SINGLE_TABÖE)`
+  - Annotation: `@Inheritance` or `@Inheritance(strategy = InheritanceType.SINGLE_TABLE)`
 - **Implementation**
   - The parent class simply receives one of the two above mentioned annotations and defines the column in which the "Class Types" are stored with the `@DiscriminatorColumn` annotation.
     ```java
@@ -597,6 +606,46 @@
 - Table-per-class is the least effective when it comes to polymorphic queries or associations. If each subclass is stored in a separate database table, the `@MappedSuperclass` Domain Model inheritance is often a better alternative anyway.
 
 ## Mapping Relationships
+
+### Unidirectional vs Bidirectional relatipnship
+
+- In the unidirectional case only one of the entities has a reference to the other side.
+    ```java
+    public class User {
+        private int     id;
+        private String  name;
+        @ManyToOne
+        @JoinColumn(
+                name = "groupId")
+        private Group   group;
+    }
+
+    public class Group {
+        private int     id;
+        private String  name;
+    }
+    ```
+- In the bidirectional case both classes have a reference to each other.
+    ```java
+    public class User {
+        private int     id;
+        private String  name;
+        @ManyToOne
+        @JoinColumn(
+                name = "groupId")
+        private Group   group;
+    }
+    public class Group {
+        private int         id;
+        private String      name;
+        @OneToMany(mappedBy="group")
+        private List<User>  users;
+    }
+    ```
+- Note that navigational access is not always good, especially for "one-to-very-many" and "many-to-very-many" relationships. Imagine a `Group` that contains thousands of `User`s:
+  - How would you access them? With so many Users, you usually need to apply some filtering and/or pagination, so that you need to execute a query anyway.
+  - How would you add new `User`s to the `Group`? Fortunately, Hibernate looks at the owning side of relationship when persisting it, so you can only set `User.group`. However, if you want to keep objects in memory consistent, you also need to add `User` to `Group.users`. But it would make Hibernate to fetch all elements of `Group.users` from the database! **This has a performance impact, if you have a lot of Users assigned to a Group!**
+- **CONCLUSION: Always consider if you really need the bidirectional association! (aka. if you really need to access the other entity from the given object.**
 
 ### @ManyToOne
 
@@ -823,12 +872,34 @@
 #### Unidirectional @OneToOne
 
 - **Notes**
-  - In this case only one of the two classes has a reference to the other.
+  - The best way to map a `@OneToOne` relationship is to use `@MapsId`. In case of two classes - `Post` and `PostDetail`, the `PostDetail` will contain the following code.
+  - This way, the `id` column serves as both Primary Key and FK. You’ll notice that the `@Id` column no longer uses a `@GeneratedValue` annotation since the identifier is populated with the identifier of the `post` association.
 - **Code**
     ```java
-    @OneToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
+    @Entity(name = "PostDetails")
+    @Table(name = "post_details")
+    public class PostDetails {
+        @Id
+        private Long id;
+
+        @Column(name = "created_on")
+        private Date createdOn;
+
+        @Column(name = "created_by")
+        private String createdBy;
+
+        @OneToOne(fetch = FetchType.LAZY)
+        @MapsId
+        private Post post;
+
+        public PostDetails() {}
+
+        public PostDetails(String createdBy) {
+            createdOn = new Date();
+            this.createdBy = createdBy;
+        }
+        //Getters and setters omitted for brevity
+    }
     ```
 
 ### @ManyToMany
@@ -1116,11 +1187,13 @@
       - To prevent dirty reads, the database engine must hide uncommitted changes from all the concurrent transactions (but the one that authored the change). Each transaction is allowed to see its own changes because otherwise the read-your-own-writes consistency guarantee is compromised.
     - **Non-repeatable read**
       - If one transaction reads a database row without applying a shared lock on the newly fetched record, then a concurrent transaction might change this row before the first transaction has ended.
-      ![NonRepeatableRead](/Java/Hibernate/res/NonRepeatableRead.PNG)
+
+        ![NonRepeatableRead](/Java/Hibernate/res/NonRepeatableRead.PNG)
       - Most database systems have moved to a Multi-Version Concurrency Control model, and shared locks are no longer mandatory for preventing non-repeatable reads. By verifying the current row version, a transaction can be aborted if a previously fetched record has changed in the meanwhile.
     - **Phantom read**
       - If a transaction makes a business decision based on a set of rows satisfying a given predicate, without predicate locking, a concurrent transaction might insert a record matching that particular predicate.
-      ![PhantomRead](/Java/Hibernate/res/PhantomRead.PNG)
+
+        ![PhantomRead](/Java/Hibernate/res/PhantomRead.PNG)
       - Phantom rows can lead a buyer into purchasing a product without being aware of a better offer that was added right after the user has finished fetching the offer list.
       - Phantom reads are not a problem on MySQL.
     - **Read skew**
@@ -1263,6 +1336,28 @@
     throw new DataAccessException(e);
     } });
     ```
+
+### Session and Transactions while using Spring Boot
+
+- The following code was used for testing. The entities are fetched using Spring's `CrudReposiotry`/`PaginsAndSortingRepository`. Some fields were lazily initialized, and when trying to use `toString` it threw an `LazyInitializationException`. However, a `LAZY` association needs the `Session` to be opened in order to initialize the Proxy. If the Persistence Context is closed, when trying to access a non-initialized `LAZY` association, the infamous `LazyInitializationException` is thrown.
+    ```java
+    @Test
+    // @Transactional
+    public void getNumberOfVehicles() throws Exception{
+        List<Vehicle> result = (List<Vehicle>) vehicleRepository.findAll();
+        for(Vehicle vehicle: result){
+            System.out.println(vehicle);
+        }
+        assertEquals(result.size(), 50);
+    }
+    ```
+- Poddible solutions:
+  - **WRONG**
+    - Add this to the config: `spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true`
+    - Problem: Behind the scenes, a temporary `Session` is opened just for initializing every `DrivingLicenseCategory` (lazy) association. Every temporary `Session` implies acquiring a new database connection, as well as a new database transaction.
+  - **BETTER**
+    - Use the `@Transactional` keyword above the method signature. This will make the enitre method to be handled in a transaction, hence the Persistance Context remains live.
+
 - **Application-level transactions**
   - **Intro**
     - A logical transaction may be composed of multiple web requests, including user think time, for which reason it can be visualized as a long conversation. (Alice and Bob are working on Motius's ticket manager, both opening the same ticket making some changes and then overwriting each others changes.) --> A logical transaction may be composed of multiple web requests, including user think time, for which reason it can be visualized as a long conversation.
