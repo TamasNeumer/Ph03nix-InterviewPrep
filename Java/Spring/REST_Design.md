@@ -150,9 +150,6 @@
     logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
     ```
 
-- ****
-  - 
-
 ## Adding reactive programming
 
 - **Basics of reactive programming**
