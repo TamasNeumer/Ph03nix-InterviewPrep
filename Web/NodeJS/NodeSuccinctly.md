@@ -113,4 +113,96 @@
     ```
 - `npm run start` - Node.js will start the index.js file as if we are running directly from the terminal.
 
-a
+## Filesystem and Streams
+
+- The fs module is a sort of wrapper around the standard POSIX functions and exposes a lot of methods to access and work with the filesystem. Most of them are in two flavors: the **default async version** and the **sync version**. For FileIO we have seen the async/sync examples before.
+
+- Writing a file is somewhat similar:
+
+    ```js
+    // Writing
+
+    const fs = require('fs')
+    fs.writeFile('/path/to/file', data, (err) => { 
+      // check error
+    })
+
+    // Watching
+
+    const watcher = fs.watch('/path/to/folder')
+    watcher.on('change', function(event, filename) {
+      console.log(`${event} on file ${filename}`)
+    })
+    ```
+
+- The path module also offers cool OS independent features.
+
+    ```js
+    const path = require('path')
+    const fullPath = path.join('/path/to/folder', 'README.md')
+    const fullPath2 = path.join(__dirname, 'README.md')
+    ```
+
+- The previously seen file readers were not very efficient as they only return once the complete file is read. --> Solution: Streams! They **emit events when a chunk of data is available** so that the consumers can start using it. Two main events are `data` and `end`, which are raised when a chunk of data is ready to be used and when the stream has finished, respectively.
+
+    ```js
+    const fs = require('fs');
+    const http = require('http');
+    const server = http.createServer((request, response) => {
+      response.writeHead(200, {'Content-Type': 'text/html'});
+      var stream = fs.createReadStream('./index.html');
+      stream.pipe(response);
+    });
+    server.listen(8000);
+    ```
+  - Since the response object is a stream, we can pipe the readable stream to response so that the server can start serving chunks of index.html as soon as they are available.
+- Writable streams are the counterpart of readable ones. They can be created with the function createWriteStream and they are streams on which we can pipe something. For example, we can use a writable stream to copy a file:
+
+    ```js
+    const fs = require('fs');
+    var sourceFile = fs.createReadStream('path/to/source.txt');
+    var destinationFile = fs.createWriteStream('path/to/dest.txt');
+    sourceFile.on('data', function(chunk) {
+      destinationFile.write(chunk);
+    });
+    ```
+
+## Writing Web Applications
+
+### HTTP
+- The `request` object contains all the information about the request, so we could use it to decide what kind of response we have to send to the client.
+- The `response` object is used to build the response. We are using it to add the status code (200) and the Content-Type header.
+
+    ```js
+    const http = require('http')
+    const server = http.createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html' })
+        if (request.url === '/about')
+            { response.write('<h1>About Node.js</h1>')
+        } else {
+            response.write('<h1>Hello from Node.js/h1>')
+        }
+        response.end();
+    })
+    server.listen(8000)
+    ```
+
+### Express
+
+- `npm install express`
+    ```js
+    const express = require('express')
+    const app = express()
+    app.get('/', (req, res) => { res.send('Hello World!') });
+    app.put('/users/:id', (req, res) => { // update the user with specified id });
+    app.get('/users', (req, res) => { 
+      const users = [{id: 1, name: 'Emanuele'}, {id: 2, name: 'Tessa'}]
+      res.send(users)
+    })
+    app.listen(8000, () = > { console.log('Example app listening on port 8000!'); });
+    ```
+- On an `app` object, we attach the various routes specifying the method used.
+- Notice the path variable. Inside the request we will find the value of `id` inside `req.params.id`.
+- Tip: Even if `res.send` converts the object in JSON format, response has a JSON method that explicitly specifies the content type to `application/json`.
+- If we need to specify a particular status code, we can use `res.status(code)` where code is the actual status code that we want. By default, it’s 200. Note that the `send` and `json` methods are overloaded so that you can send the content and the status code at the same time.
+  - `res.json(200, users) res.send(200, users)`
