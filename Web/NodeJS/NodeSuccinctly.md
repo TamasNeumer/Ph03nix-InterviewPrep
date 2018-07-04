@@ -2,7 +2,7 @@
 
 ## Intro
 
-### What is NodeJS?
+### What is NodeJS
 
 - **Node.js is an event-driven, single-thread, non-blocking I/O platform for writing applications.**
 - **Event driven**
@@ -103,4 +103,14 @@
 ### Installing modules
 
 - `npm install express` - This command will download the Express package and all its dependencies in the `node_modules` folder so that they will be available for the scripts in the current folder or any nested folders.
-- `npm init` to create projects.
+- `npm init` to create projects. This file acts as a sort of project file with some metadata information.
+- `npm install express --save` - the dependency information will be stored in the `package.json` file.
+- The dependencies in the `package.json` file are usually **split into two groups**: `dependencies` and `devDependencies`. It is a good practice to put the runtime dependencies inside the `dependencies` group and keep the `devDependencies` section for all the packages that are used only during development (for example, for testing, linting code, seeding the database, etc.).
+- By default, the script section has one entry dedicated to testing and the default implementation simply echoes a string to the terminal, saying that no test has been configured.
+
+    ```js
+    "scripts": { "start": "node ./index.js" },
+    ```
+- `npm run start` - Node.js will start the index.js file as if we are running directly from the terminal.
+
+a
