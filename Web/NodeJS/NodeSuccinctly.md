@@ -206,3 +206,4 @@
 - Tip: Even if `res.send` converts the object in JSON format, response has a JSON method that explicitly specifies the content type to `application/json`.
 - If we need to specify a particular status code, we can use `res.status(code)` where code is the actual status code that we want. By default, it’s 200. Note that the `send` and `json` methods are overloaded so that you can send the content and the status code at the same time.
   - `res.json(200, users) res.send(200, users)`
+- To add a header, we use the method `res.set(headerName, headerValue)`.
