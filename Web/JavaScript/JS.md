@@ -1,8 +1,40 @@
 
+# JavaScript
+
+## Fundamentals
+
+### Strict mode
+
+- Strict mode applies to **entire scripts** or to **individual functions**.
+- To invoke strict mode for an entire script, put the exact statement `"use strict";` (or `'use strict';`) before any other statements.
+- ECMAScript 2015 introduced JavaScript modules and the entire contents of JavaScript modules are automatically in strict mode, with no statement needed to initiate it.
+
+  ```js
+    function strict() {
+        // because this is a module --> strict
+    }
+    export default strict;
+  ```
+
+### Variables
+- 
+
+### Importing Scripts to HTML
+
+- `<script src="file.js"/>`
+- The following also works, however you **CAN'T** mix the two!
+
+  ```js
+    <script>
+      alert(1);
+    </script>`
+  ```
+
+
 https://babeljs.io/learn-es2015/
 http://2ality.com/2014/09/es6-modules-final.html
 
-# JavaScript
+
 **`let` keyword**
   - let allows you to declare variables that are **limited in scope to the block**, statement, or expression on which it is used. This is unlike the var keyword, which defines a variable globally, or locally to an entire function regardless of block scope.
     ```js
