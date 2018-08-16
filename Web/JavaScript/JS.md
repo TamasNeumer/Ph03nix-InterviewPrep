@@ -283,7 +283,7 @@ return; // <-- implicit ; at end of line!
 
 ### Symbols type
 
-- “Symbol” value represents a unique identifier.
+- Symbol is a primitive type for unique identifiers.
 - `let id = Symbol();` - creation
 - `let id = Symbol("id");` - symbol with description
 - Symbols dont auto-convert to string implicitly. Use `id.toString()`.
@@ -297,12 +297,123 @@ return; // <-- implicit ; at end of line!
   alert( user[id] ); // we can access the data using the symbol as the key
   ```
 
+- Now if there is another JS library that uses "id" as a field, there would be  a conflict if the field wouldn't be a symbol. But since it is, the two libraries' "id" symbol can co-exist.
+- However if you DO want that different parts of your app can see the same symbol, you need to create symbols in the **global symbol registry**.
+  - Use: `Symbol.for(key)` - creates a global symbol for a name
+  - `Symbol.keyFor(sym)` returns the name for a global symbol
 - Symbolic properties do not participate in for..in loop.
 - In contrast, `Object.assign` copies both string and symbol properties:
+- There are many system symbols used by JavaScript which are accessible as Symbol.*. We can use them to alter some built-in behaviors.
 
+### Object methods, "this"
 
-Two objects are equal only if they are the same object.
+- Just as you can add a field to an object, you can add a function to it as well:
+  - `user.sayHi = function() {alert("Hello!");};`
+  - Or using the mehthod shorthand:
 
+    ```js
+    let user = {
+      sayHi() { // same as "sayHi: function()"
+        alert("Hello");
+      }
+    };
+    ```
+
+- To access the object, a method can use the `this` keyword.
+- The value of `this` is defined at run-time.
+- However watch out for errors:
+
+  ```js
+  let user = {
+    name: "John",
+    hi() { alert(this.name); }
+  }
+
+  // split getting and calling the method in two lines
+  let hi = user.hi;
+  hi(); // Error, because this is undefined 
+  ```
+
+  - Here `hi = user.hi` puts the function into the variable, and then on the last line it is completely standalone, and so there’s no `this`.
+  - **To make `user.hi()` calls work, JavaScript uses a trick – the dot '.' returns not a function, but a value of the special Reference Type.**
+  - The value of Reference Type is a three-value combination (base, name, strict), where:
+    - `base` is the object.
+    - `name` is the property.
+    - `strict` is true if use strict is in effect.
+  - The result of a property access `user.hi` is not a function, but a value of Reference Type. For `user.hi` in strict mode it is:
+    - `(user, "hi", true)`
+  - When parentheses `()` are called on the Reference Type, they receive the full information about the object and its method, and can set the right `this` (`=user` in this case).
+  - Any other operation like assignment `hi = user.hi` discards the reference type as a whole, takes the value of `user.hi` (a function) and passes it on. So any further operation “loses” `this`.
+  - **So, as the result, the value of this is only passed the right way if the function is called directly using a dot `obj.method()` or square brackets `obj[method]()` syntax (they do the same here).**
+
+### Arrow functions and this
+
+- If we reference `this` from such a function, it’s taken from the outer “normal” function.
+
+  ```js
+  let user = {
+    firstName: "Ilya",
+    sayHi() {
+      let arrow = () => alert(this.firstName);
+      arrow();
+    }
+  };
+
+  user.sayHi(); // Ilya
+  ```
+
+### Object to primitive conversion
+
+- When an object is used in the context where a primitive is required, for instance, in an alert or mathematical operations, it’s converted to a primitive value using the `ToPrimitive` algorithm (specification).
+- To do the conversion, JavaScript tries to find and call three object methods:
+  - Call `obj[Symbol.toPrimitive](hint)` if the method exists,
+  - Otherwise if hint is "string" try `obj.toString()` and `obj.valueOf()`, whatever exists.
+  - Otherwise if hint is "number" or "default" try `obj.valueOf()` and `obj.toString()`, whatever exists.
+- The hint can be of 3 types: "string", "number", "default"
+- Example:
+
+    ```js
+    let user = {
+      name: "John",
+      money: 1000,
+
+      [Symbol.toPrimitive](hint) {
+        alert(`hint: ${hint}`);
+        return hint == "string" ? `{name: "${this.name}"}` : this.money;
+      }
+    };
+
+    // conversions demo:
+    alert(user); // hint: string -> {name: "John"}
+    alert(+user); // hint: number -> 1000
+    alert(user + 500); // hint: default -> 1500
+    ```
+
+### Constructor, operator "new"
+
+```js
+function User(name) {
+  // this = {};  (implicitly)
+
+  // add properties to this
+  this.name = name;
+  this.isAdmin = false;
+
+  // return this;  (implicitly)
+}
+
+let user = new User("Jack");
+```
+
+- Steps in the background:
+  - A new empty object is created and assigned to this.
+  - The function body executes. Usually it modifies this, adds new properties to it.
+  - The value of this is returned.
+ 
+- You can add return statement but:
+  - If return is called with object, then it is returned instead of this.
+  - If return is called with a primitive, it’s ignored.
+- You can omit the parentheses if there is no argument
 
 https://babeljs.io/learn-es2015/
 http://2ality.com/2014/09/es6-modules-final.html
