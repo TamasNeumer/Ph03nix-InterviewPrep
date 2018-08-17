@@ -694,6 +694,36 @@ clearTimeout(timerId);
   }, 2000);
   ```
 
+- Note that the `setInterval` **starts** the method in given intervals. If they take longer they may even overlap. With the recursive way, if re-added at the very end, you control the time **between** the end of the current and the start of the next execution.
+
+- Using `setTimeout(funct, 0)` is useful to "schedule" tasks that should be excuted immediately. For example: splitting heavy weight tasks into smaller tasks and schedule them. This way you don't block with the process of the entire task:
+
+  ```js
+  let i = 0;
+  let start = Date.now();
+
+  function count() {
+
+    // move the scheduling at the beginning
+    if (i < 1e9 - 1e6) {
+      setTimeout(count, 0); // schedule the new call
+    }
+
+    do {
+      i++;
+    } while (i % 1e6 != 0);
+
+    if (i == 1e9) {
+      alert("Done in " + (Date.now() - start) + 'ms');
+    }
+
+  }
+
+  count();
+  ```
+
+
+
 https://babeljs.io/learn-es2015/
 http://2ality.com/2014/09/es6-modules-final.html
 
