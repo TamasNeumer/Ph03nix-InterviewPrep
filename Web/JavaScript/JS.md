@@ -409,11 +409,33 @@ let user = new User("Jack");
   - A new empty object is created and assigned to this.
   - The function body executes. Usually it modifies this, adds new properties to it.
   - The value of this is returned.
- 
+
 - You can add return statement but:
   - If return is called with object, then it is returned instead of this.
   - If return is called with a primitive, it’s ignored.
 - You can omit the parentheses if there is no argument
+
+## Data types in JS
+
+### Methods of primitives
+
+- Primitives are still primitive. A single value, as desired.
+- The language allows access to methods and properties of strings, numbers, booleans and symbols.
+- When this happens, a special **“object wrapper” is created that provides the extra functionality, and then is destroyed**.
+  - For example `myStr.toUpperCase()` works, but know the "price" that had to be payed in the background.
+  - The JavaScript engine **highly optimizes** this process. It may even skip the creation of the extra object at all. But it must still adhere to the specification and behave as if it creates one.
+
+### Numbers
+
+- All numbers in JavaScript are stored in 64-bit format IEEE-754, also known as **“double precision”**.
+- You can write numbers as `1e9`, `7.3e9`, or `1e-6`.
+- Hex/Bin/Oct: `0xff` / `0b11` / `0o3777`
+- Two dots to call a method
+  - Please note that two dots in `123456..toString(36)` is not a typo. If we want to call a method directly on a number, like `toString` in the example above, then we need to place two dots `..` after it. If we placed a single dot: `123456.toString(36)`, then there would be an error, because JavaScript syntax implies the decimal part after the first dot. And if we place one more dot, then JavaScript knows that the decimal part is empty and now goes the method.
+- Methods on numbers:
+  - `toString(base)`
+  - `Math.floor/ceil/round/trunc`
+  - `toFixed(n)` -> rounds the number to n digits after the point and returns a **string representation** of the result. We can convert it to a number using the unary plus or a Number() call: `+num.toFixed(5)`.
 
 https://babeljs.io/learn-es2015/
 http://2ality.com/2014/09/es6-modules-final.html
