@@ -522,3 +522,38 @@ myFunction(-1, ...args, 2, ...[3]);
 var parts = ['shoulders', 'knees'];
 var lyrics = ['head', ...parts, 'and', 'toes'];
 ```
+
+### Strings
+
+- The internal format for strings is always **UTF-16**, it is not tied to the page encoding.
+
+  ```js
+  let single = 'single-quoted';
+  let double = "double-quoted";
+
+  let backticks = `backticks`;
+
+  function sum(a, b) {
+    return a + b;
+  }
+
+  alert(`1 + 2 = ${sum(1, 2)}.`); // 1 + 2 = 3.
+
+  // Backtics allow multi-line strings
+
+  let guestList = `Guests:
+  * John
+  * Pete
+  * Mary
+  `;
+  ```
+
+- Please note that `str.length` is a numeric property, not a function.
+- Accessing chars with `str[0]` (modern way, returns `undefined` if char not found, `str.charAt(0)` (older, returns empty string if char not found)
+- Iterate over chars: `for (let char of "Hello")`
+- Strings are **IMMUTABLE** - Strings can’t be changed in JavaScript. It is impossible to change a character. --> create new string by concatenating
+- `toLowerCase`, `toUpperCase`
+- `str.IndexOf(substr, fromPos)`, `str.lastIndexOf(pos)`
+  - In some code ninjas might write `if(~str.indexOf("Widget"))` to find something.
+- `str.includes(substr, pos)` returns true/false (instead of index)
+- `str.startsWith(substr)`, `str.endsWith(substr)`
