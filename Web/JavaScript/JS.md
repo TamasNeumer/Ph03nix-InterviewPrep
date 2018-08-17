@@ -437,6 +437,263 @@ let user = new User("Jack");
   - `Math.floor/ceil/round/trunc`
   - `toFixed(n)` -> rounds the number to n digits after the point and returns a **string representation** of the result. We can convert it to a number using the unary plus or a Number() call: `+num.toFixed(5)`.
 
+### Strings
+
+- The internal format for strings is always **UTF-16**, it is not tied to the page encoding.
+
+  ```js
+  let single = 'single-quoted';
+  let double = "double-quoted";
+
+  let backticks = `backticks`;
+
+  function sum(a, b) {
+    return a + b;
+  }
+
+  alert(`1 + 2 = ${sum(1, 2)}.`); // 1 + 2 = 3.
+
+  // Backtics allow multi-line strings
+
+  let guestList = `Guests:
+  * John
+  * Pete
+  * Mary
+  `;
+  ```
+
+- Please note that `str.length` is a numeric property, not a function.
+- Accessing chars with `str[0]` (modern way, returns `undefined` if char not found, `str.charAt(0)` (older, returns empty string if char not found)
+- Iterate over chars: `for (let char of "Hello")`
+- Strings are **IMMUTABLE** - Strings can’t be changed in JavaScript. It is impossible to change a character. --> create new string by concatenating
+- `toLowerCase`, `toUpperCase`
+- `str.IndexOf(substr, fromPos)`, `str.lastIndexOf(pos)`
+  - In some code ninjas might write `if(~str.indexOf("Widget"))` to find something.
+- `str.includes(substr, pos)` returns true/false (instead of index)
+- `str.startsWith(substr)`, `str.endsWith(substr)`
+
+## Advanced working with functions
+
+### Rest parameters and spread operator
+
+- A function **can be called with any number of arguments, no matter how it is defined**. There will be no error because of “excessive” arguments. But of course in the result only the first two will be counted (if the function expects two args).
+- Rest parameters = `...args` -> gather all args to an array. This must be at the end i.e. last argument.
+- `arguments` contains all arguments by their index:
+
+  ```js
+  function showName() {
+    alert( arguments.length );
+    alert( arguments[0] );
+    alert( arguments[1] );
+  }
+  ```
+
+- Arrow functions dont have `arguments`
+- **Spread operator** -> passing an array to a function as separate parameters:
+
+  ```js
+  let arr = [3, 5, 1];
+  alert( Math.max(...arr) );
+  ```
+
+### Closure
+
+- In JavaScript, every running function, code block, and the script as a whole have an associated object known as the **Lexical Environment**.
+- The Lexical Environment object consists of two parts:
+  - **Environment Record** – an object that has all local variables as its properties (and some other information like the value of this).
+  - A **reference to the outer lexical environment**, usually the one associated with the code lexically right outside of it (outside of the current curly brackets)
+- “Lexical Environment” is a specification object. We can’t get this object in our code and manipulate it directly.
+- Function Declarations are special. Unlike `let` variables, they are processed **not** when the execution reaches them, **but when a Lexical Environment is created**. For the global Lexical Environment, it means the moment when the script is started.
+- When code wants to access a variable – it is first searched for in the inner Lexical Environment, then in the outer one, then the more outer one and so on until the end of the chain.
+- Look at the following example. Here the `count` is always incremented!
+
+  ```js
+  function makeCounter() {
+    let count = 0;
+
+    return function() {
+      return count++; // has access to the outer counter
+    };
+  }
+
+  let counter = makeCounter();
+
+  alert( counter() ); // 0
+  alert( counter() ); // 1
+  alert( counter() ); // 2
+  ```
+
+  - Can we somehow reset the counter from the code that doesn’t belong to makeCounter? E.g. after alert calls in the example above. --> **There is no way.** The counter is a local function variable, we can’t access it from the outside.
+  - If we call makeCounter() multiple times – it returns many counter functions. Are they independent or do they share the same count? --> For every call to `makeCounter()` a new function Lexical Environment is created, with its own `counter`g. So the resulting counter functions are independent.
+
+- For GC the lexical scope also works!!!
+
+  ```js
+  function f() {
+    let value = 123;
+
+    function g() { alert(value); }
+
+    return g;
+  }
+
+  let g = f(); // g is reachable, and keeps the outer lexical environment in memory
+  ```
+
+- **V8 optimizations**
+
+  ```js
+  function f() {
+    let value = Math.random();
+
+    function g() {
+      debugger; // in console: type alert( value ); No such variable!
+    }
+
+    return g;
+  }
+
+  let g = f();
+  g();
+
+  // OR
+
+  let value = "Surprise!";
+
+  function f() {
+    let value = "the closest value";
+
+    function g() {
+      debugger; // in console: type alert( value ); Surprise!
+    }
+
+    return g;
+  }
+
+  let g = f();
+  g();
+  ```
+
+  - As you could see – there is no such variable! In theory, it should be accessible, but the engine optimized it out.
+
+### The old var
+
+- `var` has no **BLOCK** scope. It has functions scope though!
+- If a code block is inside a function, then var becomes a function-level variable.
+
+  ```js
+  if (true) {
+    var test = true; // use "var" instead of "let"
+  }
+
+  alert(test); // true, the variable lives after if
+
+  // function
+  function sayHi() {
+    var phrase = "Hello"; // local variable, "var" instead of "let"
+
+    alert(phrase); // Hello
+  }
+
+  sayHi();
+
+  alert(phrase); // Error, phrase is not defined
+  ```
+
+- `var` declarations are processed when the function starts (or script starts for globals). People also call such behavior **“hoisting”** (raising), because all `var` are “hoisted” (raised) to the top of the function.
+- **Declarations are hoisted, but assignments are not.** - i.e. `var myVar = "asd"` -> the "hoisted" `myVar` won't contain the value.
+
+### Global object
+
+- In a browser it is named “window”, for Node.JS it is “global”, for other environments it may have another name.
+- Usually, it’s not a good idea to use it, but here are some examples you can meet.
+
+### Function object, Named Function Expression (NFE)
+
+- In JavaScript, functions are objects, and they have properties.
+  - `sayHi.name`, where  `function sayHi() {alert("Hi");}` or `let sayHi = function({alert("Hi");}` will print "sayHi".
+  - `myFunc.length` -> returns the number of function parameters. Can be used with "variadic" args.
+- Functions themselves can have properties:
+
+  ```js
+  function sayHi() {
+    alert("Hi");
+
+    // let's count how many times we run
+    sayHi.counter++;
+  }
+
+  sayHi.counter = 0; // initial value
+
+  sayHi(); // Hi
+  sayHi(); // Hi
+
+  alert( `Called ${sayHi.counter} times` ); // Called 2 times
+  ```
+
+- A property assigned to a function like `sayHi.counter = 0` does not define a local variable `counter` inside it. In other words, a property `counter` and a variable `let counter` are two unrelated things.
+
+- **NFE**
+  - If the function is declared as a Function Expression (not in the main code flow), and it carries the name, then it is called a Named Function Expression. The name can be used inside to reference itself, for recursive calls or such.
+  - It allows the function to reference itself internally.
+  - It is not visible outside of the function.
+
+  ```js
+  let sayHi = function func(who) {
+    if (who) {
+      alert(`Hello, ${who}`);
+    } else {
+      func("Guest"); // use func to re-call itself
+    }
+  };
+  ```
+
+### New function syntax
+
+- `let func = new Function ([arg1[, arg2[, ...argN]],] functionBody)`
+
+  ```js
+  let sum = new Function('a', 'b', 'return a + b');
+  alert( sum(1, 2) ); // 3
+  ```
+
+  - The major difference from other ways we’ve seen is that the **function is created literally from a string, that is passed at run time**.
+  - You can use this to dynamically receive functions and execute it.
+- When a function is created using new Function, its `[[Environment]]` references not the current Lexical Environment, but instead the global one.
+
+### Scheduling: setTimeout and setInterval
+
+- `setTimeout` allows to run a function once after the interval of time.
+  - `let timerId = setTimeout(func|code, delay[, arg1, arg2...])`
+  - `clearTimeout(timerId);` - to clear it
+- `setInterval` allows to run a function regularly with the interval between the runs.
+  - `let timerId = setInterval(() => alert('tick'), 2000);`
+  - `setTimeout(() => { clearInterval(timerId); alert('stop'); }, 5000);`
+
+```js
+function sayHi(phrase, who) {
+  alert( phrase + ', ' + who );
+}
+setTimeout(sayHi, 1000, "Hello", "John"); // Hello, John
+setTimeout(() => alert('Hello'), 1000);
+let timerId = setTimeout("alert('Hello')", 1000); // even from string
+
+clearTimeout(timerId);
+```
+
+- **Recursive setTimeout**
+  - allows you to (dynamically if wanted) change the delay.
+  ```js
+  /** instead of:
+  let timerId = setInterval(() => alert('tick'), 2000);
+  */
+
+  let timerId = setTimeout(function tick() {
+    alert('tick');
+    timerId = setTimeout(tick, 2000); // (*)
+  }, 2000);
+  ```
+
 https://babeljs.io/learn-es2015/
 http://2ality.com/2014/09/es6-modules-final.html
 
@@ -545,37 +802,3 @@ var parts = ['shoulders', 'knees'];
 var lyrics = ['head', ...parts, 'and', 'toes'];
 ```
 
-### Strings
-
-- The internal format for strings is always **UTF-16**, it is not tied to the page encoding.
-
-  ```js
-  let single = 'single-quoted';
-  let double = "double-quoted";
-
-  let backticks = `backticks`;
-
-  function sum(a, b) {
-    return a + b;
-  }
-
-  alert(`1 + 2 = ${sum(1, 2)}.`); // 1 + 2 = 3.
-
-  // Backtics allow multi-line strings
-
-  let guestList = `Guests:
-  * John
-  * Pete
-  * Mary
-  `;
-  ```
-
-- Please note that `str.length` is a numeric property, not a function.
-- Accessing chars with `str[0]` (modern way, returns `undefined` if char not found, `str.charAt(0)` (older, returns empty string if char not found)
-- Iterate over chars: `for (let char of "Hello")`
-- Strings are **IMMUTABLE** - Strings can’t be changed in JavaScript. It is impossible to change a character. --> create new string by concatenating
-- `toLowerCase`, `toUpperCase`
-- `str.IndexOf(substr, fromPos)`, `str.lastIndexOf(pos)`
-  - In some code ninjas might write `if(~str.indexOf("Widget"))` to find something.
-- `str.includes(substr, pos)` returns true/false (instead of index)
-- `str.startsWith(substr)`, `str.endsWith(substr)`
