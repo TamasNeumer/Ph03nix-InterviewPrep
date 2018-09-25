@@ -1,22 +1,27 @@
 # Mockito
 
+## Review Questions
+
+1. What is Mockito?
+2. What is the difference between a dummy, fake object, stub and mock?
+
 ## Theory
 
 ### What is Mockito
 
-- Mockito is a popular mock framework which can be used in conjunction with JUnit. Mockito allows you to create and configure mock objects. Using Mockito simplifies the development of tests for classes with external dependencies significantly.
+- Mockito is a popular mock framework that allows you to create and configure mock objects.
 - If you use Mockito in tests you typically:
   1. Mock away external dependencies and insert the mocks into the code under test
-  1. Execute the code under test
-  1. Validate that the code executed correctly
+  2. Execute the code under test
+  3. Validate that the code executed correctly
 
 ### Using test-doubles
 
-- A unit test should test functionality in isolation. Side effects from other classes or the system should be eliminated for a unit test, if possible. This can be done via using test replacements (test doubles) for the real dependencies. Test doubles can be classified like the following:
+- A unit test should test functionality in isolation --> Remove dependencies via mocks!
 - A **dummy** object is passed around but never used, i.e., its *methods are never called*. Such an object can for example be used to fill the parameter list of a method.
 - **Fake objects** have working implementations, but are usually simplified. For example, they use an in memory database and not a real database. --> an object with limited capabilities (for the purposes of testing), e.g. a fake web service.
-- A **stub** class is an *partial implementation* for an interface or class with the purpose of using an instance of this stub class during testing. Stubs usually don’t respond to anything outside what’s programmed in for the test. Stubs may also record information about calls. --> an object that provides predefined answers to method calls.
-- A **mock** object is a dummy implementation for an interface or a class in which you define the output of certain method calls. Mock objects are configured to perform a certain behavior during a test. They typical record the interaction with the system and test can validate that. --> an object on which you set expectations. Mocks in a way are determined at runtime since the code that sets the expectations has to run before they do anything and that's the main difference compared to stubs!
+- A **stub** class is an *partial implementation* for an interface or class with the purpose of using an instance of this stub class during testing. Stubs provide predefined answers to method calls.
+- A **mock** object is a dummy implementation for an interface or a class in which you define the output of certain method calls. Mock objects **are configured to perform a certain behavior during a test**.  --> **Mocks in a way are determined at runtime** since the code that sets the expectations has to run before they do anything and that's the main difference compared to stubs!
 
 ### How to test properly
 
@@ -31,21 +36,9 @@
         // assert
         verify(repository).delete(article);
     ```
-  - Since `deleteByHeadline` is a "telling" operation we assert that the actual repository's `delete` function was called with the `article` as parameter, hence testing the proper functionality of the `articleManager`.
-  - Notice that we are not verifying the stub method like `verify(repository).findArticle("foo")` since the stubbed interactions are verified implicitly.  The execution flow of my own code does it completely for free. (You can only delete an article if you have found it before, hence the successful verification on `delete(article)` implies that the `findArticle` method was successfully called.)
 - As a general rule:
   - **If I stub** then it is verified for free, so **I don’t verify**.
-  - **If I verify** then I don’t care about the return value, so **I don’t stub.** (Had I called `verify(repository).findArticle("foo")` I would have been interested in the working of the repository class and stubbing would have been redundant.)
-
-### Adding mockito to POM
-
-```xml
-<dependency>
-    <groupId>org.mockito</groupId>
-    <artifactId>mockito-core</artifactId>
-    <version>2.13.0</version>
-</dependency>
-```
+  - **If I verify** then I don’t care about the return value, so **I don’t stub.** (Had I called `verify(repository).findArticle("foo")` I would have been interested in the working of the repository class and stubbing would have been redundant.) (See more on this at the stubbing example.)
 
 ## Creating and Using Mock Objects
 
@@ -60,6 +53,19 @@
     - **JUnit 4.5 runner** initializes mocks annotated with Mock, so that explicit usage of `MockitoAnnotations.initMocks(Object)` **is not necessary**. Mocks are initialized before each test method.
 - By default, for all methods that return a value, a mock will return either `null`, a primitive/primitive wrapper value, or an empty collection, as appropriate. For example `0` for an int/Integer and `false` for a boolean/Boolean.
 
+```java
+@RunWith(JUnit4.class)
+//...
+@Mock
+MyClassType myVar;
+//...
+```
+
+- Mocking `final` types, `enum`s and `final` methods
+  - This mock maker is **turned off by default**.
+  - It can be activated explicitly by the mockito extension mechanism, just create in the classpath a file `/mockito-extensions/org.mockito.plugins.MockMaker` containing the value `mock-maker-inline`.
+  - As a convenience, the Mockito team provides an artifact where this mock maker is preconfigured. Instead of using the `mockito-core artifact`, include the `mockito-inline` artifact in your project.
+
 #### Verify
 
 - `public static <T> T verify(T mock)`
@@ -72,6 +78,7 @@
       - `atLeastOnce()`
       - `only()`
       - `times(int wantedNumberOfInvocations)`
+      - `verify(mock, timeout(100)).someMethod();`
     - `Interface VerificationAfterDelay` -> `After` (Implementing class)
       - VerificationAfterDelay is a VerificationMode that allows combining existing verification modes with an initial delay
       - `atLeast(int minNumberOfInvocations), atLeastOnce(), atMost(), never(), only(), times(int wantedNumberOfInvocations)`
@@ -102,7 +109,6 @@
 
 - `public static <T> OngoingStubbing<T> when(T methodCall)`
   - Enables stubbing methods. Use it when you want the mock to return particular value when particular method is called.
-- Stubbing can be overridden: for example common stubbing can go to fixture setup but the test methods can override it. Please note that overridding stubbing is a potential code smell that points out too much stubbing
 - Once stubbed, the method will always return a stubbed value, regardless of how many times it is called.
 - As you can see the method returns an instance of `OngoingStubbing<T>`. An `OngoingStub` allows you to add the "then" part of the relation with methods as:
   - `thenReturn(T value)`
@@ -119,6 +125,9 @@
 
 - Stubbing examples:
   ```java
+  // One liner stub:
+  Car boringStubbedCar = when(mock(Car.class).shiftGear()).thenThrow(EngineNotStarted.class).getMock();
+
   //You can mock CONCRETE CLASS, not just interfaces
   LinkedList mockedList = mock(LinkedList.class);
 
@@ -137,7 +146,7 @@
 
   //Although it is possible to verify a stubbed invocation, usually it's just redundant
   //If your code cares what get(0) returns, then something else breaks (often even before verify() gets executed).
-  //If your code doesn't care what get(0) returns, then it should not be stubbed. Not convinced? See here.
+  //If your code doesn't care what get(0) returns, then it should not be stubbed.
   verify(mockedList).get(0);
   ```
 
@@ -229,7 +238,7 @@
 
 ### doReturn()|doThrow()| doAnswer()|doNothing()|doCallRealMethod() family of methods
 
-- Stubbing voids requires different approach from when(Object) because the compiler does not like void methods inside brackets. Use doThrow() when you want to stub the void method with an exception.
+- **Stubbing voids** requires different approach from `when(Object)` because the compiler does not like `void` methods inside brackets. Use `doThrow()` when you want to stub the void method with an exception.
 
   ```java
   doThrow(RuntimeException.class).when(mock).someVoidMethod();
