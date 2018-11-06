@@ -208,9 +208,142 @@
       }
       ```
 
-  -
+  - **Data JPA Tests**
 
-* Context caching
+    - You can use the `@DataJpaTest` annotation to test JPA applications. By default, it configures an in-memory embedded database, scans for `@Entity` classes, and configures Spring Data JPA repositories. Regular `@Component` beans are not loaded into the `ApplicationContext`.
+    - By default, data JPA tests are transactional and roll back at the end of each test. You can disable this by `@Transactional(propagation = Propagation.NOT_SUPPORTED)`.
+    - Such tests are useful if you want to test your custom functions (such as custom query functions).
+    - If you prefer your test to run against a real database, you can use the `@AutoConfigureTestDatabase` annotation. (i.e. `@AutoConfigureTestDatabase(replace=Replace.NONE)`)
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @DataJpaTest
+    public class ExampleRepositoryTests {
+
+      @Autowired
+      private TestEntityManager entityManager;
+
+      @Autowired
+      private UserRepository repository;
+
+      @Test
+      public void testExample() throws Exception {
+        this.entityManager.persist(new User("sboot", "1234"));
+        User user = this.repository.findByUsername("sboot");
+        assertThat(user.getUsername()).isEqualTo("sboot");
+        assertThat(user.getVin()).isEqualTo("1234");
+      }
+    }
+    ```
+
+  - **JDBC Tests**
+
+    - `@JdbcTest` is similar to `@DataJpaTest` but is for tests that only require a DataSource and do not use Spring Data JDBC. By default, it configures an in-memory embedded database and a `JdbcTemplate`. Regular `@Component` beans are not loaded into the `ApplicationContext`.
+    - By default, JDBC tests are transactional and roll back at the end of each test.
+
+  - **MongoDB Tests**
+
+    - By default, it configures an in-memory embedded MongoDB (if available), configures a MongoTemplate, scans for `@Document` classes, and configures Spring Data MongoDB repositories. Regular `@Component` beans are not loaded into the `ApplicationContext`.
+    - To run tests against real db: `@DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)`
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @DataMongoTest
+    public class ExampleDataMongoTests {
+
+      @Autowired
+      private MongoTemplate mongoTemplate;
+
+      //
+    }
+    ```
+
+  - **REST Clients**
+
+    - You can use the `@RestClientTest` annotation to test REST clients. By default, it auto-configures Jackson, GSON, and Jsonb support, configures a `RestTemplateBuilder`, and adds support for `MockRestServiceServer`. Regular `@Component` beans are not loaded into the `ApplicationContext`.
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @RestClientTest(RemoteVehicleDetailsService.class)
+    public class ExampleRestClientTest {
+
+      @Autowired
+      private RemoteVehicleDetailsService service;
+
+      @Autowired
+      private MockRestServiceServer server;
+
+      @Test
+      public void getVehicleDetailsWhenResultIsSuccessShouldReturnDetails()
+          throws Exception {
+        this.server.expect(requestTo("/greet/details"))
+            .andRespond(withSuccess("hello", MediaType.TEXT_PLAIN));
+        String greeting = this.service.callRestService();
+        assertThat(greeting).isEqualTo("hello");
+      }
+    }
+    ```
+
+- Context caching
 
   - A nice (**but sometimes confusing**) feature of the Spring Test support is that the **application context is cached in between tests**, so if you have multiple methods in a test case, or multiple test cases with the same configuration, they only incur the cost of starting the application once. You can control the cache using the `@DirtiesContext` annotation.
   - The use of `@MockBean` or `@SpyBean` influences the cache key, which will most likely increase the number of contexts.
+
+## Test Utilities
+
+- ConfigFileApplicationContextInitializer
+
+  - `ConfigFileApplicationContextInitializer` is an `ApplicationContextInitializer` that you can apply to your tests to load Spring Boot `application.properties` files. You can use it when you do not need the full set of features provided by `@SpringBootTest`
+  - Using `ConfigFileApplicationContextInitializer` alone does not provide support for `@Value("${…​}")` injection. Its only job is to ensure that `application.properties` files are loaded into Spring’s Environment. For `@Value` support, you need to either additionally configure a `PropertySourcesPlaceholderConfigurer` or use `@SpringBootTest`, which auto-configures one for you.
+
+  ```java
+  @ContextConfiguration(classes = Config.class,
+  		  initializers = ConfigFileApplicationContextInitializer.class)
+  ```
+
+- TestPropertyValues
+
+  - `TestPropertyValues` lets you quickly add properties to a `ConfigurableEnvironment` or `ConfigurableApplicationContext`.
+
+  ```java
+  TestPropertyValues.of("org=Spring", "name=Boot").applyTo(env);
+  ```
+
+- OutputCapture
+
+  - `OutputCapture` is a JUnit `Rule` that you can use to capture `System.out` and `System.err` output. You can declare the capture as a `@Rule` and then use `toString()` for assertions, as follows:
+
+    ```java
+    /*JUnit 4*/
+    public class MyTest {
+
+      @Rule
+      public OutputCapture capture = new OutputCapture();
+
+      @Test
+      public void testName() throws Exception {
+        System.out.println("Hello World!");
+        assertThat(capture.toString(), containsString("World"));
+      }
+    }
+    ```
+
+  - In Junit5 to enable it, simply set the `junit.platform.output.capture.stdout` and/or `junit.platform.output.capture.stderr` configuration parameter to `true`
+  - If enabled, the JUnit Platform captures the corresponding output and publishes it as a report entry using the `stdout` or `stderr` keys to all registered `TestExecutionListener` instances immediately before reporting the test or container as finished.
+
+- TestRestTemplate
+
+  - `TestRestTemplate` is a convenience alternative to Spring's `RestTemplate` that is useful in integration tests. You can get a vanilla template or one that sends Basic HTTP authentication (with a username and password). In either case, the template behaves in a test-friendly way by not throwing exceptions on server-side errors. It is recommended, but not mandatory, to use the Apache HTTP Client (version 4.3.2 or better). If you have that on your classpath, the `TestRestTemplate` responds by configuring the client appropriately.
+  - Alternatively, if you use the `@SpringBootTest` annotation with `WebEnvironment.RANDOM_PORT` or `WebEnvironment.DEFINED_PORT`, you can inject a fully configured `TestRestTemplate` and start using it.
+
+  ```java
+  public class MyTest {
+    private TestRestTemplate template = new TestRestTemplate();
+    @Test
+    public void testRequest() throws Exception {
+      HttpHeaders headers = this.template.getForEntity(
+          "http://myhost.example.com/example", String.class).getHeaders();
+      assertThat(headers.getLocation()).hasHost("other.example.com");
+    }
+  }
+  ```
