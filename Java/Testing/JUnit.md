@@ -361,7 +361,198 @@ INFO  example.TestLifecycleLogger - Finished executing [isEqualValue()]
 INFO  example.TestLifecycleLogger - After all tests
 ```
 
-## Parameterized test
+## Parameterized Tests (JUnit5)
+
+- Use the `@ParameterizedTest` annotation instead of `@Test`
+- In order to use parameterized tests you need to add a dependency on the `junit-jupiter-params` artifact.
+
+### Sources of Arguments
+
+#### `@ValueSource`
+
+- Lets you specify a single array of literal values and can only be used for **providing a single argument** per parameterized test invocation
+
+    ```java
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 2, 3 })
+    void testWithValueSource(int argument) {
+        assertTrue(argument > 0 && argument < 4);
+    }
+    ```
+
+#### `@EnumSource`
+
+- Like `@ValueSource`, but you specify the ENUMS as strings.
+    ```java
+    @ParameterizedTest
+    @EnumSource(value = TimeUnit.class, names = { "DAYS", "HOURS" })
+    // OR: @EnumSource(value = TimeUnit.class, mode = EXCLUDE, names = { "DAYS", "HOURS" })
+    void testWithEnumSourceInclude(TimeUnit timeUnit) {
+        assertTrue(EnumSet.of(TimeUnit.DAYS, TimeUnit.HOURS).contains(timeUnit));
+    }
+    ```
+
+#### `@MethodSource`
+
+- Allows you to refer to one or more factory methods of the test class or external classes.
+- Factory methods within the test class must be static unless the test class is annotated with `@TestInstance(Lifecycle.PER_CLASS)`; whereas, factory methods in external classes must always be `static`.
+
+    ```java
+    @ParameterizedTest
+    @MethodSource("stringProvider")
+    void testWithSimpleMethodSource(String argument) {
+        assertNotNull(argument);
+    }
+
+    static Stream<String> stringProvider() {
+        return Stream.of("foo", "bar");
+    }
+
+    static IntStream range() {
+        // Nice expression!
+        return IntStream.range(0, 20).skip(10);
+    }
+    ```
+
+- If you do not explicitly provide a factory method name via `@MethodSource`, JUnit Jupiter will search for a factory method that has the same name as the current `@ParameterizedTest` method by convention.
+- If a parameterized test method declares multiple parameters, you need to return a collection, stream, or array of `Arguments` instances or object arrays as shown below
+
+    ```java
+    @ParameterizedTest
+    @MethodSource("stringIntAndListProvider")
+    void testWithMultiArgMethodSource(String str, int num, List<String> list) {
+        assertEquals(3, str.length());
+        assertTrue(num >=1 && num <=2);
+        assertEquals(2, list.size());
+    }
+
+    static Stream<Arguments> stringIntAndListProvider() {
+        return Stream.of(
+            arguments("foo", 1, Arrays.asList("a", "b")),
+            arguments("bar", 2, Arrays.asList("x", "y"))
+        );
+    }
+    ```
+
+#### `@CsvSource`
+
+- `@CsvSource` uses a single quote `'` as its quote character. See the `'baz, qux'` value in the example below.
+    ```java
+    @ParameterizedTest
+    @CsvSource({ "foo, 1", "bar, 2", "'baz, qux', 3" })
+    void testWithCsvSource(String first, int second) {
+        assertNotNull(first);
+        assertNotEquals(0, second);
+    }
+    ```
+
+#### `@CsvFileSource`
+
+- `@CsvFileSource` lets you use CSV files from the classpath. Each line from a CSV file results in one invocation of the parameterized test.
+
+    ```java
+    @ParameterizedTest
+    @CsvFileSource(resources = "/two-column.csv", numLinesToSkip = 1)
+    void testWithCsvFileSource(String first, int second) {
+        assertNotNull(first);
+        assertNotEquals(0, second);
+    }
+    ```
+
+### Argument Conversion
+
+#### Implicit conversion
+
+- Depending on the method's requested parameter a lot of implicit conversions are supported by JUnit. I.e. `@CsvFileSource`  provides strings, but JUnit converts these to the specific primitives / POJOs.
+
+    ```java
+    @ParameterizedTest
+    @ValueSource(strings = "42 Cats")
+    // Book(Str val) constructor called, which sets the title!
+    void testWithImplicitFallbackArgumentConversion(Book book) {
+        assertEquals("42 Cats", book.getTitle());
+    }
+    ```
+
+#### Explicit conversion
+
+- You can explicitly specify the converter to be used:
+    ```java
+    @ParameterizedTest
+    @EnumSource(TimeUnit.class)
+    void testWithExplicitArgumentConversion(
+            @ConvertWith(ToStringArgumentConverter.class) String argument) {
+
+        assertNotNull(TimeUnit.valueOf(argument));
+    }
+
+    public class ToStringArgumentConverter extends SimpleArgumentConverter {
+
+        @Override
+        protected Object convert(Object source, Class<?> targetType) {
+            assertEquals(String.class, targetType, "Can only convert to String");
+            return String.valueOf(source);
+        }
+    }
+    ```
+
+### Argument aggregation
+
+- Used if you have long method signatures - i.e. you would require lot of parameters
+    ```java
+    @ParameterizedTest
+    @CsvSource({
+        "Jane, Doe, F, 1990-05-20",
+        "John, Doe, M, 1990-10-22"
+    })
+    void testWithArgumentsAccessor(ArgumentsAccessor arguments) {
+        Person person = new Person(arguments.getString(0),
+                                arguments.getString(1),
+                                arguments.get(2, Gender.class),
+                                arguments.get(3, LocalDate.class));
+
+        //assert
+    }
+
+    // OR CUSTOM / EXTERNAL Aggregator:
+    @ParameterizedTest
+    @CsvSource({
+        "Jane, Doe, F, 1990-05-20",
+        "John, Doe, M, 1990-10-22"
+    })
+    void testWithArgumentsAggregator(@AggregateWith(PersonAggregator.class) Person person) {
+        // perform assertions against person
+    }
+
+    public class PersonAggregator implements ArgumentsAggregator {
+    @Override
+    public Person aggregateArguments(ArgumentsAccessor arguments, ParameterContext context) {
+        return new Person(arguments.getString(0),
+                          arguments.getString(1),
+                          arguments.get(2, Gender.class),
+                          arguments.get(3, LocalDate.class));
+    }
+    }
+    ```
+
+### Customize display name
+
+- Also you can customize the display names of the test.
+    ```java
+    @DisplayName("Display name of container")
+    @ParameterizedTest(name = "{index} ==> first=''{0}'', second={1}")
+    @CsvSource({ "foo, 1", "bar, 2", "'baz, qux', 3" })
+    void testWithCustomDisplayNames(String first, int second) {
+    }
+
+    // RESULT:
+    Display name of container ✔
+    ├─ 1 ==> first='foo', second=1 ✔
+    ├─ 2 ==> first='bar', second=2 ✔
+    └─ 3 ==> first='baz, qux', second=3 ✔
+    ```
+
+## Parameterized test (Junit 4)
 
 - This class can contain **one** test method and this method is executed with the different parameters provided.
 - You mark a test class as a parameterized test with the ``@RunWith(Parameterized.class)`` annotation.
@@ -406,7 +597,7 @@ INFO  example.TestLifecycleLogger - After all tests
     }
     ```
 
-## Test suites
+## Test suites (Junit 4)
 
 - You can combine multiple test classes into test suits. Running a test suite executes all test classes in that suite in the specified order.
 
@@ -425,7 +616,7 @@ INFO  example.TestLifecycleLogger - After all tests
   }
   ```
 
-## JUnit Rules
+## Rules (Junit 4)
 
 - A JUnit rule is a component that intercepts test method calls and allows us to do something before a test method is invoked and after a test method has been invoked.
 - For example, the TemporaryFolder class allows to setup files and folders which are automatically removed after each test run.
@@ -463,7 +654,7 @@ INFO  example.TestLifecycleLogger - After all tests
   }
   ```
 
-## Categories
+## Categories (JUnit 4)
 
 - You can add "categories" to individual tests or to complete classes. Then you can exclude / include them based on these categories.
 - ``@Category({ SlowTests.class, FastTests.class })`` --> category definition
@@ -471,7 +662,7 @@ INFO  example.TestLifecycleLogger - After all tests
   - ``@IncludeCategory(SlowTests.class)`` --> Execute all "slow" tests
   - ``@SuiteClasses({ A.class, B.class })`` --> From these two classes
 
-## Executing multiple tests in CI
+## Executing multiple tests in CI (Junit 4)
 
 - The ``org.junit.runner.JUnitCore`` class provides the ``runClasses()``method. This method allows you to run one or several tests classes. As a return parameter you receive an object of the type ``org.junit.runner.Result.`` This object can be used to retrieve information about the tests.
 
@@ -485,7 +676,3 @@ INFO  example.TestLifecycleLogger - After all tests
     }
   }
   ```
-
-## Parameterized Tests (alä JUnit5 - `@ParameterizedTest`)
-
-- experimental feature TBD
