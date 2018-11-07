@@ -296,18 +296,18 @@
   - `ConfigFileApplicationContextInitializer` is an `ApplicationContextInitializer` that you can apply to your tests to load Spring Boot `application.properties` files. You can use it when you do not need the full set of features provided by `@SpringBootTest`
   - Using `ConfigFileApplicationContextInitializer` alone does not provide support for `@Value("${…​}")` injection. Its only job is to ensure that `application.properties` files are loaded into Spring’s Environment. For `@Value` support, you need to either additionally configure a `PropertySourcesPlaceholderConfigurer` or use `@SpringBootTest`, which auto-configures one for you.
 
-  ```java
-  @ContextConfiguration(classes = Config.class,
-  		  initializers = ConfigFileApplicationContextInitializer.class)
-  ```
+    ```java
+    @ContextConfiguration(classes = Config.class,
+          initializers = ConfigFileApplicationContextInitializer.class)
+    ```
 
 - TestPropertyValues
 
   - `TestPropertyValues` lets you quickly add properties to a `ConfigurableEnvironment` or `ConfigurableApplicationContext`.
 
-  ```java
-  TestPropertyValues.of("org=Spring", "name=Boot").applyTo(env);
-  ```
+    ```java
+    TestPropertyValues.of("org=Spring", "name=Boot").applyTo(env);
+    ```
 
 - OutputCapture
 
