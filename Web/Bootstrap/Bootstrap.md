@@ -169,3 +169,71 @@
         </div>
       </form>
       ```
+
+## Bootstrap Buttons
+
+- `<button type="button" class="btn btn-default">Default Button</button>`
+  - The class can be `btn-... -> primary, success, info, warning, danger`
+  - Size: `btn-.. -> lg sm xs block` (Block taking up the entire vertical space?)
+- States: either add them as classes or separate properties
+  - Active -> `<button type="button" class="btn btn-default btn-lg active">` -> as class
+  - Disabled -> `<button type="button" class="btn btn-default btn-lg" disabled="disabled">` -> as prop.
+
+## Bootstrap Images
+
+- `.img-rounded` -> rounded corners
+- `.img-circle` -> image as circle
+- `.img-thumbnail` -> extra "border"
+
+## Bootstrap helper classes
+
+- Visibility
+  - `show, hidden, invisible`
+  - Or use the responsive style:
+    - Visible only on xs, sm, md...: `.visible-xs-*`, `.visible-sm-*`, `.visible-md-*`
+    - Hidden only on xs, sm, md...: `.hidden-xs`, `.hidden-sm`, `.hidden-md`
+- Caret:
+  - The `.caret` class creates a caret arrow icon (down arrow), which indicates that the button is a dropdown.
+  - E.g.: Add the following to a button **text**: `Dropdown <span class="caret"></span>` -> the button will have "Dropdown (downarrow)"
+
+## Bootstrap Glyphicons
+
+- Inserted via the following syntax: `<span class="glyphicon glyphicon-name"></span>`
+- Funny thing is that you can insert these into links / buttons as well:
+  - `<a href="#"><span class="glyphicon glyphicon-envelope"></span></a>`
+
+  ```html
+  <button type="button" class="btn btn-default">
+        <span class="glyphicon glyphicon-search"></span> Search
+  </button>
+  ```
+
+## Bootstrap Dropdown
+
+    ```html
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
+      <span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        <li><a href="#">HTML</a></li>
+        <li><a href="#">CSS</a></li>
+        <li><a href="#">JavaScript</a></li>
+      </ul>
+    </div>
+    ```
+
+- `<li class="divider"></li>` -> horizontal divider
+- `<li class="dropdown-header">Dropdown header 1</li>` -> Extra (light gray) headers to categorize parts of the list
+- `<li class="active"><a href="#">HTML</a></li>` -> disable/activate items
+
+## Button Groups
+
+- Use button groups to group buttons and add css classes for all of them at the same time:
+
+    ```html
+    <div class="btn-group btn-group-sm">
+    <button type="button" class="btn btn-default">Button 4</button>
+    <button type="button" class="btn btn-default">Button 5</button>
+    </div>
+    ```
+
