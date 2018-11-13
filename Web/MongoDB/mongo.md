@@ -1,9 +1,10 @@
 # MongoDB
 
-## NoSQL vs SQL
+## Advantages of NoSQL
 
-- With traditional SQL Databases you have to know in advance what you want to store, create the schema, and fill it with data. If you want to change the schema, you will need to migrate your data, which can be tedious with larger databases.
+- Relational databases were not designed to cope with the scale and agility challenges that face modern applications, nor were they built to take advantage of the commodity storage and processing power available today. (With traditional SQL Databases you have to know in advance what you want to store, create the schema, and fill it with data. If you want to change the schema, you will need to migrate your data, which can be tedious with larger databases.)
 - NoSQL databases, usually support auto-sharding, meaning that they natively and automatically spread data across an arbitrary number of servers, without requiring the application to even be aware of the composition of the server pool.
+- Relational databases were developped in the 1970s, while NoSQL in late 2000s...
 
 ## General Intro
 
@@ -23,36 +24,6 @@
 
 - Data is stored on the disk, typically at /data/db (it can be overridden)
 
-## Connection pooling (NodeJs Driver)
-
-- Building up a connection for each request is expensive.
-- By default the driver is configured to pool 5 connections. Overriding this is simplay as follows:
-
-  ```js
-  // This is a global variable we'll use for handing the MongoDB client
-  var mongodb;
-
-  // Create the database connection
-  MongoClient.connect(url, {  
-    poolSize: 10
-    // other options can go here
-  },function(err, db) {
-      assert.equal(null, err);
-      mongodb=db;
-      }
-  );
-
-  // Use the global mongodb variable in routes!
-  ```
-
-## Reconnect to database
-
-- `autoReconnect` - defaults to `true` Reconnect on error
-- `reconnectTries` - defaults to 30
-- `reconnectInterval` - in ms, defaults to `1000`
-- Taken the previous example just add the properties to the config object
-
-
 ## Short Intro with Example Codes
 
 To communicate with mongo in node.js use the mongo client library:
@@ -61,7 +32,7 @@ To communicate with mongo in node.js use the mongo client library:
 var MongoClient = require("mongodb");
 ```
 
-The mongo client library works in a **non-blocking asynchronous manner**. **For every operation you have to provide a callback function, which is called when te operation completes.**
+The mongo client library works in a non-blocking asynchronous manner. For every operation you have to provide a callback function, which is called when te operation completes.
 
 ### Create and Connect to database
 
