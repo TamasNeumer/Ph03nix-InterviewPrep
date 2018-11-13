@@ -124,3 +124,26 @@
 - This id is usually generated on client side. (Mongo driver)
 
 ## Creating, Updating, and Deleting Documents
+
+### Inserting and Saving
+
+- **Batch insert**
+  - `db.foo.batchInsert([{"_id" : 0}, {"_id" : 1}, {"_id" : 2}])`
+  - Works only on a single collection.
+  - Message size is max 48MB, is you are sending more the driver will split it up.
+  - **If halfway through the insert you get an error, half of the data remains written to the database (?!)** You can use `continueOnError` to make it through though. (This option is not supported by the shell, only by the drivers.)
+  - All documents must be under **16MB**
+- **Removing documents**
+  - `db.foo.remove()` -> remove all, `db.mailing.list.remove({"opt-out": true})` -> remove where opt-out value is `true`.
+  - To remove entire collection use _drop_ -> `db.foo.drop()`
+- **Updating**
+  - Updating is atomic.
+  - Try to use the `_id` when updating. If your id is not unique, and you are overwriting the entire document, if the matcher matches two documents it will throw an error, as you are trying to insert (via the update) the same document with the same `_id`. As more documents cannot coexist with the same `id` an error will be produced.
+    - `db.users.update({"name" : "joe"}, joe);` -> avoid! Doesn't work if more than one document matched!
+
+### Modifiers
+
+- **`$inc`**
+  - Increments the value. Note that `_id` can't be incremented, it can be only updated by using whole-document replacement.
+  - `db.analytics.update({"url" : "www.example.com"}, {"$inc" : {"pageviews" : 1}})`
+-
