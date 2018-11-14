@@ -145,5 +145,12 @@
 
 - **`$inc`**
   - Increments the value. Note that `_id` can't be incremented, it can be only updated by using whole-document replacement.
-  - `db.analytics.update({"url" : "www.example.com"}, {"$inc" : {"pageviews" : 1}})`
--
+  - `db.analytics.update({"url" : "www.example.com"}, {"$inc" : {"pageviews" : 1}})` -**`$set`**
+  - Sets values to the field or adds field if it does not yet exist.
+  - `db.users.update({"_id" : ObjectId("4b253b067525f35f94b60a31")}, {"$set" : {"favorite book" : "War and Peace"}})`
+  - Using this you can also change the value type (i.e. from string to array)
+- **`$unset`**
+  - Remove the key
+  - Common mistake people make is trying to update/set without using the `$` modifiers. E.g.: `db.coll.update(criteria, {"foo" : "bar"})`. This won't work.
+- **`$inc`**
+  -
