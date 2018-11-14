@@ -153,4 +153,117 @@
   - Remove the key
   - Common mistake people make is trying to update/set without using the `$` modifiers. E.g.: `db.coll.update(criteria, {"foo" : "bar"})`. This won't work.
 - **`$inc`**
-  -
+
+  - Atomically increment a value (in the example increment by 50)
+  - `db.games.update({"game" : "pinball", "user" : "joe"},{"$inc" : {"score" : 50}})`
+  - Can only be used on numeric values
+
+### Array modifiers
+
+- **`$push`**
+
+  - Add elements to the end of an array (if exists), otherwise create it.
+  - `db.blog.posts.update({"title" : "A blog post"}, {"$push" : {"comments" : {"name" : "joe", "email" : "joe@example.com", "content" : "nice post."}}})`
+    - Add a new comment to the posts collection, where the title was "A blog post"
+  - Combine with the `$each` to insert multiple elements within the same push:
+    - `db.stock.ticker.update({"_id" : "GOOG"}, {"$push" : {"hourly" : {"$each" : [562.776, 562.790, 559.123]}}})`
+  - Combine with `$slice` to limit the number of elements. (The last N elements will be present in the array, where N was specified by the `$slice`)
+  - Combine with `$sort` to sort the elements. The following code will sort all of the objects in the array by their "rating" field and then keep the first 10. Note that you must include "`$each`"; you cannot just "`$slice`" or "`$sort`" an array with "\$push".
+
+    ```json
+    db.movies.find(
+      { "genre": "horror" },
+      {
+        "$push": {
+          "top10": {
+            "$each": [
+              { "name": "Nightmare on Elm Street", "rating": 6.6 },
+              { "name": "Saw", "rating": 4.3 }
+            ],
+            "$slice": -10,
+            "$sort": { "rating": -1 }
+          }
+        }
+      }
+    )
+    ```
+
+- **`$ne`**
+  - "Not element" -> i.e. push an element into an array, only if it's not already there
+  - `db.papers.update({"authors cited" : {"$ne" : "Richie"}},{$push : {"authors cited" : "Richie"}})`
+- **`$addToSet`**
+
+  - You can also use "`$addToSet`" in conjunction with "`$each`" to add multiple unique values, which cannot be done with the "`$ne`"/"`$push`" combination. Here we find our guy with it's objectId and add multiple e-mail addresses but only if these were not there yet
+
+    ```json
+    db.users.update(
+      { "_id": ObjectId("4b2d75476cc613d5ee930164") },
+      {
+        "$addToSet": { "emails": { "$each": ["joe@php.net", "joe@example.com", "joe@python.org"] } }
+      }
+    )
+    ```
+
+- **`$pop`**
+  - `{"$pop" : {"key" : 1}}` removes the last element, `{"$pop" : {"key" : 1}}` removes from beginning.
+- **`$pull`**
+  - Used to remove elemnts based on a criteria
+  - `db.lists.update({}, {"$pull" : {"todo" : "laundry"}})` -> remove the laundry element from our todo list.
+- **Positional array modifications**
+  - Arrays are indexed from 0 -> `db.blog.update({"post" : post_id}, {"$inc" : {"comments.0.votes" : 1}})` -> increments the vote counter of the first array element.
+  - Often we don't know the index -> We use the `$` positional operator, that figures out which element of the array the query document matched and updates that element.
+  - `db.blog.update({"comments.author" : "John"}, {"$set" : {"comments.$.author" : "Jim"}})`
+  - The positional operator **updates only the first match**.
+
+### Array storage on the disk
+
+- When you start inserting documents into MongoDB, it puts each document right next to the previous one on disk. Thus, if a document gets bigger, it will no longer fit in the space it was originally written to and will be moved to another part of the collection.
+- As of this writing **(2013)**, MongoDB is **not** great at reusing empty space, so moving documents around a lot can result in large swaths of empty data file. If you have a lot of empty space, you’ll start seeing messages that look like this in the logs: `extent a:7f18dc00 was empty, skipping ahead`. The message itself is harmless, but it indicates that you have fragmentation and may wish to perform a compact.
+- If your schema requires lots of moves or lots of churn through inserts and deletes, you can improve disk reuse by using the `usePowerOf2Sizes` option.
+  - `db.runCommand({"collMod" : collectionName, "usePowerOf2Sizes" : true})`
+
+### Upserts / Updates
+
+- If found updated normally, if not created
+- `db.users.update({"rep" : 25}, {"$inc" : {"rep" : 3}}, true)`
+  - The third `true` parameter sets the upsert mode.
+  - Note that if didn't exist, rep is created with 28! And again and again if you run this multiple times.
+- `$setOnInsert` - only sets the value of a field when the document is being inserted.
+  - `db.users.update({}, {"$setOnInsert" : {"createdAt" : new Date()}}, true)`
+- `save` is a shell function that lets you insert a document if it doesn’t exist and update it if it does.
+- Updates, by default, **update only the first document found** that matches the criteria.
+- To modify all of the documents matching the criteria, you can pass `true` as the fourth parameter to update.
+  - `db.users.update({"birthday" : "10/13/1978"},{"$set" : {"gift" : "Happy Birthday!"}}, false, true)`
+- `findAndModify` -> can **return** the item and update it in a single operation. It returns the **pre-update** state of the object.
+
+  - `findAndModify` can either have `update` or `remove` key.
+
+  ```json
+  db.runCommand({"findAndModify" : "processes",
+      "query" : {"status" : "READY"},
+      "sort" : {"priority" : -1},
+      "update" : {"$set" : {"status" : "RUNNING"}})
+  ```
+
+### Write concern
+
+- The two basic write concerns are _acknowledged_ or _unacknowledged_ writes.
+- Acknowledged writes are the default: you get a response that tells you whether or not
+  the database successfully processed your write. Unacknowledged writes do not return
+  any response, so you do not know if the write succeeded or not.
+- In general, **applications should stick with acknowledged writes**.
+- For low-value data (e.g., logs or bulk data loading), you may not want to wait for a response you don’t care about. In these situations, use unacknowledged writes.
+- The shell does not actually support write concerns in the same way that the client libraries do: it does unacknowledged writes and then checks that the last operation was successful before drawing the prompt. Thus, if you do a series of invalid operations on a collection, finishing with a valid operation, the shell will not complain.
+  - `db.foo.insert({"_id" : 1}); db.foo.insert({"_id" : 1}); db.foo.count()`
+  - This will pass, even if inserting twice with same \_id didn't work out!
+
+## Querying
+
+### Find
+
+- **Intro**
+  - `db.collectionName.find()` - if no criteria given all results returned (as a `Cursor`)
+  - `db.users.find({"age" : 27})` - adding a key/value pair to query.
+- **Which key-value paris to return**
+  - `db.users.find({}, {"username" : 1, "email" : 1})` -> default `_id` and these two fields are returned.
+  - `db.users.find({}, {"username" : 1, "_id" : 0})` -> you can disable returning a field by setting it to 0.
