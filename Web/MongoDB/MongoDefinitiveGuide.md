@@ -266,4 +266,42 @@
   - `db.users.find({"age" : 27})` - adding a key/value pair to query.
 - **Which key-value paris to return**
   - `db.users.find({}, {"username" : 1, "email" : 1})` -> default `_id` and these two fields are returned.
-  - `db.users.find({}, {"username" : 1, "_id" : 0})` -> you can disable returning a field by setting it to 0.
+  - `db.users.find({}, {"username" : 1, "_id" : 0})` -> you can disable returning a field by setting it to `0`.
+
+### Query Criteria
+
+- **Query Conditionals**
+  - "`$lt`", "`$lte`", "`$gt`", "`$gte`" - (lower than, lower than equals etc.)
+    - `db.users.find({"age" : {"$gte" : 18, "$lte" : 30}})`
+    - `db.users.find({"registered" : {"$lt" : new Date("01/01/2007")}})`
+      - When matching date you don't want to use equals, as this would match to millisecond precision.
+  - `$ne` -> "not equal"
+    - `db.users.find({"username" : {"$ne" : "joe"}})`
+- **OR querries**
+  - `db.raffle.find({"ticket_no" : {"$in" : [725, 542, 390]}})`
+  - `db.raffle.find({"ticket_no" : {"$nin" : [725, 542, 390]}})`
+  - `db.raffle.find({"$or" : [{"ticket_no" : 725}, {"winner" : true}]})`
+- **`$not`**
+  - _metaconditional_: it can be applied on top of any other criteria
+  - `db.users.find({"id_num" : {"$not" : {"$mod" : [5, 1]}}})` - find numbers where % 5 does NOT return 1.
+
+### Type-Specific Queries
+
+- **null**
+  - `null` not only matches itself but also matches “does not exist.”
+    - `db.c.find({"z" : null})` will return every element where the key `z` was not defined at all, and elements where it was set explicitly to `null`
+    - `db.c.find({"z" : {"$in" : [null], "$exists" : true}})` -> to only deliver results where `null` was assigned to the key use the `$exists`
+- **RegExp**
+  - MongoDB uses the Perl Compatible Regular Expression (PCRE)
+
+### Querying Arrays
+
+- **`$all`**
+  - If you need to match arrays by more than one element, you can use "`$all`".
+  - `db.food.find({fruit : {$all : ["apple", "banana"]}})` -> find docs where fruit both contains apple and banana
+  - You can also query by **exact match** using the entire array.
+    - `db.food.find({"fruit" : ["apple", "banana"]})`
+  - `db.food.find({"fruit.2" : "peach"})` -> find by a specific index
+- **`$size`**
+  - `db.food.find({"fruit" : {"$size" : 3}})`
+- **`$slice`**
