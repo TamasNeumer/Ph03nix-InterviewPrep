@@ -1,5 +1,250 @@
 # MongoDB Definitive guide
 
+## The `mongo` Shell
+
+### Login
+
+- The mongo shell is an interactive JavaScript interface to MongoDB.
+- **Connect to local instance**
+  - Start the local instance with `mongod`
+  - Enter the shall on a new tab with `mongo` or `mongo --port 28015`
+- **Connect to remote instance**
+  - `mongo mongodb://ds153763.mlab.com:53763/` or `mongo --host mongodb://alice@mongodb0.examples.com:28015/?authSource=admin` (shell will prompt for pw)
+- **SSH**
+  - Append `&ssl=true`
+
+### Commands
+
+- `db` - shows the _current_ db
+- `show dbs` - show all the dbs
+- `use <db>` - select db
+  - You can switch to non-existing databases. When you create a collection the db is also created.
+- `show collections` - show all collections
+- `show users` - users for _current_ database
+- `show roles` - show roles, both user-defined and built-in, for the _current_ database.
+
+### Collection commands
+
+- Find a collection whose name might contain whitespace
+  - `db.getCollection("my Collection").find()`
+- Prettify the output
+  - `db.myCollection.find().pretty()`
+
+### Configure .mongorc.js
+
+- Adding the following js code you can change the "prompt cursor"
+
+```js
+host = db.serverStatus().host;
+prompt = function() {
+  return db + "@" + host + "$ ";
+};
+```
+
+- `DBQuery.shellBatchSize = 10;` to change the default batch size from 20.
+
+### Scripting
+
+- You can pass the shell JS commands by the `--eval` flag:
+  - `mongo test --eval "printjson(db.getCollectionNames())"`
+- When writing js script you obviously can't use the shell commands.
+
+```js
+conn = new Mongo();
+db = conn.getDB("localhost:27020");
+cursor = db.myCollection.find();
+while (cursor.hasNext()) {
+  printjson(cursor.next());
+}
+```
+
+- Execute via: `load("mytest.js")`or `mongo localhost:27017/test myjsfile.js`.
+- The `load()` method accepts relative and absolute paths.
+
+### Datatypes in the shell
+
+- **Date**
+  - `Date()` - returns it as string, `new Date()` returns `Date` object.
+- **ObjectId**
+  - `new ObjectId` - generate new objectId
+- **Numbers**
+  - The mongo shell treats all numbers **as 64 bit floating-point** values by default.
+  - **NumberLong(5)** - to give a 64bit integer
+  - **NumberInt(3)** - 32 bit integer
+  - **NumberDecimal(10.5)** 128 bit float
+- **String**
+
+### Other
+
+- End your line with `(`, `[`, `{`, when pressing enter it will start a new line. (Instead of sending the command.)
+- Use `Tab` for autocomplete
+- Exit by `quit()` or `<Ctrl-C>`
+- `help` to access the help menu.
+
+## CRUD
+
+### Insert
+
+- All write operations in MongoDB are **atomic** on the level of a single document.
+
+- **insertOne**
+  - `await db.collection('collName').insertOne({obj});`
+  - `insertOne` returns a promise that provides a result. The `result.insertedId` promise contains the `_id` of the newly inserted document.
+- **insertMany**
+  - `await db.collection('inventory').insertMany([obj1, obj2]);`
+  - Returns a promise, and `result.insertedId` returns a promise with the array of `_id`s.
+- **insert**
+  - Inserts a single document or multiple documents into a collection.
+
+### Query
+
+#### Basics
+
+- **Select all**
+  - `db.collection('inventory').find({});`
+- **Equality condition**
+  - `.find({ status: 'D' })`
+  - `.find({status: { $in: ['A', 'D'] }})`
+- **AND condition**
+  - `.find({status: 'A', qty: { $lt: 30 }});`
+- **OR condition**
+
+  - `.find({$or: [{ status: 'A' }, { qty: { $lt: 30 } }]});`
+
+#### Match and query nested documents
+
+- **Match a nested document**
+  - `.find({size: { h: 14, w: 21, uom: 'cm' }});`
+    - Find the object whose size object matches the specified object.
+- **Query on Nested Field**
+  - `.find({'size.uom': 'in'});`
+  - `.find({'size.h': { $lt: 15 }});`
+
+#### Match and query an array
+
+- **Match and querry array**
+
+  - `.find({tags: ['red', 'blank']});` - **In the specified order!**
+  - `.find({tags: { $all: ['red', 'blank'] }});` - Regardless the order
+  - `.find({tags: 'red'});` - documents where `tags` is an array that contains the string "red".
+  - `.find({dim_cm: { $elemMatch: { $gt: 22, $lt: 30 } }});` - at least one element that is both greater than (`$gt`) 22 and less than (`$lt`) 30
+  - `.find({'dim_cm.1': { $gt: 25 }});` - where the second element is greater than 25
+  - `.find({tags: { $size: 3 }});` - query by array size
+
+- **Query an array of embedded documents**
+  - `.find({'instock.qty': { $lte: 20 }});`
+  - `.find({'instock.0.qty': { $lte: 20 }});` - specific array position. Arrays are 0 based!
+  - `.find({instock: { $elemMatch: { qty: 5, warehouse: 'A' }}});`
+    - Use `$elemMatch` operator to specify multiple criteria on an array of embedded documents
+    - `instock` array has at least one embedded document that contains both the field `qty` equal to 5 and the field `warehouse` equal to A.
+  - `.find({'instock.qty': { $gt: 10, $lte: 20 }});`
+    - matches documents where any document nested in the `instock` array has the `qty` field greater than 10 and any document (but not necessarily the same embedded document) in the array has the `qty` field less than or equal to 20
+
+#### Projections
+
+- With the **exception** of the `_id` field, you cannot combine inclusion and exclusion statements in projection documents.
+
+- **Show specific fields**
+  - `.find({}).project({ item: 1, status: 1 });`
+- **Suppress \_id**
+  - `.project({ item: 1, status: 1, _id: 0 });`
+- **Return all but the excluded fields**
+  - `.project({ status: 0, instock: 0 });`
+- **Return fields of embedded documents**
+  - `.project({ item: 1, status: 1, 'size.uom': 1 });`
+- **Suppress fields of embedded docs**
+  - `.project({ 'size.uom': 0 });`
+- **Return specific parts of an array**
+  - `.project({ item: 1, status: 1, instock: { $slice: -1 } });`
+  - In this case the last element
+
+#### Query for missing elements and null
+
+- `{ item : null }` - **either** contain the `item` field whose value is `null` or that do not contain the `item` field.
+- `{ item : { $type: 10 } }` - **only** those where value is BSON Type `Null`
+- `{ item : { $exists: false }}` - **only** where item doesn't exist.
+
+#### Iterate a cursor
+
+- `myCursor.forEach(printjson);`
+- `myCursor.toArray();` - returns elements as array. **WARNING! It loads all elements into RAM**
+- Some drivers allow you to access elements by index in the cursor (`myCursor[1]`), but it is the same as `myCursor.toArray() [1];`
+
+#### Cursor closure, isolation & batches
+
+- By default, the server will automatically close the cursor after **10 minutes of inactivity**, or if client has exhausted the cursor. You can override this the following way: `db.users.find().noCursorTimeout();`. Or you can close it manually either with `cursor.close()` or by exhausting the cursor’s results.
+- As a cursor returns documents, other operations may interleave with the query. (You might see the same document twice in the result.) To avoid this refer to "Cursor Snapshot"
+- The MongoDB server returns the query results in batches. The amount of data in the batch will not exceed the maximum BSON document size. To override the default size of the batch, see `batchSize()` and `limit()`.
+  - `find()` and `aggregate()` operations have an initial **batch size of 101 documents by default**.
+  - As you iterate through the cursor and reach the end of the returned batch, if there are more results, cursor.next() will perform a getMore operation to retrieve the next batch. Subsequent `getMore` operations issued against the resulting cursor have no default batch size, so they are **limited only by the 16 megabyte message size**.
+- The `db.serverStatus()` method returns a document that includes a `metrics` field. The metrics field contains a `metrics.cursor`field with the following :
+
+  ```json
+  {
+    "timedOut" : <number>
+    "open" : {
+        "noTimeout" : <number>,
+        "pinned" : <number>,
+        "total" : <number>
+    }
+  }
+  ```
+
+### Update documents
+
+#### `updateOne` & `updateMany`
+
+- Updates the **first** document the query finds
+- `$set` operator specifying the updated values
+- `$currentDate` operator to update the value of a field to the current date
+
+  ```js
+  await db.collection("inventory").updateOne(
+    { item: "paper" },
+    {
+      $set: { "size.uom": "cm", status: "P" },
+      $currentDate: { lastModified: true }
+    }
+  );
+  ```
+
+- `updateMany` same as `updateOne` but updates **all** documents
+
+#### `replaceOne`
+
+- To replace the entire content of a document except for the \_id field, pass an entirely new document as the second argument to `Collection.replaceOne()`
+- In the replacement document, you can omit the `_id` field since the `_id` field is immutable
+
+#### `update`
+
+- Either updates or replaces a single document that match a specified filter or updates all documents that match a specified filter.
+
+#### Update behavior
+
+- All write operations in MongoDB are **atomic** on the level of a **single document**.
+- `_id` is immutable!
+- MongoDB preserves the order of the document fields following write operations except for the following cases:
+  - The `_id` field is always the first field in the document.
+  - Updates that include `renaming` of field names may result in the reordering of fields in the document.
+
+#### Upsert
+
+- If `updateOne()`, `updateMany()`, or `replaceOne()` include `upsert : true` in the `options` parameter document and no documents match the specified filter, then the operation creates a new document and inserts it.
+
+### Delete documents
+
+#### `deleteMany` / `deleteOne`
+
+- To delete multiple documents. E.g.: `.deleteMany({});`
+- Returns a promise that provides a `result` with `result.deletedCount`.
+- `deleteOne` only deletes the first match.
+  - `.deleteOne({ status: 'D' });`
+
+#### Behavior
+
+- Delete operations **do not drop indexes**, even if deleting all documents from a collection.
+- All write operations in MongoDB are atomic on the level of a single document.
+
 ## Getting started
 
 ### Documents

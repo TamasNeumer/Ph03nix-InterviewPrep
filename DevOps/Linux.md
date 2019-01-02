@@ -1,14 +1,17 @@
 # Linux
 
 #### Help
+
 - `man command` - get the manual and read up on the given command.
 - `man -k text` - searches for the given text across the entire manual
 
 #### Turning off and on
+
 - After turning on the system the user has is prompted the `lilo boot:` where he has the ability to start the default OS, or start another.
 - Turning off via `Ctrl` + `Alt` + `F1`, and then `Ctrl` + `Ctrl` + `Alt` + `Del`
 
 #### Users and Keyboard combos
+
 - Changing password: `passwd`
 - `logout`
 - `exit`
@@ -21,9 +24,10 @@
 - `Ctrl` + `q` --> Unfreeze console
 
 #### File management
+
 - `ls` - listing files
 - `ls -l` - list with details
-  - `drwxrwxr-x  2 amrood amrood      4096 Dec 25 09:59 uml`
+  - `drwxrwxr-x 2 amrood amrood 4096 Dec 25 09:59 uml`
   - First Column − Represents the file type and the permission given on the file. Below is the description of all type of files.
     - `-` - Regular file, such as an ASCII text file, binary executable, or hard link.
     - `b` - Block special file. Block input/output device file such as a physical hard drive.
@@ -51,6 +55,7 @@
 - `rm filename` - remove/delete
 
 #### Directories
+
 - `cd ~` - home directory
 - `cd -` - go in your last directory
 - `pwd` - display the full path of the current working directory
@@ -62,6 +67,7 @@
 - `.` is the current dir while `..` is the parent dir
 
 #### File permissions
+
 - Every file in Unix has the following attributes
   - **Owner permissions** − The owner's permissions determine what actions the owner of the file can perform on the file.
   - **Group permissions** − The group's permissions determine what actions a user, who is a member of the group that a file belongs to, can perform on the file.
@@ -75,43 +81,45 @@
   - For directories execution means executing commands in the dir (execute the ls or the cd command.)
 - `chmod` to change premission
   - Symbolic mode
-    - ``+`` Adds the designated permission(s) to a file or directory.
-    - ``-`` Removes the designated permission(s) from a file or directory.
-    - ``=`` Sets the designated permission(s).
+    - `+` Adds the designated permission(s) to a file or directory.
+    - `-` Removes the designated permission(s) from a file or directory.
+    - `=` Sets the designated permission(s).
     - Example:
       - `chmod o+wx testfile`, `chmod u-x testfile`, `chmod g = rx testfile` = `chmod o+wx,u-x,g = rx testfile`
   - Using chmod with Absolute Permissions
-    - 0	No permission	---
-    - 1	Execute permission	--x
-    - 2	Write permission	-w-
-    - 3	Execute and write permission: 1 (execute) + 2 (write) = 3	-wx
-    - 4	Read permission	r--
-    - 5	Read and execute permission: 4 (read) + 1 (execute) = 5	r-x
-    - 6	Read and write permission: 4 (read) + 2 (write) = 6	rw-
-    - 7	All permissions: 4 (read) + 2 (write) + 1 (execute) = 7	rwx
+    - 0 No permission ---
+    - 1 Execute permission --x
+    - 2 Write permission -w-
+    - 3 Execute and write permission: 1 (execute) + 2 (write) = 3 -wx
+    - 4 Read permission r--
+    - 5 Read and execute permission: 4 (read) + 1 (execute) = 5 r-x
+    - 6 Read and write permission: 4 (read) + 2 (write) = 6 rw-
+    - 7 All permissions: 4 (read) + 2 (write) + 1 (execute) = 7 rwx
     - Script:
-      - ``chmod 755 testfile``, `chmod 743 testfile` etc.
-- ``chown`` − The chown command stands for "change owner" and is used to change the owner of a file.
-  - ``chown user testfile`` --> The value of the user can be either the name of a user on the system or the user id (uid) of a user on the system.
-- ``chgrp`` − The chgrp command stands for "change group" and is used to change the group of a file.
+      - `chmod 755 testfile`, `chmod 743 testfile` etc.
+- `chown` − The chown command stands for "change owner" and is used to change the owner of a file.
+  - `chown user testfile` --> The value of the user can be either the name of a user on the system or the user id (uid) of a user on the system.
+- `chgrp` − The chgrp command stands for "change group" and is used to change the group of a file.
   - `chgrp group filelist`
-- Additional permissions are given to programs via a mechanism known as the ``Set User ID (SUID)`` and ``Set Group ID (SGID)`` bits.
+- Additional permissions are given to programs via a mechanism known as the `Set User ID (SUID)` and `Set Group ID (SGID)` bits.
   - When you execute a program that has the SUID bit enabled, you inherit the permissions of that program's owner. Programs that do not have the SUID bit set are run with the permissions of the user who started the program.
   - This is the case with SGID as well. Normally, programs execute with your group permissions, but instead your group will be changed just for this program to the group owner of the program.
   - The SUID and SGID bits will appear as the letter "s" if the permission is available. The SUID "s" bit will be located in the permission bits where the owners’ execute permission normally resides.
-    - `-r-sr-xr-x  1   root   bin  19031 Feb 7 13:47  /usr/bin/passwd*`
+    - `-r-sr-xr-x 1 root bin 19031 Feb 7 13:47 /usr/bin/passwd*`
     - A capital letter S in the execute position instead of a lowercase s indicates that the execute bit is not set.
 
 #### Environment
+
 - When you log in to the system, the shell undergoes a phase called initialization to set up the environment. This is usually a two-step process that involves the shell reading the following files:
-  - ``/etc/profile`` - maintained by admin, valid for all users
+  - `/etc/profile` - maintained by admin, valid for all users
   - `profile` - under the user's control i.e. console customization
--The ``PATH`` variable specifies the locations in which the shell should look for commands.
-  - Here, each of the individual entries separated by the colon character (``:``) are directories.
+- The `PATH` variable specifies the locations in which the shell should look for commands.
+  - Here, each of the individual entries separated by the colon character (`:`) are directories.
 
 #### Pipes and Filters
+
 - `grep`
-  - ``-v`` Prints all lines that do not match pattern.
+  - `-v` Prints all lines that do not match pattern.
   - `-n` Prints the matched line and its line number.
   - `-l` Prints only the names of files with matching lines (letter "l")
     - `ls -l | grep "Aug"`
@@ -125,6 +133,7 @@
   - etc.
 
 #### Processes
+
 - **Background**
   - A background process runs without being connected to your keyboard. If the background process requires any keyboard input, it waits. The simplest way to start a background process is to add an ampersand (&) at the end of the command.
     - `$ls ch*.doc &`
@@ -139,11 +148,61 @@
   - `kill -9 PID`
 
 #### Advanced User Management
+
 - **Managing User Groups**
-  - ``/etc/passwd`` − Keeps the user account and password information. This file holds the majority of information about accounts on the Unix system.
-  - ``/etc/shadow`` − Holds the encrypted password of the corresponding account. Not all the systems support this file.
-  - ``/etc/group`` − This file contains the group information for each account.
+  - `/etc/passwd` − Keeps the user account and password information. This file holds the majority of information about accounts on the Unix system.
+  - `/etc/shadow` − Holds the encrypted password of the corresponding account. Not all the systems support this file.
+  - `/etc/group` − This file contains the group information for each account.
   - `/etc/gshadow` - This file contains secure group account information.
 - **Commands**
+
   - `useradd`, `usermod`, `userdel`, `groupadd`, `groupmod`, `groupdel`
+
 - https://www.tutorialspoint.com/unix/unix-user-administration.htm
+
+#### Linux in Containers
+
+- **Memory inside Linux Containers - Or why don’t free and top work in a Linux container?**
+  - **Cgroups**
+    - **cgroups** (abbreviated from control groups) is a Linux kernel feature that limits, accounts for, and isolates the resource usage (CPU, memory, disk I/O, network, etc.) of a collection of processes. You can find more info in the ![Docs](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/resource_management_guide/sec-memory).
+    - most container specific metrics are available at the cgroup filesystem via `/path/to/cgroup/memory.stat`, `/path/to/cgroup/memory.usage_in_bytes`, `/path/to/cgroup/memory.limit_in_bytes` and others. `/sys/fs/cgroup/` **is the recommended location** for cgroup hierarchies, but it is not a standard.
+  - **The problem**
+    - Most of the Linux tools providing system resource metrics were created before cgroups even existed (e.g.: `free` and `top`, both from procps). They usually read memory metrics from the proc filesystem: `/proc/meminfo, /proc/vmstat`, `/proc/PID/smaps` and others. Unfortunately these are **not** containerized. Meaning that they are not cgroup-aware. Hence **they will always display memory numbers from the host system** (physical or virtual machine) as a whole, which is useless for modern Linux containers (Heroku, Docker, etc.).
+  - **Solution**
+    - Some kernel developers believe that the best option is an userspace library that processes can use to query their memory usage and available memory.
+    - `libmymem` would do all the hard work of figuring out where to pull numbers from (`/proc` vs. `cgroup` vs. `getrlimit(2)` vs. `systemd`, etc.). I am considering starting one. New code could easily benefit from it, but it is unlikely that all existing tools (`free`, `top`, etc.) will just switch to it. For now, we might need to encourage people to stop using those tools inside containers.
+- **Linux memory and JVM**
+
+  - We need to understand that the docker switches (`-m`, `–memory` and `–memory-swap`) and the kubernetes switch (`–limits`) instruct the Linux kernel to **kill the process** if it tries to exceed the specified limit, but the JVM is completely unaware of the limits and when it exceeds the limits, bad things happen!
+  - Assume that we create a virtual Linux OS with 1GB of RAM and run a Linux container with 150MB restricted drive. If we start a Java application, that exposes an endpoint where we can query the JVM we see the following interesting points:
+    - Why is the JVM maximum allowed memory 241.7 MiB?
+      - Since the JVM doesn’t know that it’s executing inside a container, it will allow the maximum heap size to be close to 260MB.
+    - If this container restricts the memory to 150MB, why does it allow Java to allocate almost 220MB?
+      - When we use the parameter “`-m 150M`” in the docker command line, the docker daemon will limit 150M in the RAM and 150M in the Swap. As a result, the process can allocate the 300M and it explains why our process didn’t receive any kill from the Kernel.
+  - Bad solution: Have more RAM in the VM! Assume that you have 8GB ram in the virtual machine and limit the container to 600MB. In this case the 8GB environment the JVM will try to have a heap of 2GB! The application will try to allocate more than 1.2GB of memory, which is more than the limit of this container (**600MB in RAM + 600MB in Swap**) and the process will be killed.
+  - **Solution**
+
+    - A slight change in the Dockerfile allows the user to specify an environment variable that defines extra parameters for the JVM. Check the following line:
+      - `CMD java -XX:+PrintFlagsFinal $JAVA_OPTIONS -jar java-container.jar`
+    - Hence when running the container we define the Java_Options variable and pass it to the container:
+      - `docker run -d --name mycontainer8g -p 8080:8080 -m 600M -e JAVA_OPTIONS='-Xmx300m' rafabene/java-container:openjdk-env`
+    - The image `fabric8/java-jboss-openjdk8-jdk` uses a script that calculates the container restriction and uses 50% of the available memory as an upper boundary.
+
+      ```dockerfile
+      FROM fabric8/java-jboss-openjdk8-jdk:1.4.0
+
+      ENV JAVA_APP_JAR java-container.jar
+      ENV AB_OFF true
+
+      EXPOSE 8080
+
+      ADD target/$JAVA_APP_JAR /deployments/
+      ```
+
+    - Done! Now, no matter what the container memory limit is, our Java application will always adjust the heap size according to the container and not according to the daemon.
+
+  - **Update - Java 8 / 9**
+    - From JDK 8u131+ and JDK 9, there’s an experimental VM option that allows the JVM ergonomics to read the memory values from CGgroups. To enable it on, you must explicit set the parameters -XX:+UnlockExperimentalVMOptions and -XX:+UseCGroupMemoryLimitForHeap on the JVM.
+    - `docker run -d --name mycontainer8g-jdk9 -p 8080:8080 -m 600M rafabene/java-container:openjdk-cgroup`
+  - **Update - Java 10**
+    - The Dockerfile for JDK10 doesn’t need any extra flags, and/or even any manual and special ergonomics configuration. Hence: `docker run -it --name mycontainer -p 8080:8080 -m 600M rafabene/java-container:openjdk10` runs perfect.

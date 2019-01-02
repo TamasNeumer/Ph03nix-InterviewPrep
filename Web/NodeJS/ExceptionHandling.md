@@ -21,10 +21,55 @@ function myApiFunc(callback) {
 ```
 
 - You should also be familiar with the four main ways to deliver an error in Node.js:
+
   - throw the error (making it an exception).
   - pass the error to a callback, a function provided specifically for handling errors and the results of asynchronous operations
   - pass the error to a reject Promise function
   - emit an "error" event on an EventEmitter
+
+- You can throw strings in JavaScript, but if you do it in Node.js, you’ll lose all the stack information and the rest of the properties that are contained in the error object.
+
+```js
+/**
+ * A custom MyError class
+ * @class
+ */
+class MyError extends Error {
+  /**
+   * Constructs the MyError class
+   * @param {String} message an error message
+   * @constructor
+   */
+  constructor(message) {
+    super(message);
+    // properly capture stack trace in Node.js
+    Error.captureStackTrace(this, this.constructor);
+    this.name = this.constructor.name;
+  }
+}
+```
+
+- Using the emitter is also simple
+
+```js
+const EventEmitter = require("events");
+
+class Emitter extends EventEmitter {}
+
+const emitter = new Emitter();
+const logger = console;
+
+/**
+ * Add Error listener
+ */
+emitter.on("error", err => {
+  logger.error("Unexpected error on emitter", err);
+});
+
+// test the emitter
+emitter.emit("error", new Error("Whoops!"));
+// Unexpected error on emitter Error: Whoops!
+```
 
 ## Operational errors vs. programmer errors
 
