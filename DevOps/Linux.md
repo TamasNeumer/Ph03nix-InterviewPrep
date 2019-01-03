@@ -181,28 +181,8 @@
       - When we use the parameter “`-m 150M`” in the docker command line, the docker daemon will limit 150M in the RAM and 150M in the Swap. As a result, the process can allocate the 300M and it explains why our process didn’t receive any kill from the Kernel.
   - Bad solution: Have more RAM in the VM! Assume that you have 8GB ram in the virtual machine and limit the container to 600MB. In this case the 8GB environment the JVM will try to have a heap of 2GB! The application will try to allocate more than 1.2GB of memory, which is more than the limit of this container (**600MB in RAM + 600MB in Swap**) and the process will be killed.
   - **Solution**
-
-    - A slight change in the Dockerfile allows the user to specify an environment variable that defines extra parameters for the JVM. Check the following line:
-      - `CMD java -XX:+PrintFlagsFinal $JAVA_OPTIONS -jar java-container.jar`
-    - Hence when running the container we define the Java_Options variable and pass it to the container:
-      - `docker run -d --name mycontainer8g -p 8080:8080 -m 600M -e JAVA_OPTIONS='-Xmx300m' rafabene/java-container:openjdk-env`
-    - The image `fabric8/java-jboss-openjdk8-jdk` uses a script that calculates the container restriction and uses 50% of the available memory as an upper boundary.
-
-      ```dockerfile
-      FROM fabric8/java-jboss-openjdk8-jdk:1.4.0
-
-      ENV JAVA_APP_JAR java-container.jar
-      ENV AB_OFF true
-
-      EXPOSE 8080
-
-      ADD target/$JAVA_APP_JAR /deployments/
-      ```
-
-    - Done! Now, no matter what the container memory limit is, our Java application will always adjust the heap size according to the container and not according to the daemon.
-
-  - **Update - Java 8 / 9**
-    - From JDK 8u131+ and JDK 9, there’s an experimental VM option that allows the JVM ergonomics to read the memory values from CGgroups. To enable it on, you must explicit set the parameters -XX:+UnlockExperimentalVMOptions and -XX:+UseCGroupMemoryLimitForHeap on the JVM.
-    - `docker run -d --name mycontainer8g-jdk9 -p 8080:8080 -m 600M rafabene/java-container:openjdk-cgroup`
-  - **Update - Java 10**
-    - The Dockerfile for JDK10 doesn’t need any extra flags, and/or even any manual and special ergonomics configuration. Hence: `docker run -it --name mycontainer -p 8080:8080 -m 600M rafabene/java-container:openjdk10` runs perfect.
+    - **Java8u131+**
+      - From JDK 8u131+ and JDK 9, there’s an experimental VM option that allows the JVM ergonomics to read the memory values from CGgroups. To enable it on, you must explicit set the parameters -XX:+UnlockExperimentalVMOptions and -XX:+UseCGroupMemoryLimitForHeap on the JVM. I.e. add the following flags. The last flag will utilize 100% of memory for the JVM, instead of the default 1/4.
+      - `-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1`
+    - **Update - Java 10**
+      - The Dockerfile for JDK10 doesn’t need any extra flags, and/or even any manual and special ergonomics configuration. Hence: `docker run -it --name mycontainer -p 8080:8080 -m 600M rafabene/java-container:openjdk10` runs perfect.
