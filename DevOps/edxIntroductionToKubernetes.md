@@ -127,6 +127,10 @@
 - Start minikube
   - `minikube start`
     - If hangs for more than 3-5 min do `minikube delete` to delete the current cluster.
+    - In case of errors:
+      - `$minikube stop`
+      - `$minikube delete && rm -rf ~/.minikube && rm -rf ~/.kube`
+      - `$minikube start --vm-driver=hyperkit --bootstrapper=localkube`
   - `minikube status`
   - `minikube stop`
 - Accessing minikube
@@ -153,4 +157,372 @@
 
 ## Kubernetes Objects
 
--
+- YML configuration file
+
+  - Declare our intent or desired state using the `spec` field, while the `status` field will hold the actual state. Kubernetes Control Plane tries to match the object's actual state to the object's desired state.
+  - Most often, we provide an object's definition in a.yaml file, which is converted by kubectl in a JSON payload and sent to the API server. Example:
+
+  ```yml
+  apiVersion: apps/v1 # API endpoint on the API server which we want to connect to
+  kind: Deployment # object type - in our case, we have Deployment
+  metadata: # basic information to objects, like the name
+    name: nginx-deployment
+    labels:
+      app: nginx
+  spec: # desired state of the deployment
+    replicas: 3 # at least 3 Pods are running, created by spec.template
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec: # define the desired state of the Pod.
+        containers:
+          - name: nginx
+            image: nginx:1.7.9 # image to be used for pod
+            ports:
+              - containerPort: 80
+  ```
+
+  - Once the object is created, the Kubernetes system attaches the status field to the object; we will explore it later.
+
+- **Pod**
+  - Unit of deployment in Kubernetes, which represents a single instance of the application. A Pod is a logical collection of one or more containers, which:
+    - Are scheduled together on the same host
+    - Share the same network namespace (i.e. see each other on localhost)
+    - Mount the same external storage (volumes).
+  - We don't deploy a Pod independently, as it would not be able to re-start itself, if something goes wrong. (Deploy it with replication controllers.)
+    ![KubiNetwork1](./res/10.png)
+- **Labels**
+  - Key-value pairs that can be attached to any Kubernetes objects. Used to organize and select a subset of objects.
+  - e.g.: Pod1: `app: frontend`, Pod2: `app: backend` -> same label with two different values on the different pods.
+  - Equality-Based Label Selectors: `=, ==, !=` operators. e.g.: `app==frontend`
+  - Set-Based Selectors: Filtering of objects based on a set of values. `in notin exist` operators.
+    - e.g.: `env in (dev,qa)`
+- **Replication Controllers**
+  - Part of the master node's controller manager.
+  - It makes sure the specified number of replicas for a Pod is running at any given point in time. (starts new pods if necessary, kills of if pod is not required anymore)
+- **Replica Sets**
+  - A `ReplicaSet` (rs) is the next-generation `ReplicationController`. `ReplicaSets` support both equality- and set-based selectors, whereas `ReplicationControllers` only support equality-based Selectors. Currently, this is the only difference.
+  - `ReplicaSets` can be used independently, but they are mostly used by `Deployments` to orchestrate the Pod creation, deletion, and updates. A Deployment automatically creates the `ReplicaSets`, and we do not have to worry about managing them.
+- **Deployments**
+  - Deployment objects provide declarative updates to Pods and `ReplicaSets`. The `DeploymentController` is part of the master node's controller manager, and it makes sure that the current state always matches the desired state.
+  - **Deployment rollout**
+    - In the following example, we have a `Deployment` which creates a `ReplicaSet A`. `ReplicaSet A` then creates 3 Pods. In each Pod, one of the containers uses the `nginx:1.7.9` image.
+    - Now, in the Deployment, we change the Pods Template and we update the image for the nginx container from `nginx:1.7.9` to `nginx:1.9.1`. As have modified the Pods Template, a new `ReplicaSet B` gets created.
+    - **A rollout is only triggered when we update the Pods Template for a deployment**. Operations like scaling the deployment do not trigger the deployment. Once ReplicaSet B is ready, the Deployment starts pointing to it.
+      ![KubiNetwork1](./res/11.png)
+    - On top of `ReplicaSets`, `Deployments` provide features like Deployment recording, with which, if something goes wrong, we can rollback to a previously known state.
+- **Namespaces**
+  - If we have numerous users whom we would like to organize into teams/projects, we can partition the Kubernetes cluster into sub-clusters using `Namespaces`. The names of the resources/objects created inside a `Namespace` are unique, but not across `Namespaces`.
+  - `kubectl get namespaces` to list all namespaces.
+  - Two + 1 default Namespaces:
+    - `kube-system`: contains the objects created by the Kubernetes system
+    - `default`: contains the objects which belong to any other Namespace
+    - `kube-public` is a special Namespace, which is readable by all users and used for special purposes, like bootstrapping a cluster.
+  - By default, we connect to the default.
+
+## Authentication, Authorization
+
+- **Authentication**: Logs in a user
+  - **Normal Users**: managed outside of the Kubernetes cluster via independent services like User/Client Certificates, a file listing usernames/passwords, Google accounts, etc.
+  - **Service Accounts**: With Service Account users, in-cluster processes communicate with the API server to perform different operations.
+  - If properly configured, Kubernetes can also support **anonymous requests**, along with requests from Normal Users and Service Accounts.
+  - There are many different authentication mechanisms available, such as: Client Certificates, Static Token File, Service Account Tokens, OpenID Connect Tokens, Keystone Passwords etc.
+- **Authorization**: Authorizes the API requests added by the logged-in user.
+
+  - Some of the API request attributes that are reviewed by Kubernetes include user, group, extra, Resource or Namespace, to name a few. Next, these attributes are evaluated against policies. If the evaluation is successful, then the request will be allowed, otherwise it will get denied.
+  - Many authorizers are supported: Node Authorizer, Attribute-Based Access Control (ABAC) Authorizer, Webhook Authorizer
+
+    - Role-Based Access Control (RBAC) Authorizer:
+
+      - regulate the access to resources based on the roles of individual users
+      - While creating the roles, we restrict resource access by specific operations, such as `create, get, update, patch`, etc.
+
+        - **Role**: With Role, we can grant access to resources within a specific Namespace.
+
+          ```yml
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          metadata:
+          namespace: lfs158 # ccess only to the Pods of lfs158 Namespace
+          name: pod-reader
+          rules:
+            - apiGroups: [""] # "" indicates the core API group
+          resources: ["pods"]
+          verbs: ["get", "watch", "list"]
+          ```
+
+        - **Cluster Role**: grant the same permissions as Role does, but its _scope is cluster-wide_.
+
+    - We have 2 ways to bind users to roles:
+      - **RoleBinding**: bind users to the same namespace as a Role
+      - **ClusterRoleBinding**: grant access to resources at a cluster-level and to _all_ Namespaces
+        ```yml
+        kind: RoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: pod-read-access
+          namespace: lfs158
+        subjects:
+          - kind: User
+            name: nkhare # gives access to nkhare to read the Pods of lfs158 Namespace
+            apiGroup: rbac.authorization.k8s.io
+        roleRef:
+          kind: Role
+          name: pod-reader
+          apiGroup: rbac.authorization.k8s.io
+        ```
+        - To enable the RBAC authorizer, we would need to start the API server with the `--authorization-mode=RBAC`
+
+- **Admission Control**: software modules that can modify or reject the requests based on some additional checks, like Quota.
+  - To use admission controls, we must start the Kubernetes API server with the admission-control, which takes a comma-delimited, ordered list of controller names:
+    - `--admission-control=NamespaceLifecycle,ResourceQuota,PodSecurityPolicy,DefaultStorageClass`
+  - By default, Kubernetes comes with some built-in admission controllers.
+
+```sh
+Practice:
+
+$: minikube start --extra-config=controller-manager.ClusterSigningCertFile="/var/lib/localkube/certs/ca.crt" --extra-config=controller-manager.ClusterSigningKeyFile="/var/lib/localkube/certs/ca.key" --extra-config=apiserver.Authorization.Mode=RBAC
+$: kubectl config view
+-> See that current-context is minikube, we are connecting user "minikube" to cluster "minikube"
+$: kubectl create namespce lfs158
+$: mkdir ~/rbac
+$: cd ~/rbac
+$: openssl genrsa -out nkhare.key 2048
+-> created private key
+$: openssl req -new -key nkhare.key -out nkhare.csr -subj "/CN=nkhare/O=cloudyuha"\n
+-> generate signing request
+// TODO...
+```
+
+## Services
+
+- **Intro**
+
+  - In a "dummy" scenario users could connect to Pods by the Pod's IP address. However once a Pod dies and a new pod is started using a different IP, the user wouldn't be able to reach the newly created pod. -> Kubernetes provides a higher-level abstraction called Service, which logically groups Pods and a policy to access them.
+  - Previously we have talked about labels and selectors. We can assign a **name** to the logical grouping, referred to as a **Service name**. In our example, we can create two Services, `frontend-svc` (app==frontend) and the `db-svc` (app==db) using selectors. Now the user can reach the actual pods using the services and hence using the selectors.
+    ![KubiNetwork1](./res/12.png)
+  - The user/client now connects to a service via the IP address, which forwards the traffic to one of the Pods attached to it. A service does the load balancing while selecting the Pods for forwarding the data/traffic.
+
+    ```yml
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: frontend-svc
+    spec:
+      selector:
+        app: frontend
+      ports:
+        - protocol: TCP
+          port: 80
+          targetPort: 5000
+    ```
+
+    - In our example, for `frontend-svc`, we will receive requests from the user/client on Port `80`. We will then forward these requests to one of the attached Pods on Port `5000`. If the target port is not defined explicitly, then traffic will be forwarded to Pods on the port on which the Service receives traffic.
+    - In our case, frontend-svc has 3 endpoints: `10.0.1.3:5000, 10.0.1.4:5000`, and `10.0.1.5:5000`.
+
+- **Kube-Proxy**
+  - All of the worker nodes run a daemon called kube-proxy, which watches the API server on the master node for the addition and removal of Services and endpoints. For each new Service, on each node, kube-proxy configures the iptables rules to capture the traffic for its ClusterIP and forwards it to one of the endpoints. When the service is removed, kube-proxy removes the iptables rules on all nodes as well.
+    ![KubiNetwork1](./res/13.png)
+- **Service Discovery**
+
+  - **Environment Variables**
+    - As soon as the Pod starts on any worker node, the `kubelet` daemon running on that node adds a set of environment variables in the Pod for all active Services. For example, if we have an active Service called `redis-master`, which exposes port `6379`, and its ClusterIP is `172.17.0.6`, then, on a newly created Pod, we can see the following environment variables:
+      ```yml
+      REDIS_MASTER_SERVICE_HOST=172.17.0.6
+      REDIS_MASTER_SERVICE_PORT=6379
+      REDIS_MASTER_PORT=tcp://172.17.0.6:6379
+      REDIS_MASTER_PORT_6379_TCP=tcp://172.17.0.6:6379
+      REDIS_MASTER_PORT_6379_TCP_PROTO=tcp
+      REDIS_MASTER_PORT_6379_TCP_PORT=6379
+      REDIS_MASTER_PORT_6379_TCP_ADDR=172.17.0.6
+      ```
+  - **DNS**
+    - Kubernetes has an add-on for DNS, which creates a DNS record for each Service and its format is like `my-svc.my-namespace.svc.cluster.local`
+    - This is the most common and highly recommended solution. For example, in the previous section's image, we have seen that an internal DNS is configured, which maps our Services `frontend-svc` and `db-svc` to `172.17.0.4` and `172.17.0.5`, respectively.
+
+- **ServiceType (Scope)**
+  - **ClusterIP**
+    - Default ServiceType. A Service gets its Virtual IP address using the ClusterIP. That IP address is used for communicating with the Service and is accessible only within the cluster.
+  - **NodePort**
+    - In addition to creating a ClusterIP, a port from the range 30000-32767 is mapped to the respective Service, from all the worker nodes. For example, if the mapped NodePort is `32233` for the service f`rontend-svc`, then, if we connect to any worker node on port `32233`, the node would redirect all the traffic to the assigned ClusterIP - 172.17.0.4.
+      ![KubiNetwork1](./res/14.png)
+    - The NodePort ServiceType is useful when we want to make our Services accessible from the external world. The end-user connects to the worker nodes on the specified port, which forwards the traffic to the applications running inside the cluster.
+  - **LoadBalancer**
+    - NodePort and ClusterIP Services are automatically created, and the external load balancer will route to them
+    - The Services are exposed at a static port on each worker node
+    - The Service is exposed externally using the underlying cloud provider's load balancer feature.
+    - (Same image as before, except node-balancer stands between service and user. The user communicates with the load balancer.)
+  - **ExternalIP**
+    - A Service can be mapped to an ExternalIP address if it can route to one or more of the worker nodes. Traffic that is ingressed into the cluster with the ExternalIP (as destination IP) on the Service port, gets routed to one of the the Service endpoints.
+      ![KubiNetwork1](./res/15.png)
+    - Please note that ExternalIPs are not managed by Kubernetes. The cluster administrators has configured the routing to map the ExternalIP address to one of the nodes.
+  - **ExternalName**
+    - no Selectors and does not define any endpoints. When accessed within the cluster, it returns a `CNAME` record of an externally configured Service.
+    - The primary use case of this ServiceType is to make externally configured Services like `my-database.example.com` available inside the cluster, using just the name, like `my-database`, to other Services inside the same Namespace.
+
+## Deploying the Stuff
+
+- **Deploying using the GUI**
+
+  - `minikube start`
+  - `minikube dashboard` - top open the GUI
+  - Click on `CREATE AN APP`
+    - Name: webserver
+    - Image: nginx:alpine
+    - Replica count: 3
+    - Service: None
+    - Deploy!
+  - `k8s-app:webserver` Label is set by default. Wait until all the pods are running.
+  - Now in the command line we can check our deployment:
+    - `kubectl get deployments`
+    - `kubectl get replicasets`
+    - `kubectl get pods`
+    - `kubectl describe pod webserver-74d8bd488f-dwbzz`
+    - `kubectl get pods -L k8s-app,label2` to list with more details. Or we can use `kubectl get pods -l k8s-app=webserver` to filter by label!
+
+- **Deploying via CLI**
+
+  - Delete the previous deployment: `kubectl delete deployments webserver`
+  - `kubectl get replicasets` / `kubectl get pods` -> nothing found.
+  - Create and save the following YML file:
+
+  ```yml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: webserver
+    labels:
+      app: nginx
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+          - name: nginx
+            image: nginx:alpine
+            ports:
+              - containerPort: 80
+  ```
+
+  - Deploy via `kubectl create -f {ABS_PATH_TO_YML}/depo.yml`
+  - Check the replicas and pods.
+
+- **Exposing our service**
+
+  - For a given Service, with the `NodePort` ServiceType, Kubernetes opens up a static port on all the worker nodes. If we connect to that port from any node, we are forwarded to the respective Service.
+  - Don't yet delete the previous deployment! Create the **service** with the following yml.
+
+    ```yml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: web-service
+      labels:
+        run: web-service
+    spec:
+      type: NodePort
+      ports:
+        - port: 80
+          protocol: TCP
+      selector:
+        app: nginx
+    ```
+
+  - `kubectl get svc`
+
+    ```sh
+    NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+    kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP        2d
+    web-service   NodePort    10.100.29.200   <none>        80:32551/TCP   34s
+    ```
+
+  - Our web-service is now created and its ClusterIP is `10.110.47.84`. In the PORT(S)section, we can see a mapping of `80:32551`, which means that we have reserved a static port `32551` on the node. If we connect to the node on that port, our requests will be forwarded to the ClusterIP on port `80`.
+  - `kubectl describe svc web-service`
+    - For this to work both deployment and service must be created. The order in which you create doesn't matter.
+    - web-service uses app=nginx as a Selector, through which it selected our three Pods, which are listed as endpoints. So, whenever we send a request to our Service, it will be served by one of the Pods listed in the Endpoints section.
+  - Get the address of our minikube VM:
+    - `minikube ip`
+    - Now open the browser on port `32551`, where `32551` is the ip given by `kubectl get svc`
+    - `minikube service web-service` would also do the same.
+
+- **Liveness**
+
+  - If a container in the Pod is running, but the application running inside this container is not responding to our requests, then that container is of no use to us. (Deadlock, memory pressure etc.)
+  - _Liveness probe checks on an application's health_, and, if for some reason, the health check fails, it restarts the affected container automatically.
+
+    ```yml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      labels:
+        test: liveness
+      name: liveness-exec
+    spec:
+      containers:
+        - name: liveness
+          image: k8s.gcr.io/busybox
+          args:
+            - /bin/sh
+            - -c
+            - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+          livenessProbe:
+            exec:
+              command:
+                - cat
+                - /tmp/healthy
+            initialDelaySeconds: 3
+            periodSeconds: 5
+    ```
+
+    - he existence of the `/tmp/healthy` file is configured to be checked every 5 seconds using the `periodSeconds` parameter. The `initialDelaySeconds` parameter requests the kubelet to wait for 3 seconds before doing the first probe. When running the command line argument to the container, we will first create the `/tmp/healthy` file, and then we will remove it after 30 seconds. The deletion of the file would trigger a health failure, and our Pod would get restarted.
+
+  - Same can be configured over a `HTTP GET` request.
+
+    ```yml
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+        httpHeaders:
+          - name: X-Custom-Header
+            value: Awesome
+      initialDelaySeconds: 3
+      periodSeconds: 3
+    ```
+
+  - Or with TCO Liveness Probe. The kubelet attempts to open the TCP Socket to the container which is running the application.
+
+    ```yml
+    livenessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    ```
+
+- **Readiness Probes**
+
+  - Sometimes, applications have to meet certain conditions before they can serve traffic. These conditions include ensuring that the depending service is ready, or acknowledging that a large dataset needs to be loaded, etc. In such cases, we use Readiness Probes and wait for a certain condition to occur. Only then, the application can serve traffic.
+  - **A Pod with containers that do not report ready status will not receive traffic from Kubernetes Services.**
+
+    ```yml
+    readinessProbe:
+      exec:
+        command:
+          - cat
+          - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    ```
+
+## Kubernetes volume management
