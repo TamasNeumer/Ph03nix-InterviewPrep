@@ -526,3 +526,18 @@ $: openssl req -new -key nkhare.key -out nkhare.csr -subj "/CN=nkhare/O=cloudyuh
     ```
 
 ## Kubernetes volume management
+
+- All data stored inside a container is deleted if the container crashes. To overcome this problem, Kubernetes uses Volumes. A Volume is essentially a directory backed by a storage medium.
+- Volume Types:
+  - `emptyDir`: created for the Pod as soon as it is scheduled on the worker node. The Volume's life is tightly coupled with the Pod. If the Pod dies, the content of emptyDir is deleted forever.
+  - `hostPath`: we can share a directory from the host to the Pod. If the Pod dies, the content of the Volume is still available on the host.
+  - `secret`: we can pass sensitive information, such as passwords, to Pods.
+  - `gcePersistentDisk`: mount a Google Compute Engine (GCE) persistent disk into a Pod.
+  - `nfs`: mount an NFS share into a Pod
+- Kubernetes provides the **PersistentVolume** (PV) subsystem, which provides APIs for users and administrators to manage and consume storage. A **Persistent Volume is a network-attached storage in the cluster**, which is provisioned by the administrator.
+- A **PersistentVolumeClaim (PVC)** is a request for storage by a user.
+  ![Claim](./res/16.png)
+
+## Deploying Multi Tier application
+
+- 
