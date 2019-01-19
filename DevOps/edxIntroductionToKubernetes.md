@@ -540,4 +540,988 @@ $: openssl req -new -key nkhare.key -out nkhare.csr -subj "/CN=nkhare/O=cloudyuh
 
 ## Deploying Multi Tier application
 
+## Slide 14
+
+- `kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=10.230.0.11`
+  - The IP there is the IP created by Vagrant (all 3 virtual machines are connected there?)
+- Execute the generated command in the two worker node's shell
+  - `kubeadm join 10.230.0.11:6443 --token ilmob5.3a7qqexpldn4nxan --discovery-token-ca-cert-hash sha256:9fd26bb6fbbd45eed54c437058cfdb0a2d7dee6635c679f999965d283834fe55`
+- Finally in the master node execute the following commands:
+
+  ```sh
+  # TO enable autocomplete:
+  $ source <(kubectl completion bash)
+  $ echo "source <(kubectl completion bash)" >> ~/.bashrc
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+  kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
+  kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+  ```
+
+- Now `kubectl get nodes` should display the nodes running.
+
+## Slide 15
+
+- `kubectl get pods --all-namespaces`
+- `kubectl apply –f /vagrant/k8s/kube-dashboard.yaml`
+- `kubectl create secret docker-registry pd-dockerhub --docker-server=dockerhub.prodyna.com --docker-username=pd-training --docker-password=PRODYNA-Training --docker-email=foo@bar.com`
+- `kubectl patch serviceaccount default –p '{"imagePullSecrets": [{"name": "pd-dockerhub"}]}'`
+
+## Get until slide 16
+
+- `kubectl cluster-info`
+  Kubernetes master is running at https://10.230.0.11:6443
+- `kubectl get services --all-namespaces`
+  - Grab the port of the dashboard -> and use it as the port for the above ip
+- `kubectl -n kube-system describe secrets admin-user-token-f7sfg`
+  - copy the token and use it on the dashboard
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  containers:
+    - name: tomcat-sample
+      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+      ports:
+        - containerPort: 8080
+      env:
+        - name: STATIC_VAR
+          value: "Hello from the environment"
+```
+
+- `kubectl create -f mypod.yml`
+- `kubectl apply -f mypod.yml` to reapply (instead of delete & create)
+
+- Port forward:
+  - ## `kubectl port-forward tomcat-sample 8080`
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: worker-1
+                operator: In
+                values:
+                  - "true"
+  containers:
+    - name: tomcat-sample
+      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+      ports:
+        - containerPort: 8080
+      env:
+        - name: STATIC_VAR
+          value: "Hello from the environment"
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "1Gi"
+          cpu: "1"
+```
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pasue-sample
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - tomcat-sample
+            topologyKey: kubernetes.io/hostname
+  containers:
+    - name: pasue-sample
+      image: k8s.gcr.io/pause:2.0
+```
+
+# Slide 19
+
+- `kubectl taint nodes node1 key=value:NoSchedule`
+- If you restart the node, and reupload, it won't be scheduled as the node doesn't tolerate the pod.
+  - "0/3 nodes are available: 1 node(s) had taints that the pod didn't tolerate, 2 node(s) didn't match node selector."
+- Adding the toleration solves the issue
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  tolerations:
+    - key: "foo"
+      operator: "Exists"
+      effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: worker-1
+                operator: In
+                values:
+                  - "true"
+  containers:
+    - name: tomcat-sample
+      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+      ports:
+        - containerPort: 8080
+      env:
+        - name: STATIC_VAR
+          value: "Hello from the environment"
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "1Gi"
+          cpu: "1"
+```
+
+- Remove taint: `kubectl taint nodes worker-1 foo:NoSchedule-`
+
+- With probe
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  tolerations:
+  - key: "foo"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-1
+            operator: In
+            values:
+            - "true"
+  containers:
+  - name: tomcat-sample
+    image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+    ports:
+    - containerPort: 8080
+    env:
+    - name: STATIC_VAR
+      value: "Hello from the environment"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    livenessProbe:
+      exec:
+        command:
+          - wget
+          - --spider
+          - http://localhost:8080
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+- Adding readiness probe:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  tolerations:
+  - key: "foo"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-1
+            operator: In
+            values:
+            - "true"
+  containers:
+  - name: tomcat-sample
+    image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+    ports:
+    - containerPort: 8080
+    env:
+    - name: STATIC_VAR
+      value: "Hello from the environment"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    readinessProbe:
+      exec:
+        command:
+          - wget
+          - --spider
+          - http://localhost:8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    livenessProbe:
+      exec:
+        command:
+          - wget
+          - --spider
+          - http://localhost:8080
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+- Change the type to TCPSocketAction. Make it 8081 so we see it fail
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  tolerations:
+  - key: "foo"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-1
+            operator: In
+            values:
+            - "true"
+  containers:
+  - name: tomcat-sample
+    image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+    ports:
+    - containerPort: 8080
+    env:
+    - name: STATIC_VAR
+      value: "Hello from the environment"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    readinessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    livenessProbe:
+      tcpSocket:
+        port: 8081
+      initialDelaySeconds: 15
+      periodSeconds: 20
+
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  66s                default-scheduler  Successfully assigned default/tomcat-sample to worker-1
+  Normal   Pulling    64s                kubelet, worker-1  pulling image "dockerhub.prodyna.com/training/tomcat-sample-tneumer"
+  Normal   Pulled     64s                kubelet, worker-1  Successfully pulled image "dockerhub.prodyna.com/training/tomcat-sample-tneumer"
+  Normal   Created    63s                kubelet, worker-1  Created container
+  Normal   Started    63s                kubelet, worker-1  Started container
+  Warning  Unhealthy  20s (x2 over 40s)  kubelet, worker-1  Liveness probe failed: dial tcp 192.168.2.15:8081: connect: connection refused
+```
+
+- HTTP get action (didn't work... :-/):
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  tolerations:
+  - key: "foo"
+    operator: "Exists"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker-1
+            operator: In
+            values:
+            - "true"
+  containers:
+  - name: tomcat-sample
+    image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+    ports:
+    - containerPort: 8080
+    env:
+    - name: STATIC_VAR
+      value: "Hello from the environment"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+```
+
+- Fix the pod:
+  - The containers can reach the shared "emptyDir" names folder via "/shre" path.
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-container-sample
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: main
+    image: busybox
+    command: ['sh', '-c', 'if [ -f "/share/test.file" ]; then sleep 3600; else exit 1; fi']
+    volumeMounts:
+      - mountPath: /share
+        name: share
+  volumes:
+    - name: share
+      emptyDir: {}
+```
+
+- Fix:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-container-sample
+  labels:
+    app: myapp
+spec:
+  initContainers:
+  - name: init-myservice
+    image: busybox
+    command: ['sh', '-c', 'touch /share/test.file']
+    volumeMounts:
+      - mountPath: /share
+        name: share
+  containers:
+  - name: main
+    image: busybox
+    command: ['sh', '-c', 'if [ -f "/share/test.file" ]; then sleep 3600; else exit 1; fi']
+    volumeMounts:
+      - mountPath: /share
+        name: share
+  volumes:
+    - name: share
+      emptyDir: {}
+```
+
+## Security
+- Linux 1000 is the first user created -> now the container is executed as vagrant's 1000 user who doesn't have the privilidges
+- Now if you remove the security context block you will see that the user is root -> i.e. 
+
+## Services
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-sample-service
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    nodePort: 30080
+    targetPort: 8080
+  selector:
+    app: tomcat-sample
+```
+
+
+apiVersion: v1                                                                           |apiVersion: v1
+kind: Service                                                                            |kind: Pod
+metadata:                                                                                |metadata:
+  name: tomcat-sample-service                                                            |  name: tomcat-sample
+spec:                                                                                    |  labels:
+  type: NodePort                                                                         |    app: tomcat-sample
+  ports:                                                                                 |spec:
+  - protocol: TCP                                                                        |  containers:
+    port: 80                                                                             |    - name: tomcat-sample
+    nodePort: 30080                                                                      |      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+    targetPort: 8080                                                                     |      ports:
+  selector:                                                                              |        - containerPort: 8080
+    app: tomcat-sample                                                                   |      env:
+~                                                                                        |        - name: STATIC_VAR
+~                                                                                        |          value: "Hello from the environment"
+
+BUSYBOX:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: admin-pod
+spec:
+  containers:
+    - name: admin-pod
+      image: busybox:1.28
+      command:
+        - sleep
+        - "3600"
+```
+
+- Get into the shell of the contianer: `kubectl exec -it shell-demo -- /bin/bash` -> or shell: `kubectl exec -it admin-pod --sh`
+- `kubectl get service` -> to read out the services -> get the service name
+- `kubectl exec -ti admin-pod -- nslookup tomcat-sample-service`
+  - Get the address: `tomcat-sample-service.default.svc.cluster.local`
+- `kubectl exec -ti admin-pod -- nslookup tomcat-sample-service.default.svc.cluster.local`
+
+## Ingress
+- We expose pods & deployment via services
+- Ingress routes the traffic to the services )(?)
+
 - 
+
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
+
+Deploy ngninx **controller** for ingredss
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  containers:
+    - name: tomcat-sample
+      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+      ports:
+        - containerPort: 8080
+      env:
+        - name: STATIC_VAR
+          value: "Hello from the environment"
+```
+
+```yml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tomcat-sample-ingres
+spec:
+  rules:
+  - host: tomcat-sample.10.230.0.11.xip.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: tomcat-sample
+          servicePort: 80
+```
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    nodePort: 30080
+    targetPort: 8080
+  selector:
+    app: tomcat-sample
+```
+
+- Open it from brwoser via `http://tomcat-sample.10.230.0.11.xip.io:30071/` -> where did the 30071 come from?! 
+
+## Deployment
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat-sample
+  template:
+    metadata:
+      labels:
+        app: tomcat-sample
+    spec:
+      containers:
+      - name: tomcat-sample
+        image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+```
+
+- https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#use-case
+
+- `kubectl scale --replicas=3 deployment tomcat-sample`
+- `kubectl apply -f deployment.yml`
+
+$ kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.9.1 --record deployment.apps/nginx-deployment image updated
+
+kubectl edit deployment.v1.apps/nginx-deployment deployment.apps/nginx-deployment edited
+
+## Quitas
+
+- Specifying quota allows to restrict how much of cluster resources can be consumed across all pods in a namespace.
+  
+```yml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: quota
+spec:
+  hard:
+    cpu: "20"
+    memory: 1Gi
+    pods: "10"
+    replicationcontrollers: "20"
+    resourcequotas: "1"
+    services: "5"
+```
+
+- The limit range is valid for a pod in a single container
+- `kubectl create namespace resource-test`
+
+```yml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: mem-demo
+  namespace: resource-test
+space:
+  hard:
+      requests.memory: 2Gi
+      limits.memory: 4Gi
+      pods: "3"
+```
+
+```yml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit-range
+spec:
+  limits:
+  - default:
+      memory: 128Mi
+      cpu: 0.5
+    defaultRequest:
+      memory: 64Mi
+      cpu: 0.1
+    type: Container
+```
+
+## Sotrage
+
+- `kubectl apply -f nfs-storage/`
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: es
+  labels:
+    app: elasticsearch
+spec:
+  ports:
+  - port: 9200
+    name: http
+  - port: 9300
+    name: cluster
+  clusterIP: None
+  selector:
+    app: elasticsearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+spec:
+  ports:
+  - port: 9200
+    name: http
+  selector:
+    app: elasticsearch
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  serviceName: "es"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      initContainers:
+      # NOTE:
+      # This is to fix the permission on the volume
+      # By default elasticsearch container is not run as
+      # non root user.
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_notes_for_production_use_and_defaults
+      - name: fix-the-volume-permission
+        image: busybox
+        command:
+        - sh
+        - -c
+        - chown -R 1000:1000 /usr/share/elasticsearch/data
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/elasticsearch/data
+      # NOTE:
+      # To increase the default vm.max_map_count to 262144
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode
+      - name: increase-the-vm-max-map-count
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      # To increase the ulimit
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_notes_for_production_use_and_defaults
+      - name: increase-the-ulimit
+        image: busybox
+        command:
+        - sh
+        - -c
+        - ulimit -n 65536
+        securityContext:
+          privileged: true
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: cluster
+        env:
+        - name: cluster.name
+          value: elasticsearch-cluster
+        - name: node.name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        # NOTE: This will tell the elasticsearch node where to connect to other nodes to form a cluster
+        - name: discovery.zen.ping.unicast.hosts
+          value: "elasticsearch-0.es.default.svc.cluster.local,elasticsearch-1.es.default.svc.cluster.local"
+        # NOTE: You can increase the heap size
+        - name: ES_JAVA_OPTS
+          value: -Xmx1g
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/elasticsearch/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-nfs"
+      resources:
+        requests:
+          storage: 1Gi
+```
+
+- `kubectl apply -f headlessService.yml`
+
+- `kubectl scale --replicas=2 statefulset elasticsearch`
+- `kubectl port-forward elasticsearch-0 9200:9200`
+- In another temrinal: `curl http://localhost:9200/_cluster/state?pretty`
+- Enter pod: `kubectl exec -it elasticsearch-0 -- sh`
+- `yum install bind-utils`
+- `nslookup elasticsearch`
+
+```
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	elasticsearch.default.svc.cluster.local
+Address: 10.102.58.107
+```
+
+- `curl 10.102.58.107:9200` -> do it multiple times adn you will see the load balancing happening
+- `cd /usr/share/elasticsearch/data`
+- `kubectl describe pod nfs-provisioner-0`
+
+### Daemon set
+
+```yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+  labels:
+    app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-logging
+  template:
+    metadata:
+      labels:
+        name: fluentd-logging
+    spec:
+      serviceAccountName: fluentd
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      containers:
+        - name: fluentd-logging-container
+          image: fluent/fluentd-kubernetes-daemonset:elasticsearch
+          env:
+            - name: FLUENT_ELASTICSEARCH_HOST
+              value: "????????"
+            - name: FLUENT_ELASTICSEARCH_PORT
+              value: "9200"
+            - name: FLUENT_ELASTICSEARCH_SCHEME
+              value: "http"
+            - name: FLUENT_UID
+              value: "0"
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+```
+
+- `kubectl get daemonsets -n kube-system`
+- `kubectl get pods -o wide --all-namespaces`
+
+## Config map
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-sample
+  labels:
+    app: tomcat-sample
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat-sample
+  template:
+    metadata:
+      labels:
+        app: tomcat-sample
+    spec:
+      containers:
+      - name: tomcat-sample
+        image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+        env:
+        - name: COLOR
+          valueFrom:
+            configMapKeyRef:
+              name: tomcat-sample
+              key: color
+        ports:
+        - containerPort: 8080
+```
+
+# Design patterns
+ -sidecar
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-pod
+  labels:
+    name: sidecar-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: http
+      volumeMounts:
+        - mountPath: /usr/share/nginx
+          name: data-share
+    - name: git-sync
+      image: k8s.gcr.io/git-sync:v3.0.1
+      env:
+        - name: GIT_SYNC_REPO
+          value: https://github.com/fassmus/git-sync-sample-content.git
+        - name: GIT_SYNC_ROOT
+          value: /data-share
+        - name: GIT_SYNC_DEST
+          value: html
+      volumeMounts:
+        - mountPath: /data-share
+          name: data-share
+  volumes:
+   - name: data-share
+      emptyDir: {}
+```
+- Ambassador:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ambassador-pod
+spec:
+  containers:
+    - name: web-server
+      image: nginx
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: nginx-ambassador
+          mountPath: /etc/nginx/
+    - name: tomcat
+      image: dockerhub.prodyna.com/training/tomcat-sample-tneumer
+      ports:
+        - containerPort: 80
+  volumes:
+    - name: nginx-ambassador
+      configMap:
+        name: nginx-ambassador
+```
+
+
+- adapter:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adapter
+  labels:
+    app: adapter
+spec:
+  containers:
+    - name: main
+      image: alpine
+      command:
+        [
+          "sh",
+          "-c",
+          "while true; do date> /var/log/top.txt && top -n 1 -b >> /var/log/top.txt; sleep 5; done",
+        ]
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+    - name: adapter
+      image: alpine
+      command:
+        [
+          "sh",
+          "-c",
+          "while true; do (cat /var/log/top.txt | head -1 > /var/log/status.txt) && (cat /var/log/top.txt | head -2 | tail -1 | grep -o -E '\\d+\\w' | head -1 >> /var/log/status.txt) && (cat /var/log/top.txt | head -3 | tail -1 | grep -o -E '\\d+%' | head -1 >> /var/log/status.txt); sleep 5; done",
+        ]
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+  volumes:
+    - name: varlog
+      emptyDir: {}
+
+```
