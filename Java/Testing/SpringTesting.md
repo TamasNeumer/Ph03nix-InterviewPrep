@@ -4,7 +4,7 @@
 
 - `@SpringBootTest` creates the `ApplicationContext` used in your tests through `SpringApplication`.
 - If using Junit5 add the `@ExtendWith(SpringExtension)` annotation. For Junit4 use the `@RunWith(SpringRunner.class)`.
-- By default, `@SpringBootTest` will not start a server. You can use the webEnvironment attribute of @SpringBootTest to further refine how your tests run:
+- By default, `@SpringBootTest` will not start a server. You can use the webEnvironment attribute of `@SpringBootTest`to further refine how your tests run:
 
 - `SpringBootTest` configuration:
 
@@ -103,7 +103,7 @@
 
 - Default behavior
 
-  - Spring Boot's `@*Test` annotations search for your primary configuration automatically whenever you do not explicitly define one. The search algorithm works up from the package that contains the test until it finds a class annotated with `@SpringBootApplication` or `@SpringBootConfiguration`.
+  - Spring Boot's `@Test` annotations search for your primary configuration automatically whenever you do not explicitly define one. The search algorithm works up from the package that contains the test until it finds a class annotated with `@SpringBootApplication` or `@SpringBootConfiguration`.
 
 - Manual context configuration
 
